@@ -1,0 +1,32 @@
+{
+  "name": "freeform",
+  "license": "Apache-2.0",
+  "private": true,
+  "author": {
+    "name": "LiYechao",
+    "email": "liyechao@yechao.xyz"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/li-yechao/freeform.git"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^15.0.0",
+    "@commitlint/config-conventional": "^15.0.0",
+    "husky": "^7.0.0",
+    "lerna": "^4.0.0",
+    "lint-staged": "^12.1.2",
+    "prettier": "^2.5.1"
+  },
+  "lint-staged": {
+    "*.(js|jsx|ts|tsx|json|md)": [
+      "prettier -w"
+    ]
+  }
+}
