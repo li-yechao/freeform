@@ -12,19 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// <reference types="vite-plugin-pwa/client" />
+import styled from '@emotion/styled'
+import { Box, Typography } from '@mui/material'
 
-interface ImportMetaEnv extends Readonly<Record<string, string | boolean>> {
-  DEV: boolean
-  PROD: boolean
+export default function ErrorView({ error }: { error?: Error }) {
+  return (
+    <Box>
+      <Typography variant="h1" align="center" color="textSecondary">
+        {error?.name || 'Error'}
+      </Typography>
 
-  VITE_DINGTALK_CLIENT_ID: string
-
-  VITE_AUTH_API: string
-
-  VITE_GRAPHQL_URI: string
+      <_Message variant="h6" align="center" color="textSecondary">
+        {error?.message || 'Unknown Error'}
+      </_Message>
+    </Box>
+  )
 }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
+const _Message = styled(Typography)`
+  word-wrap: break-word;
+  margin: ${props => props.theme.spacing(8)};
+`

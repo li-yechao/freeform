@@ -12,19 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// <reference types="vite-plugin-pwa/client" />
+import { DependencyList } from 'react'
+import { useAsync } from 'react-use'
+import { FunctionReturningPromise, PromiseType } from 'react-use/lib/misc/types'
 
-interface ImportMetaEnv extends Readonly<Record<string, string | boolean>> {
-  DEV: boolean
-  PROD: boolean
+export type AsyncState<T> =
+  | {
+      loading: true
+      error?: Error | undefined
+      value?: T
+    }
+  | {
+      loading: false
+      error: Error
+      value?: undefined
+    }
+  | {
+      loading: false
+      error?: undefined
+      value: T
+    }
 
-  VITE_DINGTALK_CLIENT_ID: string
-
-  VITE_AUTH_API: string
-
-  VITE_GRAPHQL_URI: string
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
+export default useAsync as <T extends FunctionReturningPromise>(
+  fn: T,
+  deps?: DependencyList
+) => AsyncState<PromiseType<ReturnType<T>>>

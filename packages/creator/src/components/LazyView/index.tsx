@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// <reference types="vite-plugin-pwa/client" />
+import * as React from 'react'
+import NetworkIndicator from '../NetworkIndicator'
 
-interface ImportMetaEnv extends Readonly<Record<string, string | boolean>> {
-  DEV: boolean
-  PROD: boolean
-
-  VITE_DINGTALK_CLIENT_ID: string
-
-  VITE_AUTH_API: string
-
-  VITE_GRAPHQL_URI: string
+export default function LazyView<P>(C: React.LazyExoticComponent<React.ComponentType<P>>) {
+  return (props: P) => {
+    return (
+      <React.Suspense fallback={<Loading />}>
+        <C {...(props as any)} />
+      </React.Suspense>
+    )
+  }
 }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv
+const Loading = () => {
+  return <NetworkIndicator in />
 }

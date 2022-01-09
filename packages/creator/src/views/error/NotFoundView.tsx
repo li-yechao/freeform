@@ -12,19 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// <reference types="vite-plugin-pwa/client" />
+import { Box, Typography } from '@mui/material'
 
-interface ImportMetaEnv extends Readonly<Record<string, string | boolean>> {
-  DEV: boolean
-  PROD: boolean
+export default function NotFoundView() {
+  return (
+    <Box>
+      <Typography variant="h1" align="center" color="textSecondary">
+        404
+      </Typography>
 
-  VITE_DINGTALK_CLIENT_ID: string
-
-  VITE_AUTH_API: string
-
-  VITE_GRAPHQL_URI: string
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
+      <Typography variant="h6" align="center" color="textSecondary">
+        Not Found
+      </Typography>
+    </Box>
+  )
 }

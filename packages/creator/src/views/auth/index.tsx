@@ -12,19 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// <reference types="vite-plugin-pwa/client" />
+import * as React from 'react'
+import LazyView from '../../components/LazyView'
 
-interface ImportMetaEnv extends Readonly<Record<string, string | boolean>> {
-  DEV: boolean
-  PROD: boolean
-
-  VITE_DINGTALK_CLIENT_ID: string
-
-  VITE_AUTH_API: string
-
-  VITE_GRAPHQL_URI: string
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
+export const AuthViewLazy = LazyView(React.lazy(() => import('./AuthView')))
