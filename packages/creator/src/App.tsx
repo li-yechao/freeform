@@ -34,6 +34,7 @@ import {
 import { StylesProvider } from '@mui/styles'
 import { SnackbarProvider } from 'notistack'
 import { Suspense, useEffect, useMemo, useState } from 'react'
+import { IntlProvider } from 'react-intl'
 import { HashRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import { RecoilRoot } from 'recoil'
 import { createClient } from './apollo'
@@ -50,6 +51,7 @@ import {
 } from './state/account'
 import { useHeaderActions } from './state/header'
 import useAsync from './utils/useAsync'
+import { ApplicationViewLazy } from './views/application'
 import { AuthViewLazy } from './views/auth'
 import { ErrorViewLazy, NotFoundViewLazy } from './views/error'
 import ErrorView from './views/error/ErrorView'
@@ -64,31 +66,33 @@ export default function App() {
       <ApolloProvider client={client}>
         <RecoilRoot>
           <NetworkIndicator.Provider>
-            <StylesProvider injectFirst>
-              <MuiThemeProvider theme={theme}>
-                <EmotionThemeProvider theme={theme}>
-                  <CssBaseline>
-                    <Global
-                      styles={css`
-                        .SnackbarContainer-top {
-                          margin-top: 56px;
-                        }
-                      `}
-                    />
-                    <SnackbarProvider
-                      maxSnack={3}
-                      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                    >
-                      <Suspense fallback={<NetworkIndicator in />}>
-                        <HashRouter>
-                          <AppRoutes />
-                        </HashRouter>
-                      </Suspense>
-                    </SnackbarProvider>
-                  </CssBaseline>
-                </EmotionThemeProvider>
-              </MuiThemeProvider>
-            </StylesProvider>
+            <IntlProvider locale={navigator.language}>
+              <StylesProvider injectFirst>
+                <MuiThemeProvider theme={theme}>
+                  <EmotionThemeProvider theme={theme}>
+                    <CssBaseline>
+                      <Global
+                        styles={css`
+                          .SnackbarContainer-top {
+                            margin-top: 56px;
+                          }
+                        `}
+                      />
+                      <SnackbarProvider
+                        maxSnack={3}
+                        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                      >
+                        <Suspense fallback={<NetworkIndicator in />}>
+                          <HashRouter>
+                            <AppRoutes />
+                          </HashRouter>
+                        </Suspense>
+                      </SnackbarProvider>
+                    </CssBaseline>
+                  </EmotionThemeProvider>
+                </MuiThemeProvider>
+              </StylesProvider>
+            </IntlProvider>
           </NetworkIndicator.Provider>
         </RecoilRoot>
       </ApolloProvider>
@@ -164,6 +168,7 @@ const _AppRoutes = () => {
   return (
     <Routes>
       <Route index element={<HomeViewLazy />} />
+      <Route path="/application/:applicationId" element={<ApplicationViewLazy />} />
       <Route path="*" element={<NotFoundViewLazy />} />
     </Routes>
   )
