@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { GraphQLModule } from '@nestjs/graphql'
-import { AuthModule } from './auth/auth.module'
-import { ApplicationModule } from './application/application.module'
 import { MongooseModule } from '@nestjs/mongoose'
+import { ApplicationModule } from './application/application.module'
+import { AuthModule } from './auth/auth.module'
+import { FormModule } from './form/form.module'
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { MongooseModule } from '@nestjs/mongoose'
       autoSchemaFile: true,
       context: ({ req }) => ({ headers: req.headers }),
     }),
+    FormModule,
     AuthModule,
     ApplicationModule,
   ],
