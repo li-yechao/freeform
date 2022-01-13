@@ -1,7 +1,15 @@
-import { Field as GraphqlField, ID, ObjectType } from '@nestjs/graphql'
+import { Field as GraphqlField, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Application } from 'express'
+import { GraphQLJSONObject } from 'graphql-type-json'
 import { Types } from 'mongoose'
+
+export enum FieldState {
+  READONLY,
+  DISABLED,
+}
+
+registerEnumType(FieldState, { name: 'FieldState' })
 
 @ObjectType({ description: 'field' })
 export class Field {
@@ -16,6 +24,18 @@ export class Field {
   @Prop({ required: true })
   @GraphqlField()
   type!: string
+
+  @Prop({ required: true })
+  @GraphqlField()
+  label!: string
+
+  @Prop()
+  @GraphqlField(() => FieldState, { nullable: true })
+  state?: FieldState
+
+  @Prop({ type: Types.Map })
+  @GraphqlField(() => GraphQLJSONObject, { nullable: true })
+  meta?: {}
 }
 
 @ObjectType()
@@ -23,10 +43,6 @@ export class Col {
   @Prop({ required: true })
   @GraphqlField()
   fieldId!: string
-
-  @Prop()
-  @GraphqlField({ nullable: true })
-  span?: number
 }
 
 @ObjectType()
@@ -34,10 +50,6 @@ export class Row {
   @Prop([Col])
   @GraphqlField(() => [Col], { nullable: true })
   children?: Col[]
-
-  @Prop()
-  @GraphqlField({ nullable: true })
-  spacing?: number
 }
 
 @ObjectType()

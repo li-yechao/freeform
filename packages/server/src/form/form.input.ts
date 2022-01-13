@@ -1,4 +1,6 @@
 import { InputType, Field, PickType, PartialType } from '@nestjs/graphql'
+import { GraphQLJSONObject } from 'graphql-type-json'
+import { FieldState } from './form.schema'
 
 @InputType()
 export class FieldInput {
@@ -10,24 +12,27 @@ export class FieldInput {
 
   @Field()
   type!: string
+
+  @Field()
+  label!: string
+
+  @Field(() => FieldState, { nullable: true })
+  state?: FieldState
+
+  @Field(() => GraphQLJSONObject, { nullable: true })
+  meta?: {}
 }
 
 @InputType()
 export class ColInput {
   @Field()
   fieldId!: string
-
-  @Field({ nullable: true })
-  span?: number
 }
 
 @InputType()
 export class RowInput {
   @Field(() => [ColInput], { nullable: true })
   children?: ColInput[]
-
-  @Field({ nullable: true })
-  spacing?: number
 }
 
 @InputType()

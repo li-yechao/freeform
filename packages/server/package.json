@@ -30,6 +30,7 @@
     "@nestjs/platform-express": "^8.0.0",
     "apollo-server-express": "^3.6.1",
     "graphql": "^15",
+    "graphql-type-json": "^0.3.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.1.7",
     "reflect-metadata": "^0.1.13",
