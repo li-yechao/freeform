@@ -55,6 +55,7 @@ import { ApplicationViewLazy } from './views/application'
 import { AuthViewLazy } from './views/auth'
 import { ErrorViewLazy, NotFoundViewLazy } from './views/error'
 import ErrorView from './views/error/ErrorView'
+import { FormEditLazyViwe } from './views/form'
 import { HomeViewLazy } from './views/home'
 
 export default function App() {
@@ -168,7 +169,8 @@ const _AppRoutes = () => {
   return (
     <Routes>
       <Route index element={<HomeViewLazy />} />
-      <Route path="/application/:applicationId" element={<ApplicationViewLazy />} />
+      <Route path="/application/:applicationId/*" element={<ApplicationViewLazy />} />
+      <Route path="/application/:applicationId/form/:formId/edit" element={<FormEditLazyViwe />} />
       <Route path="*" element={<NotFoundViewLazy />} />
     </Routes>
   )
