@@ -59,7 +59,18 @@ import { FormEditLazyViwe } from './views/form'
 import { HomeViewLazy } from './views/home'
 
 export default function App() {
-  const theme = useMemo(() => createTheme(), [])
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          background: {
+            default: '#f5f5f5',
+            paper: '#ffffff',
+          },
+        },
+      }),
+    []
+  )
   const client = useMemo(() => createClient(), [])
 
   return (
@@ -196,7 +207,7 @@ const _AppBar = () => {
   const headerActions = useHeaderActions()
 
   return (
-    <__AppBar position="fixed">
+    <__AppBar position="fixed" elevation={1}>
       <Toolbar>
         <Typography variant="h5">Freeform</Typography>
 
@@ -218,7 +229,7 @@ const _AppBar = () => {
 }
 
 const __AppBar = styled(AppBar)`
-  background-color: ${props => props.theme.palette.background.default};
+  background-color: ${props => props.theme.palette.background.paper};
   color: ${props => props.theme.palette.text.primary};
   user-select: none;
 

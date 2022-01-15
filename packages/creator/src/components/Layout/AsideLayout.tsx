@@ -42,7 +42,7 @@ const _AsideLayout = styled(Box)`
     width: 200px;
     height: 100%;
     overflow: auto;
-    border-right: 1px solid ${props => props.theme.palette.divider};
+    background-color: ${props => props.theme.palette.background.paper};
   }
 
   > main {

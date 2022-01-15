@@ -80,5 +80,5 @@ const _Fields = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  padding: 4px;
+  padding: ${props => props.theme.spacing(2, 1, 1)};
 `

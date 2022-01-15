@@ -15,6 +15,7 @@
 import styled from '@emotion/styled'
 import { LocalizationProvider } from '@mui/lab'
 import AdapterDateFns from '@mui/lab/AdapterDateFns'
+import { Paper } from '@mui/material'
 import { useEffect, useRef } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -66,7 +67,9 @@ const _FormCreator = (props: FormCreatorProps) => {
         <Fields />
       </aside>
       <main>
-        <Form />
+        <Paper>
+          <Form />
+        </Paper>
       </main>
       <aside>
         <Configure />
@@ -86,12 +89,12 @@ const _Container = styled.div`
   > aside {
     width: 300px;
     overflow: auto;
+    background-color: ${props => props.theme.palette.background.paper};
   }
 
   > main {
     flex: 1;
     overflow: auto;
-    border-left: 1px solid #eee;
-    border-right: 1px solid #eee;
+    padding: ${props => props.theme.spacing(2)};
   }
 `
