@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import { gql, useMutation, useQuery } from '@apollo/client'
-import { Add, DeleteForever, Image, MoreVert } from '@mui/icons-material'
+import styled from '@emotion/styled'
+import { Add, DeleteForever, Edit, Image, MoreVert } from '@mui/icons-material'
 import {
   Box,
   Card,
@@ -27,10 +28,13 @@ import {
   Typography,
 } from '@mui/material'
 import { useSnackbar } from 'notistack'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FormattedDate } from 'react-intl'
 import { useNavigate } from 'react-router-dom'
+import { useToggle } from 'react-use'
 import ArrowMenu from '../../components/ArrowMenu'
+import Prompt from '../../components/Modal/Prompt'
+import { cx } from '../../utils/cx'
 
 export default function HomeView() {
   const apps = useApps()
@@ -104,54 +108,148 @@ const AppItem = ({ app }: { app: Application }) => {
     navigate(`/application/${app.id}`)
   }
 
+  const nameRef = useRef<HTMLSpanElement>(null)
+  const [nameUpdaterVisible, toggleNameUpdaterVisible] = useToggle(false)
+
   return (
-    <Card sx={{ position: 'relative' }}>
-      <CardActionArea sx={{ display: 'flex' }} onClick={handleToDetail}>
-        <CardMedia sx={{ fontSize: 120, lineHeight: 1 }}>
-          <Image fontSize="inherit" sx={{ display: 'block', color: 'text.disabled' }} />
-        </CardMedia>
+    <>
+      <_Card sx={{ position: 'relative' }}>
+        <CardActionArea sx={{ display: 'flex' }} onClick={handleToDetail}>
+          <CardMedia sx={{ fontSize: 120, lineHeight: 1 }}>
+            <Image fontSize="inherit" sx={{ display: 'block', color: 'text.disabled' }} />
+          </CardMedia>
 
-        <CardContent sx={{ overflow: 'hidden' }}>
-          <Typography variant="h5">{app.name || '未命名'}</Typography>
+          <CardContent sx={{ overflow: 'hidden' }}>
+            <Box>
+              <Typography component="span" noWrap variant="subtitle1" ref={nameRef}>
+                {app.name || '未命名'}
+              </Typography>
+            </Box>
 
-          <Typography variant="caption">
-            <FormattedDate
-              value={app.updated ?? app.createdAt}
-              year="numeric"
-              month="numeric"
-              day="numeric"
-              hour="numeric"
-              hour12={false}
-              minute="numeric"
-            />
-          </Typography>
-        </CardContent>
-      </CardActionArea>
+            <Typography variant="caption">
+              <FormattedDate
+                value={app.updated ?? app.createdAt}
+                year="numeric"
+                month="numeric"
+                day="numeric"
+                hour="numeric"
+                hour12={false}
+                minute="numeric"
+              />
+            </Typography>
+          </CardContent>
+        </CardActionArea>
 
-      <IconButton
-        size="small"
-        sx={{ position: 'absolute', right: 4, top: 4 }}
-        onClick={handleMenuOpen}
-      >
-        <MoreVert />
-      </IconButton>
+        <div className={cx('hover_visible', anchorEl && 'visible')}>
+          <IconButton
+            size="small"
+            sx={{ position: 'absolute', right: 4, top: 4 }}
+            onClick={handleMenuOpen}
+          >
+            <MoreVert />
+          </IconButton>
+        </div>
 
-      <ArrowMenu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        keepMounted
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={handleDelete}>
-          <ListItemIcon>
-            <DeleteForever />
-          </ListItemIcon>
-          Delete
-        </MenuItem>
-      </ArrowMenu>
-    </Card>
+        <ArrowMenu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={() => (handleMenuClose(), toggleNameUpdaterVisible())}>
+            <ListItemIcon>
+              <Edit />
+            </ListItemIcon>
+            重命名
+          </MenuItem>
+
+          <MenuItem onClick={handleDelete}>
+            <ListItemIcon>
+              <DeleteForever />
+            </ListItemIcon>
+            删除
+          </MenuItem>
+        </ArrowMenu>
+      </_Card>
+
+      <AppNameUpdater
+        open={nameUpdaterVisible}
+        app={app}
+        anchorEl={nameRef.current}
+        onClose={toggleNameUpdaterVisible}
+      />
+    </>
+  )
+}
+
+const _Card = styled(Card)`
+  .hover_visible {
+    display: none;
+
+    &.visible {
+      display: block;
+    }
+  }
+
+  &:hover {
+    .hover_visible {
+      display: block;
+    }
+  }
+`
+
+const AppNameUpdater = ({
+  open = false,
+  app,
+  anchorEl,
+  onClose,
+}: {
+  open?: boolean
+  app?: { id: string; name?: string } | null
+  anchorEl?: Element | null
+  onClose?: () => void | null
+}) => {
+  const [updateApp, { data, loading, error, reset }] = useMutation<
+    { updateApplication: { id: string; updatedAt?: number; name?: string } },
+    { applicationId: string; input: { name: string } }
+  >(gql`
+    mutation UpdateApplication($applicationId: String!, $input: UpdateApplicationInput!) {
+      updateApplication(id: $applicationId, input: $input) {
+        id
+        updatedAt
+        name
+      }
+    }
+  `)
+
+  const updateName = useCallback(
+    (name: string) => {
+      if (!app || loading) {
+        return
+      }
+      updateApp({ variables: { applicationId: app.id, input: { name } } })
+    },
+    [app?.id, updateApp, loading]
+  )
+
+  useEffect(() => {
+    if (data?.updateApplication.id) {
+      onClose?.()
+      reset()
+    }
+  }, [data])
+
+  return (
+    <Prompt
+      open={open}
+      anchorEl={anchorEl}
+      value={app?.name}
+      error={error}
+      title="修改应用名称"
+      onClose={onClose}
+      onSubmit={updateName}
+    />
   )
 }
 
