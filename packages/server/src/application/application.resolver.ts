@@ -2,7 +2,7 @@ import { UseGuards } from '@nestjs/common'
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { Viewer } from 'src/auth/auth.schema'
-import { CreateApplicationInput } from './application.input'
+import { CreateApplicationInput, UpdateApplicationInput } from './application.input'
 import { Application } from './application.schema'
 import { ApplicationService } from './application.service'
 
@@ -43,7 +43,7 @@ export class ApplicationResolver {
   async updateApplication(
     @Context('viewer') viewer: Viewer,
     @Args('id') id: string,
-    @Args('input') input: CreateApplicationInput
+    @Args('input') input: UpdateApplicationInput
   ): Promise<Application> {
     const application = await this.applicationService.updateApplication(viewer.unionId, id, input)
     if (!application) {
