@@ -58,7 +58,7 @@ export default function HomeView() {
 interface Application {
   id: string
   createdAt: number
-  updated?: number
+  updatedAt?: number
   name?: string
 }
 
@@ -128,7 +128,7 @@ const AppItem = ({ app }: { app: Application }) => {
 
             <Typography variant="caption">
               <FormattedDate
-                value={app.updated ?? app.createdAt}
+                value={app.updatedAt ?? app.createdAt}
                 year="numeric"
                 month="numeric"
                 day="numeric"
