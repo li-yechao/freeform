@@ -14,7 +14,7 @@
 
 import { gql, MutationHookOptions, QueryHookOptions, useMutation, useQuery } from '@apollo/client'
 import styled from '@emotion/styled'
-import { Add, DeleteForever, Edit, MoreVert, ViewList } from '@mui/icons-material'
+import { Add, DeleteForever, Edit, MoreVert, Title, ViewList } from '@mui/icons-material'
 import {
   IconButton,
   List,
@@ -24,10 +24,11 @@ import {
   MenuItem,
 } from '@mui/material'
 import { useSnackbar } from 'notistack'
-import { useState } from 'react'
+import { ComponentProps, useCallback, useEffect, useState } from 'react'
 import { Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import ArrowMenu from '../../components/ArrowMenu'
 import AsideLayout from '../../components/Layout/AsideLayout'
+import Prompt from '../../components/Modal/Prompt'
 import NetworkIndicator from '../../components/NetworkIndicator'
 import { NotFoundViewLazy } from '../error'
 
@@ -80,6 +81,25 @@ export default function ApplicationView() {
     }
   }
 
+  const [nameUpdaterProps, setNameUpdaterProps] = useState<
+    Partial<ComponentProps<typeof FormNameUpdater>> | undefined
+  >()
+
+  const handleEditName = () => {
+    const form = anchorEl?.form
+    handleMenuClose()
+    if (app && form) {
+      setNameUpdaterProps({
+        open: true,
+        anchorEl: document.getElementById(`form-name-${form.id}`),
+        app: { id: app.id, form: { id: form.id, name: form.name } },
+        onClose: () => {
+          setNameUpdaterProps(undefined)
+        },
+      })
+    }
+  }
+
   const application = useApplication({ variables: { id: applicationId } })
 
   const [createForm] = useCreateForm()
@@ -106,7 +126,11 @@ export default function ApplicationView() {
                     </ListItemIcon>
 
                     <ListItemText
-                      primaryTypographyProps={{ noWrap: true }}
+                      primaryTypographyProps={{
+                        noWrap: true,
+                        id: `form-name-${form.id}`,
+                        sx: { display: 'inline-block', verticalAlign: 'middle', maxWidth: '100%' },
+                      }}
                       primary={form.name || '未命名'}
                     />
 
@@ -138,6 +162,13 @@ export default function ApplicationView() {
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 onClose={handleMenuClose}
               >
+                <MenuItem onClick={handleEditName}>
+                  <ListItemIcon>
+                    <Title />
+                  </ListItemIcon>
+
+                  <ListItemText>重命名</ListItemText>
+                </MenuItem>
                 <MenuItem onClick={handleToEdit}>
                   <ListItemIcon>
                     <Edit />
@@ -153,6 +184,8 @@ export default function ApplicationView() {
                   <ListItemText>删除</ListItemText>
                 </MenuItem>
               </ArrowMenu>
+
+              <FormNameUpdater {...nameUpdaterProps} />
             </>
           }
         >
@@ -252,3 +285,57 @@ const _List = styled(List)`
     }
   }
 `
+
+const FormNameUpdater = ({
+  open = false,
+  app,
+  anchorEl,
+  onClose,
+}: {
+  open?: boolean
+  app?: { id: string; form: { id: string; name?: string } } | null
+  anchorEl?: Element | null
+  onClose?: () => void | null
+}) => {
+  const [updateForm, { data, loading, error, reset }] = useMutation<
+    { updateForm: { id: string; updatedAt?: number; name?: string } },
+    { applicationId: string; formId: string; input: { name: string } }
+  >(gql`
+    mutation UpdateForm($applicationId: String!, $formId: String!, $input: UpdateFormInput!) {
+      updateForm(applicationId: $applicationId, formId: $formId, input: $input) {
+        id
+        updatedAt
+        name
+      }
+    }
+  `)
+
+  const updateName = useCallback(
+    (name: string) => {
+      if (!app || loading) {
+        return
+      }
+      updateForm({ variables: { applicationId: app.id, formId: app.form.id, input: { name } } })
+    },
+    [app?.form.id, updateForm, loading]
+  )
+
+  useEffect(() => {
+    if (data?.updateForm.id) {
+      onClose?.()
+      reset()
+    }
+  }, [data, onClose])
+
+  return (
+    <Prompt
+      open={open}
+      anchorEl={anchorEl}
+      value={app?.form.name}
+      error={error}
+      title="修改表单名称"
+      onClose={onClose}
+      onSubmit={updateName}
+    />
+  )
+}
