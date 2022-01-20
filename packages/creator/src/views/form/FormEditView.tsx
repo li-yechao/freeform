@@ -169,6 +169,27 @@ const SaveButton = ({
     mutation UpdateForm($applicationId: String!, $formId: String!, $input: UpdateFormInput!) {
       updateForm(applicationId: $applicationId, formId: $formId, input: $input) {
         id
+        createdAt
+        updatedAt
+        name
+        description
+
+        fields {
+          id
+          type
+          name
+          label
+          state
+          meta
+        }
+
+        layout {
+          rows {
+            children {
+              fieldId
+            }
+          }
+        }
       }
     }
   `)
