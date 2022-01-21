@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import styled from '@emotion/styled'
-import { Box, CircularProgress, Fade, LinearProgress, Typography } from '@mui/material'
+import { Box, CircularProgress, Fade, LinearProgress, Paper, Typography } from '@mui/material'
 import { useSnackbar } from 'notistack'
 import { useEffect } from 'react'
 import { useToggle } from 'react-use'
@@ -114,7 +113,16 @@ export default function AuthView() {
   }, [result.value])
 
   return (
-    <_Card position="relative" overflow="hidden">
+    <Paper
+      sx={{
+        position: 'relative',
+        overflow: 'hidden',
+        maxWidth: 500,
+        margin: 'auto',
+        marginTop: 4,
+        padding: 2,
+      }}
+    >
       <Box position="absolute" left={0} top={0} right={0}>
         <Fade in={loading}>
           <LinearProgress />
@@ -122,7 +130,7 @@ export default function AuthView() {
       </Box>
 
       <Typography variant="h5" color="primary" align="center">
-        Freeform
+        智能表单
       </Typography>
       <Box mt={2}>
         <Typography variant="subtitle1" align="center">
@@ -150,14 +158,6 @@ export default function AuthView() {
       <Box textAlign="center">
         <Typography variant="caption">使用钉钉扫码登录</Typography>
       </Box>
-    </_Card>
+    </Paper>
   )
 }
-
-const _Card = styled(Box)`
-  max-width: 500px;
-  margin: ${props => props.theme.spacing(4)} auto;
-  padding: ${props => props.theme.spacing(2)};
-  border: 1px solid ${props => props.theme.palette.divider};
-  border-radius: ${props => props.theme.shape.borderRadius}px;
-`

@@ -209,7 +209,7 @@ const _AppBar = () => {
   return (
     <__AppBar position="fixed" elevation={1}>
       <Toolbar>
-        <Typography variant="h5">Freeform</Typography>
+        <Typography variant="h5">智能表单</Typography>
 
         <Box flexGrow={1} />
 
@@ -291,14 +291,14 @@ const AccountButton = () => {
           <ListItemIcon>
             <AccountCircle />
           </ListItemIcon>
-          My profile
+          首页
         </MenuItem>
         <Divider />
         <MenuItem onClick={handleSignOut}>
           <ListItemIcon>
             <Logout fontSize="small" />
           </ListItemIcon>
-          Sign out
+          注销登录
         </MenuItem>
       </ArrowMenu>
     </>
