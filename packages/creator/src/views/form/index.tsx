@@ -15,4 +15,6 @@
 import React from 'react'
 import LazyView from '../../components/LazyView'
 
+export const FormLazyView = LazyView(React.lazy(() => import('./FormView')))
+
 export const FormEditLazyViwe = LazyView(React.lazy(() => import('./FormEditView')))

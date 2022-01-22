@@ -3,8 +3,8 @@ import { Args, Context, Mutation, Parent, ResolveField, Resolver } from '@nestjs
 import { Application } from 'src/application/application.schema'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { Viewer } from 'src/auth/auth.schema'
-import { CreateFormInput, UpdateFormInput } from './form.input'
-import { Form } from './form.schema'
+import { CreateFormInput, UpdateFormInput, ViewInput } from './form.input'
+import { Form, View } from './form.schema'
 import { FormService } from './form.service'
 
 @Resolver(() => Application)
@@ -63,6 +63,45 @@ export class FormResolver {
     @Args('formId') formId: string
   ) {
     const form = await this.formService.deleteForm(viewer.unionId, appId, formId)
+    if (!form) {
+      throw new Error('Not found')
+    }
+    return true
+  }
+
+  @Mutation(() => View)
+  async createView(
+    @Context('viewer') viewer: Viewer,
+    @Args('applicationId') appId: string,
+    @Args('formId') formId: string,
+    @Args('input') input: ViewInput
+  ): Promise<View> {
+    return await this.formService.createView(viewer.unionId, appId, formId, input)
+  }
+
+  @Mutation(() => View)
+  async updateView(
+    @Context('viewer') viewer: Viewer,
+    @Args('applicationId') appId: string,
+    @Args('formId') formId: string,
+    @Args('viewId') viewId: string,
+    @Args('input') input: ViewInput
+  ): Promise<View> {
+    const view = await this.formService.updateView(viewer.unionId, appId, formId, viewId, input)
+    if (!view) {
+      throw new Error('Not found')
+    }
+    return view
+  }
+
+  @Mutation(() => Boolean)
+  async deleteView(
+    @Context('viewer') viewer: Viewer,
+    @Args('applicationId') appId: string,
+    @Args('formId') formId: string,
+    @Args('viewId') viewId: string
+  ): Promise<boolean> {
+    const form = await this.formService.deleteView(viewer.unionId, appId, formId, viewId)
     if (!form) {
       throw new Error('Not found')
     }

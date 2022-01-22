@@ -39,6 +39,7 @@ const _AsideLayout = styled(Box)`
   display: flex;
 
   > aside {
+    position: relative;
     width: 200px;
     height: 100%;
     overflow: auto;
@@ -46,6 +47,7 @@ const _AsideLayout = styled(Box)`
   }
 
   > main {
+    position: relative;
     flex: 1;
     height: 100%;
     overflow: auto;

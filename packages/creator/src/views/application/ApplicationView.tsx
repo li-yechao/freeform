@@ -31,6 +31,7 @@ import AsideLayout from '../../components/Layout/AsideLayout'
 import Prompt from '../../components/Modal/Prompt'
 import NetworkIndicator from '../../components/NetworkIndicator'
 import { NotFoundViewLazy } from '../error'
+import { FormLazyView } from '../form'
 
 export default function ApplicationView() {
   const { applicationId } = useParams<{ applicationId: string }>()
@@ -200,7 +201,7 @@ const ApplicationRoutes = () => {
   return (
     <Routes>
       <Route index element={<div />} />
-      <Route path="form/:formId" element={<div />} />
+      <Route path="form/:formId/*" element={<FormLazyView />} />
       <Route path="*" element={<NotFoundViewLazy />} />
     </Routes>
   )
