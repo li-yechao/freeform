@@ -12,45 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {
+  AppstoreOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  MoreOutlined,
+  PlusOutlined,
+} from '@ant-design/icons'
 import { gql, useMutation, useQuery } from '@apollo/client'
 import styled from '@emotion/styled'
-import { Add, DeleteForever, Edit, Image, MoreVert } from '@mui/icons-material'
-import {
-  Box,
-  Card,
-  CardActionArea,
-  CardContent,
-  CardMedia,
-  Grid,
-  IconButton,
-  ListItemIcon,
-  MenuItem,
-  Typography,
-} from '@mui/material'
-import { useSnackbar } from 'notistack'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Box } from '@mui/system'
+import { Button, Col, Dropdown, Menu, message, Row, Typography } from 'antd'
+import { useCallback } from 'react'
 import { FormattedDate } from 'react-intl'
 import { useNavigate } from 'react-router-dom'
 import { useToggle } from 'react-use'
-import ArrowMenu from '../../components/ArrowMenu'
-import Prompt from '../../components/Modal/Prompt'
-import { cx } from '../../utils/cx'
+import Popprompt, { PoppromptProps } from '../../components/Modal/Popprompt'
 
 export default function HomeView() {
   const apps = useApps()
 
   return (
-    <Box pb={10}>
-      <Grid container spacing={2} maxWidth={800} margin="auto">
+    <Box pb={10} sx={{ maxWidth: 800, margin: 'auto' }}>
+      <Row gutter={16}>
         {apps.data?.applications.map(app => (
-          <Grid key={app.id} item xs={4}>
+          <Col key={app.id} xs={8}>
             <AppItem app={app} />
-          </Grid>
+          </Col>
         ))}
-        <Grid key="add" item xs={4}>
+        <Col key="add" xs={8}>
           <AddApp />
-        </Grid>
-      </Grid>
+        </Col>
+      </Row>
     </Box>
   )
 }
@@ -75,7 +68,6 @@ const useApps = () =>
   `)
 
 const AppItem = ({ app }: { app: Application }) => {
-  const snackbar = useSnackbar()
   const navigate = useNavigate()
   const [deleteApp] = useMutation<{ deleteApplication: boolean }, { id: string }>(
     gql`
@@ -85,132 +77,84 @@ const AppItem = ({ app }: { app: Application }) => {
     `,
     { refetchQueries: ['Applications'] }
   )
-  const [anchorEl, setAnchorEl] = useState<Element>()
-
-  const handleMenuOpen = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setAnchorEl(e.currentTarget)
-  }
-
-  const handleMenuClose = () => {
-    setAnchorEl(undefined)
-  }
 
   const handleDelete = () => {
-    handleMenuClose()
     deleteApp({ variables: { id: app.id } })
-      .then(() => snackbar.enqueueSnackbar('删除成功', { variant: 'success' }))
-      .catch(error => snackbar.enqueueSnackbar(error.message, { variant: 'error' }))
+      .then(() => message.success('删除成功'))
+      .catch(error => message.error(error.message))
   }
 
   const handleToDetail = () => {
     navigate(`/application/${app.id}`)
   }
 
-  const nameRef = useRef<HTMLSpanElement>(null)
   const [nameUpdaterVisible, toggleNameUpdaterVisible] = useToggle(false)
 
   return (
-    <>
-      <_Card sx={{ position: 'relative' }}>
-        <CardActionArea sx={{ display: 'flex' }} onClick={handleToDetail}>
-          <CardMedia sx={{ fontSize: 120, lineHeight: 1 }}>
-            <Image fontSize="inherit" sx={{ display: 'block', color: 'text.disabled' }} />
-          </CardMedia>
+    <_ItemContainer>
+      <Box sx={{ display: 'flex', alignItems: 'center' }} onClick={handleToDetail}>
+        <Box sx={{ p: 2, color: '#eeeeee' }}>
+          <AppstoreOutlined style={{ fontSize: 60 }} />
+        </Box>
 
-          <CardContent sx={{ overflow: 'hidden' }}>
-            <Box>
-              <Typography component="span" noWrap variant="subtitle1" ref={nameRef}>
-                {app.name || '未命名'}
-              </Typography>
-            </Box>
+        <Box sx={{ flex: 1, overflow: 'hidden', pr: 2 }}>
+          <Box>
+            <Typography.Title level={5} ellipsis>
+              <AppNameUpdater
+                app={app}
+                visible={nameUpdaterVisible}
+                onVisibleChange={toggleNameUpdaterVisible}
+              >
+                <span>{app.name || '未命名'}</span>
+              </AppNameUpdater>
+            </Typography.Title>
+          </Box>
 
-            <Typography variant="caption">
-              <FormattedDate
-                value={app.updatedAt ?? app.createdAt}
-                year="numeric"
-                month="numeric"
-                day="numeric"
-                hour="numeric"
-                hour12={false}
-                minute="numeric"
-              />
-            </Typography>
-          </CardContent>
-        </CardActionArea>
+          <Typography.Text ellipsis type="secondary">
+            <FormattedDate
+              value={app.updatedAt ?? app.createdAt}
+              year="numeric"
+              month="numeric"
+              day="numeric"
+              hour="numeric"
+              hour12={false}
+              minute="numeric"
+            />
+          </Typography.Text>
+        </Box>
+      </Box>
 
-        <div className={cx('hover_visible', anchorEl && 'visible')}>
-          <IconButton
-            size="small"
-            sx={{ position: 'absolute', right: 4, top: 4 }}
-            onClick={handleMenuOpen}
-          >
-            <MoreVert />
-          </IconButton>
-        </div>
-
-        <ArrowMenu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-          onClose={handleMenuClose}
-        >
-          <MenuItem onClick={() => (handleMenuClose(), toggleNameUpdaterVisible())}>
-            <ListItemIcon>
-              <Edit />
-            </ListItemIcon>
-            重命名
-          </MenuItem>
-
-          <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteForever />
-            </ListItemIcon>
-            删除
-          </MenuItem>
-        </ArrowMenu>
-      </_Card>
-
-      <AppNameUpdater
-        open={nameUpdaterVisible}
-        app={app}
-        anchorEl={nameRef.current}
-        onClose={toggleNameUpdaterVisible}
-      />
-    </>
+      <Dropdown
+        className="hover_visible"
+        arrow
+        trigger={['click']}
+        placement="bottomCenter"
+        overlay={() => (
+          <Menu>
+            <Menu.Item key="rename" icon={<EditOutlined />} onClick={toggleNameUpdaterVisible}>
+              重命名
+            </Menu.Item>
+            <Menu.Item key="delete" icon={<DeleteOutlined />} onClick={handleDelete}>
+              删除
+            </Menu.Item>
+          </Menu>
+        )}
+      >
+        <Button size="small" type="text" shape="circle">
+          <MoreOutlined />
+        </Button>
+      </Dropdown>
+    </_ItemContainer>
   )
 }
 
-const _Card = styled(Card)`
-  .hover_visible {
-    display: none;
-
-    &.visible {
-      display: block;
-    }
-  }
-
-  &:hover {
-    .hover_visible {
-      display: block;
-    }
-  }
-`
-
 const AppNameUpdater = ({
-  open = false,
   app,
-  anchorEl,
-  onClose,
+  ...props
 }: {
-  open?: boolean
-  app?: { id: string; name?: string } | null
-  anchorEl?: Element | null
-  onClose?: () => void | null
-}) => {
-  const [updateApp, { data, loading, error, reset }] = useMutation<
+  app: { id: string; name?: string }
+} & PoppromptProps) => {
+  const [updateApp, { loading, error }] = useMutation<
     { updateApplication: { id: string; updatedAt?: number; name?: string } },
     { applicationId: string; input: { name: string } }
   >(gql`
@@ -225,32 +169,17 @@ const AppNameUpdater = ({
 
   const updateName = useCallback(
     (name: string) => {
-      if (!app || loading) {
+      if (loading) {
         return
       }
-      updateApp({ variables: { applicationId: app.id, input: { name } } })
+      updateApp({ variables: { applicationId: app.id, input: { name } } }).then(() =>
+        props.onVisibleChange?.(false)
+      )
     },
-    [app?.id, updateApp, loading]
+    [app.id]
   )
 
-  useEffect(() => {
-    if (data?.updateApplication.id) {
-      onClose?.()
-      reset()
-    }
-  }, [data])
-
-  return (
-    <Prompt
-      open={open}
-      anchorEl={anchorEl}
-      value={app?.name}
-      error={error}
-      title="修改应用名称"
-      onClose={onClose}
-      onSubmit={updateName}
-    />
-  )
+  return <Popprompt {...props} error={error} value={app.name} onSubmit={updateName} />
 }
 
 const AddApp = () => {
@@ -272,19 +201,41 @@ const AddApp = () => {
   )
 
   return (
-    <Card onClick={() => createApplication({ variables: { input: {} } })}>
-      <CardActionArea>
-        <CardMedia
-          sx={{
-            minHeight: 120,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Add sx={{ display: 'block', color: 'text.disabled', fontSize: 40 }} />
-        </CardMedia>
-      </CardActionArea>
-    </Card>
+    <_ItemContainer onClick={() => createApplication({ variables: { input: {} } })}>
+      <PlusOutlined />
+    </_ItemContainer>
   )
 }
+
+const _ItemContainer = styled(Box)`
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0;
+  border: 1px solid var(--ant-primary-color-outline);
+
+  .hover_visible {
+    display: none;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+
+    &.ant-dropdown-open,
+    &.visible {
+      display: block;
+    }
+  }
+
+  &:hover {
+    border-color: var(--ant-primary-color-hover);
+
+    .hover_visible {
+      display: block;
+    }
+  }
+`

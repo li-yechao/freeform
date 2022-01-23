@@ -12,24 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { CaretDownOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { gql, QueryHookOptions, useMutation, useQuery } from '@apollo/client'
 import styled from '@emotion/styled'
-import { Add, ArrowDropDown, DeleteForever, Title } from '@mui/icons-material'
-import {
-  Box,
-  IconButton,
-  ListItemIcon,
-  ListItemText,
-  MenuItem,
-  Tab,
-  Tabs,
-  Typography,
-} from '@mui/material'
-import { useSnackbar } from 'notistack'
-import { ComponentProps, useCallback, useEffect, useState } from 'react'
+import { Box } from '@mui/system'
+import { Dropdown, Menu, message, Tabs, Typography } from 'antd'
+import { useCallback, useEffect, useState } from 'react'
 import { Route, Routes, useNavigate, useParams } from 'react-router-dom'
-import ArrowMenu from '../../components/ArrowMenu'
-import Prompt from '../../components/Modal/Prompt'
+import Popprompt, { PoppromptProps } from '../../components/Modal/Popprompt'
 import NetworkIndicator from '../../components/NetworkIndicator'
 
 export default function FormView() {
@@ -87,17 +77,13 @@ const _FormView = styled.div`
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: ${props => props.theme.palette.background.paper};
-  border-left: 1px solid ${props => props.theme.palette.divider};
+  background-color: white;
+  border-left: 1px solid #efefef;
 `
 
 const FormHeader = ({ app }: { app: ApplicationForm }) => {
   const { viewId } = useParams<'viewId'>()
   const navigate = useNavigate()
-  const snackbar = useSnackbar()
-
-  const [anchorEl, setAnchorEl] =
-    useState<{ anchorEl: Element; view: { id: string; name?: string } }>()
 
   const [deleteView] = useMutation(
     gql`
@@ -108,129 +94,133 @@ const FormHeader = ({ app }: { app: ApplicationForm }) => {
     { refetchQueries: ['ApplicationFormViews'] }
   )
 
-  const handleMenuOpen = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    view: { id: string; name?: string }
-  ) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setAnchorEl({ anchorEl: e.currentTarget, view })
-  }
+  const handleDelete = (view: { id: string }) => {
+    const index = app.form.views?.findIndex(i => i.id === view.id)
+    const next =
+      index !== undefined
+        ? app.form.views?.at(index + 1) ?? app.form.views?.at(index - 1) ?? app.form.views?.at(-1)
+        : undefined
 
-  const handleMenuClose = () => {
-    setAnchorEl(undefined)
-  }
-
-  const handleDelete = () => {
-    const view = anchorEl?.view
-    handleMenuClose()
-    if (view) {
-      const index = app.form.views?.findIndex(i => i.id === view.id)
-      const next =
-        index !== undefined
-          ? app.form.views?.at(index + 1) ?? app.form.views?.at(index - 1) ?? app.form.views?.at(-1)
-          : undefined
-
-      deleteView({ variables: { applicationId: app.id, formId: app.form.id, viewId: view.id } })
-        .then(() => {
-          if (next) {
-            navigate(`../${next.id}`)
-          } else {
-            navigate(`..`)
-          }
-          snackbar.enqueueSnackbar('删除成功', { variant: 'success' })
-        })
-        .catch(error => snackbar.enqueueSnackbar(error.message, { variant: 'error' }))
-    }
-  }
-
-  const [nameUpdaterProps, setNameUpdaterProps] = useState<
-    Partial<ComponentProps<typeof ViewNameUpdater>> | undefined
-  >()
-
-  const handleEditName = () => {
-    const view = anchorEl?.view
-    handleMenuClose()
-    if (view) {
-      setNameUpdaterProps({
-        open: true,
-        anchorEl: document.getElementById(`view-name-${view.id}`),
-        app: { id: app.id, form: { id: app.form.id, view: { id: view.id, name: view.name } } },
-        onClose: () => {
-          setNameUpdaterProps(undefined)
-        },
+    deleteView({ variables: { applicationId: app.id, formId: app.form.id, viewId: view.id } })
+      .then(() => {
+        if (next) {
+          navigate(`../${next.id}`)
+        } else {
+          navigate(`..`)
+        }
+        message.success('删除成功')
       })
-    }
+      .catch(error => message.error(error.message))
   }
+
+  const [createView, { error }] = useMutation<
+    { createView: { id: string; name?: string; fields?: { fieldId: string }[] } },
+    {
+      applicationId: string
+      formId: string
+      input: { name?: string; fields: { fieldId: string }[] }
+    }
+  >(
+    gql`
+      mutation CreateView($applicationId: String!, $formId: String!, $input: ViewInput!) {
+        createView(applicationId: $applicationId, formId: $formId, input: $input) {
+          id
+          name
+          fields {
+            fieldId
+          }
+        }
+      }
+    `,
+    { refetchQueries: ['ApplicationFormViews'] }
+  )
+
+  useEffect(() => {
+    if (error) {
+      message.error(error.message)
+    }
+  }, [error])
+
+  const [nameUpdaterTarget, setNameUpdaterTarget] = useState<{ id: string; name?: string }>()
 
   return (
     <>
       <Box px={2} py={1}>
-        <Typography variant="subtitle1">{app.form.name || '未命名'}</Typography>
+        <Typography.Title level={5}>{app.form.name || '未命名'}</Typography.Title>
       </Box>
 
-      <Box px={2} sx={{ display: 'flex', alignItems: 'center' }}>
-        <ViewCreator app={app} />
-
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <Tabs
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{ minHeight: 32 }}
-          value={viewId}
-          onChange={(_, viewId) => navigate(`../${viewId}`, { replace: true })}
+          type="editable-card"
+          size="small"
+          activeKey={viewId}
+          onChange={key => navigate(`../${key}`, { replace: true })}
+          onEdit={(_, t) =>
+            t === 'add' &&
+            createView({
+              variables: {
+                applicationId: app.id,
+                formId: app.form.id,
+                input: {
+                  fields:
+                    app.form.layout?.rows.flatMap(row =>
+                      row.children.map(col => ({ fieldId: col.fieldId }))
+                    ) ?? [],
+                },
+              },
+            }).then(res => {
+              const viewId = res.data?.createView.id
+              if (viewId) {
+                navigate(`../${viewId}`)
+              }
+            })
+          }
         >
           {app.form.views?.map(view => (
-            <Tab
+            <Tabs.TabPane
               key={view.id}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography>
-                    <span id={`view-name-${view.id}`}>{view.name || '未命名'}</span>
-                  </Typography>
-
-                  {viewId === view.id && (
-                    <IconButton
-                      component="span"
-                      disableRipple
-                      sx={{ width: 20, height: 20 }}
-                      onClick={(e: any) => handleMenuOpen(e, view)}
-                    >
-                      <ArrowDropDown />
-                    </IconButton>
+              tabKey={view.id}
+              closable={viewId === view.id}
+              closeIcon={
+                <Dropdown
+                  arrow
+                  trigger={['click']}
+                  overlay={() => (
+                    <Menu>
+                      <Menu.Item
+                        key="rename"
+                        icon={<EditOutlined />}
+                        onClick={() => setNameUpdaterTarget(view)}
+                      >
+                        重命名
+                      </Menu.Item>
+                      <Menu.Item
+                        key="delete"
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleDelete(view)}
+                      >
+                        删除
+                      </Menu.Item>
+                    </Menu>
                   )}
-                </Box>
+                >
+                  <CaretDownOutlined />
+                </Dropdown>
               }
-              value={view.id}
-              sx={{ minHeight: 32, paddingY: 1 }}
+              tab={
+                <ViewNameUpdater
+                  appId={app.id}
+                  formId={app.form.id}
+                  view={view}
+                  visible={nameUpdaterTarget?.id === view.id}
+                  onVisibleChange={() => setNameUpdaterTarget(undefined)}
+                >
+                  <span>{view.name || '未命名'}</span>
+                </ViewNameUpdater>
+              }
             />
           ))}
         </Tabs>
-
-        <ArrowMenu
-          anchorEl={anchorEl?.anchorEl}
-          open={Boolean(anchorEl)}
-          keepMounted
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-          onClose={handleMenuClose}
-        >
-          <MenuItem onClick={handleEditName}>
-            <ListItemIcon>
-              <Title />
-            </ListItemIcon>
-
-            <ListItemText>重命名</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteForever />
-            </ListItemIcon>
-
-            <ListItemText>删除</ListItemText>
-          </MenuItem>
-        </ArrowMenu>
-
-        <ViewNameUpdater {...nameUpdaterProps} />
       </Box>
     </>
   )
@@ -326,73 +316,18 @@ const useApplicationFormViews = (
     options
   )
 
-const ViewCreator = ({ app }: { app: ApplicationForm }) => {
-  const snackbar = useSnackbar()
-
-  const [createForm, { loading, error }] = useMutation<
-    { createView: { id: string; name?: string; fields?: { fieldId: string }[] } },
-    {
-      applicationId: string
-      formId: string
-      input: { name?: string; fields: { fieldId: string }[] }
-    }
-  >(
-    gql`
-      mutation CreateView($applicationId: String!, $formId: String!, $input: ViewInput!) {
-        createView(applicationId: $applicationId, formId: $formId, input: $input) {
-          id
-          name
-          fields {
-            fieldId
-          }
-        }
-      }
-    `,
-    { refetchQueries: ['ApplicationFormViews'] }
-  )
-
-  const handleClick = () => {
-    if (!loading) {
-      createForm({
-        variables: {
-          applicationId: app.id,
-          formId: app.form.id,
-          input: {
-            fields:
-              app.form.layout?.rows.flatMap(row =>
-                row.children.map(col => ({ fieldId: col.fieldId }))
-              ) ?? [],
-          },
-        },
-      })
-    }
-  }
-
-  useEffect(() => {
-    if (error) {
-      snackbar.enqueueSnackbar(error.message, { variant: 'error' })
-    }
-  }, [error])
-
-  return (
-    <IconButton onClick={handleClick}>
-      <Add />
-    </IconButton>
-  )
-}
-
 const ViewNameUpdater = ({
-  open = false,
-  app,
-  anchorEl,
-  onClose,
+  appId,
+  formId,
+  view,
+  ...props
 }: {
-  open?: boolean
-  app?: { id: string; form: { id: string; view: { id: string; name?: string } } } | null
-  anchorEl?: Element | null
+  appId: string
+  formId: string
+  view: { id: string; name?: string }
   onClose?: () => void | null
-}) => {
-  const [updateView, { data, loading, error, reset }] = useMutation<
+} & PoppromptProps) => {
+  const [updateView, { loading, error }] = useMutation<
     { updateView: { id: string; name?: string } },
     { applicationId: string; formId: string; viewId: string; input: { name: string } }
   >(gql`
@@ -411,36 +346,22 @@ const ViewNameUpdater = ({
 
   const updateName = useCallback(
     (name: string) => {
-      if (!app || loading) {
+      if (loading) {
         return
       }
       updateView({
         variables: {
-          applicationId: app.id,
-          formId: app.form.id,
-          viewId: app.form.view.id,
+          applicationId: appId,
+          formId,
+          viewId: view.id,
           input: { name },
         },
+      }).then(() => {
+        props.onVisibleChange?.(false)
       })
     },
-    [app?.form.view.id, updateView, loading]
+    [view.id, updateView, loading]
   )
 
-  useEffect(() => {
-    if (data?.updateView.id) {
-      onClose?.()
-      reset()
-    }
-  }, [data, onClose])
-
-  return (
-    <Prompt
-      open={open}
-      anchorEl={anchorEl}
-      value={app?.form.view.name}
-      error={error}
-      onClose={onClose}
-      onSubmit={updateName}
-    />
-  )
+  return <Popprompt {...props} value={view.name} error={error} onSubmit={updateName} />
 }

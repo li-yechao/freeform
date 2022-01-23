@@ -12,34 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { HomeOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons'
 import { ApolloProvider } from '@apollo/client'
-import { css, Global, ThemeProvider as EmotionThemeProvider } from '@emotion/react'
 import styled from '@emotion/styled'
-import { AccountCircle, Logout } from '@mui/icons-material'
-import {
-  AppBar,
-  Box,
-  CircularProgress,
-  createTheme,
-  CssBaseline,
-  Divider,
-  IconButton,
-  LinearProgress,
-  ListItemIcon,
-  MenuItem,
-  ThemeProvider as MuiThemeProvider,
-  Toolbar,
-  Typography,
-} from '@mui/material'
-import { StylesProvider } from '@mui/styles'
-import { SnackbarProvider } from 'notistack'
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Box } from '@mui/system'
+import { Button, Dropdown, Menu, Typography } from 'antd'
+import { Suspense, useEffect, useMemo } from 'react'
 import { IntlProvider } from 'react-intl'
 import { HashRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import { RecoilRoot } from 'recoil'
 import { createClient } from './apollo'
 import { useViewerLazyQuery, Viewer } from './apollo/viewer'
-import ArrowMenu from './components/ArrowMenu'
 import ErrorBoundary from './components/ErrorBoundary'
 import NetworkIndicator from './components/NetworkIndicator'
 import {
@@ -59,18 +42,6 @@ import { FormEditLazyViwe } from './views/form'
 import { HomeViewLazy } from './views/home'
 
 export default function App() {
-  const theme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          background: {
-            default: '#f5f5f5',
-            paper: '#ffffff',
-          },
-        },
-      }),
-    []
-  )
   const client = useMemo(() => createClient(), [])
 
   return (
@@ -79,31 +50,11 @@ export default function App() {
         <RecoilRoot>
           <NetworkIndicator.Provider>
             <IntlProvider locale={navigator.language}>
-              <StylesProvider injectFirst>
-                <MuiThemeProvider theme={theme}>
-                  <EmotionThemeProvider theme={theme}>
-                    <CssBaseline>
-                      <Global
-                        styles={css`
-                          .SnackbarContainer-top {
-                            margin-top: 56px;
-                          }
-                        `}
-                      />
-                      <SnackbarProvider
-                        maxSnack={3}
-                        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                      >
-                        <Suspense fallback={<NetworkIndicator in />}>
-                          <HashRouter>
-                            <AppRoutes />
-                          </HashRouter>
-                        </Suspense>
-                      </SnackbarProvider>
-                    </CssBaseline>
-                  </EmotionThemeProvider>
-                </MuiThemeProvider>
-              </StylesProvider>
+              <Suspense fallback={<NetworkIndicator in />}>
+                <HashRouter>
+                  <AppRoutes />
+                </HashRouter>
+              </Suspense>
             </IntlProvider>
           </NetworkIndicator.Provider>
         </RecoilRoot>
@@ -137,7 +88,7 @@ const AppRoutes = () => {
   }
 
   if (accountState.loading) {
-    return <Splash />
+    return null
   }
 
   return (
@@ -154,25 +105,6 @@ const AppRoutes = () => {
     </>
   )
 }
-
-const Splash = () => {
-  return (
-    <_Splash>
-      <CircularProgress />
-    </_Splash>
-  )
-}
-
-const _Splash = styled.div`
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`
 
 const _AppRoutes = () => {
   useAccount()
@@ -207,64 +139,61 @@ const _AppBar = () => {
   const headerActions = useHeaderActions()
 
   return (
-    <__AppBar position="fixed" elevation={1}>
-      <Toolbar>
-        <Typography variant="h5">智能表单</Typography>
+    <__AppBar>
+      <Typography.Title level={4}>智能表单</Typography.Title>
 
-        <Box flexGrow={1} />
+      <Box flexGrow={1} />
 
-        {headerActions.map(i => (
-          <i.component {...i.props} key={i.key} />
-        ))}
-        <AccountButton />
-      </Toolbar>
+      {headerActions.map(i => (
+        <Box key={i.key} sx={{ mx: 1 }}>
+          <i.component {...i.props} />
+        </Box>
+      ))}
+
+      <AccountButton />
 
       <NetworkIndicator.Renderer>
-        <Box position="fixed" left={0} top={56} right={0} zIndex={t => t.zIndex.tooltip + 1}>
-          <LinearProgress />
-        </Box>
+        <Box position="fixed" left={0} top={48} right={0}></Box>
       </NetworkIndicator.Renderer>
     </__AppBar>
   )
 }
 
-const __AppBar = styled(AppBar)`
-  background-color: ${props => props.theme.palette.background.paper};
-  color: ${props => props.theme.palette.text.primary};
+const __AppBar = styled.header`
+  background-color: #ffffff;
   user-select: none;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid #efefef;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 48px;
+  z-index: 100;
 
-  .MuiToolbar-root {
-    min-height: ${props => props.theme.spacing(7)};
+  > h4 {
+    margin: 0;
   }
 `
 
 const _Body = styled.div`
-  padding-top: ${props => props.theme.spacing(7)};
+  padding-top: 48px;
 `
 
 const AccountButton = () => {
   const navigate = useNavigate()
   const account = useAccountOrNull()
   const logout = useLogout()
-  const [anchorEl, setAnchorEl] = useState<Element>()
 
-  const handleMenuOpen = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(e.currentTarget)
-  }
-
-  const handleMenuClose = () => {
-    setAnchorEl(undefined)
-  }
-
-  const handleToMyProfile = () => {
-    handleMenuClose()
+  const handleToHome = () => {
     if (account) {
       navigate(`/`)
     }
   }
 
   const handleSignOut = () => {
-    handleMenuClose()
     logout()
     navigate(`/`)
   }
@@ -273,34 +202,24 @@ const AccountButton = () => {
     return null
   }
 
-  return (
-    <>
-      <IconButton onClick={handleMenuOpen}>
-        <AccountCircle />
-      </IconButton>
+  const menu = (
+    <Menu>
+      <Menu.Item key="home" icon={<HomeOutlined />} onClick={handleToHome}>
+        首页
+      </Menu.Item>
+      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleSignOut}>
+        注销登录
+      </Menu.Item>
+    </Menu>
+  )
 
-      <ArrowMenu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        keepMounted
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={handleToMyProfile}>
-          <ListItemIcon>
-            <AccountCircle />
-          </ListItemIcon>
-          首页
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleSignOut}>
-          <ListItemIcon>
-            <Logout fontSize="small" />
-          </ListItemIcon>
-          注销登录
-        </MenuItem>
-      </ArrowMenu>
-    </>
+  return (
+    <Box sx={{ mx: 1 }}>
+      <Dropdown overlay={menu} trigger={['click']} arrow>
+        <Button shape="circle">
+          <UserOutlined />
+        </Button>
+      </Dropdown>
+    </Box>
   )
 }

@@ -13,23 +13,23 @@
 // limitations under the License.
 
 import styled from '@emotion/styled'
-import { Box, Typography } from '@mui/material'
+import { Box } from '@mui/system'
+import Title from 'antd/lib/typography/Title'
 
 export default function ErrorView({ error }: { error?: Error }) {
   return (
-    <Box>
-      <Typography variant="h1" align="center" color="textSecondary">
+    <Box sx={{ textAlign: 'center', mt: 5 }}>
+      <Title level={1} type="secondary">
         {error?.name || 'Error'}
-      </Typography>
+      </Title>
 
-      <_Message variant="h6" align="center" color="textSecondary">
+      <_Message level={5} type="secondary">
         {error?.message || 'Unknown Error'}
       </_Message>
     </Box>
   )
 }
 
-const _Message = styled(Typography)`
+const _Message = styled(Title)`
   word-wrap: break-word;
-  margin: ${props => props.theme.spacing(8)};
 `

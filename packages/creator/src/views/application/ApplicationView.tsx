@@ -12,23 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { gql, MutationHookOptions, QueryHookOptions, useMutation, useQuery } from '@apollo/client'
+import { MoreOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons'
+import { gql, QueryHookOptions, useMutation, useQuery } from '@apollo/client'
 import styled from '@emotion/styled'
-import { Add, DeleteForever, Edit, MoreVert, Title, ViewList } from '@mui/icons-material'
-import {
-  IconButton,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  MenuItem,
-} from '@mui/material'
-import { useSnackbar } from 'notistack'
-import { ComponentProps, useCallback, useEffect, useState } from 'react'
+import { Button, Dropdown, Menu, message } from 'antd'
+import { useCallback, useState } from 'react'
 import { Route, Routes, useNavigate, useParams } from 'react-router-dom'
-import ArrowMenu from '../../components/ArrowMenu'
 import AsideLayout from '../../components/Layout/AsideLayout'
-import Prompt from '../../components/Modal/Prompt'
+import Popprompt, { PoppromptProps } from '../../components/Modal/Popprompt'
 import NetworkIndicator from '../../components/NetworkIndicator'
 import { NotFoundViewLazy } from '../error'
 import { FormLazyView } from '../form'
@@ -39,8 +30,50 @@ export default function ApplicationView() {
     throw new Error(`Required params applicationId is missing`)
   }
 
+  const application = useApplication({ variables: { id: applicationId } })
+
+  const app = application.data?.application
+
+  return (
+    <>
+      <NetworkIndicator in={application.loading} />
+
+      {app && (
+        <AsideLayout
+          sx={{ pt: 6 }}
+          left={
+            <Routes>
+              <Route index element={<FormList app={app} />} />
+              <Route path="form/:formId/*" element={<FormList app={app} />} />
+            </Routes>
+          }
+        >
+          <ApplicationRoutes />
+        </AsideLayout>
+      )}
+    </>
+  )
+}
+
+const FormList = ({ app }: { app: Application }) => {
+  const { formId } = useParams<'formId'>()
   const navigate = useNavigate()
-  const snackbar = useSnackbar()
+
+  const [createForm] = useMutation(
+    gql`
+      mutation CreateForm($applicationId: String!, $input: CreateFormInput!) {
+        createForm(applicationId: $applicationId, input: $input) {
+          id
+          createdAt
+          updatedAt
+          name
+          description
+        }
+      }
+    `,
+    { refetchQueries: ['ApplicationForms'] }
+  )
+
   const [deleteForm] = useMutation<
     { deleteForm: boolean },
     { applicationId: string; formId: string }
@@ -52,148 +85,71 @@ export default function ApplicationView() {
     `,
     { refetchQueries: ['ApplicationForms'] }
   )
-  const [anchorEl, setAnchorEl] = useState<{ anchorEl: Element; form: Form }>()
 
-  const handleMenuOpen = (e: React.MouseEvent<HTMLButtonElement>, form: Form) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setAnchorEl({ anchorEl: e.currentTarget, form })
+  const [nameUpdaterTarget, setNameUpdaterTarget] = useState<{ id: string; name?: string }>()
+
+  const handleDelete = (form: { id: string }) => {
+    deleteForm({ variables: { applicationId: app.id, formId: form.id } }).then(() =>
+      message.success('删除成功')
+    )
   }
 
-  const handleMenuClose = () => {
-    setAnchorEl(undefined)
+  const handleToEdit = (form: { id: string }) => {
+    navigate(`/application/${app.id}/form/${form.id}/edit`)
   }
-
-  const handleDelete = () => {
-    const form = anchorEl?.form
-    handleMenuClose()
-    if (app && form) {
-      deleteForm({ variables: { applicationId: app.id, formId: form.id } })
-        .then(() => snackbar.enqueueSnackbar('删除成功', { variant: 'success' }))
-        .catch(error => snackbar.enqueueSnackbar(error.message, { variant: 'error' }))
-    }
-  }
-
-  const handleToEdit = () => {
-    const form = anchorEl?.form
-    handleMenuClose()
-    if (app && form) {
-      navigate(`/application/${app.id}/form/${form.id}/edit`)
-    }
-  }
-
-  const [nameUpdaterProps, setNameUpdaterProps] = useState<
-    Partial<ComponentProps<typeof FormNameUpdater>> | undefined
-  >()
-
-  const handleEditName = () => {
-    const form = anchorEl?.form
-    handleMenuClose()
-    if (app && form) {
-      setNameUpdaterProps({
-        open: true,
-        anchorEl: document.getElementById(`form-name-${form.id}`),
-        app: { id: app.id, form: { id: form.id, name: form.name } },
-        onClose: () => {
-          setNameUpdaterProps(undefined)
-        },
-      })
-    }
-  }
-
-  const application = useApplication({ variables: { id: applicationId } })
-
-  const [createForm] = useCreateForm()
-
-  const app = application.data?.application
 
   return (
-    <>
-      <NetworkIndicator in={application.loading} />
-
-      {app && (
-        <AsideLayout
-          sx={{ paddingTop: 7 }}
-          left={
-            <>
-              <_List>
-                {app.forms.map(form => (
-                  <ListItemButton
-                    key={form.id}
-                    onClick={() => navigate(`/application/${app.id}/form/${form.id}`)}
-                  >
-                    <ListItemIcon>
-                      <ViewList />
-                    </ListItemIcon>
-
-                    <ListItemText
-                      primaryTypographyProps={{
-                        noWrap: true,
-                        id: `form-name-${form.id}`,
-                        sx: { display: 'inline-block', verticalAlign: 'middle', maxWidth: '100%' },
-                      }}
-                      primary={form.name || '未命名'}
-                    />
-
-                    <IconButton
-                      className="hover_visible"
-                      sx={{ width: 32, height: 32 }}
-                      onClick={e => handleMenuOpen(e, form)}
-                    >
-                      <MoreVert />
-                    </IconButton>
-                  </ListItemButton>
-                ))}
-                <ListItemButton
-                  key="add"
-                  onClick={() => createForm({ variables: { applicationId: app.id, input: {} } })}
-                >
-                  <ListItemIcon>
-                    <Add />
-                  </ListItemIcon>
-                  <ListItemText>新建表单</ListItemText>
-                </ListItemButton>
-              </_List>
-
-              <ArrowMenu
-                anchorEl={anchorEl?.anchorEl}
-                open={Boolean(anchorEl)}
-                keepMounted
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                onClose={handleMenuClose}
-              >
-                <MenuItem onClick={handleEditName}>
-                  <ListItemIcon>
-                    <Title />
-                  </ListItemIcon>
-
-                  <ListItemText>重命名</ListItemText>
-                </MenuItem>
-                <MenuItem onClick={handleToEdit}>
-                  <ListItemIcon>
-                    <Edit />
-                  </ListItemIcon>
-
-                  <ListItemText>编辑表单</ListItemText>
-                </MenuItem>
-                <MenuItem onClick={handleDelete}>
-                  <ListItemIcon>
-                    <DeleteForever />
-                  </ListItemIcon>
-
-                  <ListItemText>删除</ListItemText>
-                </MenuItem>
-              </ArrowMenu>
-
-              <FormNameUpdater {...nameUpdaterProps} />
-            </>
-          }
+    <_Menu activeKey={formId} selectedKeys={formId ? [formId] : undefined}>
+      {app.forms.map(form => (
+        <Menu.Item
+          key={form.id}
+          icon={<UnorderedListOutlined />}
+          onClick={() => navigate(`/application/${app.id}/form/${form.id}`)}
         >
-          <ApplicationRoutes />
-        </AsideLayout>
-      )}
-    </>
+          <span>
+            <FormNameUpdater
+              appId={app.id}
+              form={form}
+              visible={nameUpdaterTarget?.id === form.id}
+              onVisibleChange={() => setNameUpdaterTarget(undefined)}
+            >
+              <span>{form.name || '未命名'}</span>
+            </FormNameUpdater>
+          </span>
+
+          <div className="hover_visible" onClick={e => e.stopPropagation()}>
+            <Dropdown
+              arrow
+              trigger={['click']}
+              overlay={() => (
+                <Menu>
+                  <Menu.Item key="rename" onClick={() => setNameUpdaterTarget(form)}>
+                    重命名
+                  </Menu.Item>
+                  <Menu.Item key="edit" onClick={() => handleToEdit(form)}>
+                    编辑表单
+                  </Menu.Item>
+                  <Menu.Item key="delete" onClick={() => handleDelete(form)}>
+                    删除
+                  </Menu.Item>
+                </Menu>
+              )}
+            >
+              <Button size="small" type="text" shape="circle">
+                <MoreOutlined />
+              </Button>
+            </Dropdown>
+          </div>
+        </Menu.Item>
+      ))}
+      <Menu.Item
+        key="add"
+        icon={<PlusOutlined />}
+        onClick={() => createForm({ variables: { applicationId: app.id, input: {} } })}
+      >
+        新建表单
+      </Menu.Item>
+    </_Menu>
   )
 }
 
@@ -247,58 +203,57 @@ const useApplication = (options?: QueryHookOptions<{ application: Application },
     options
   )
 
-const useCreateForm = (
-  options?: MutationHookOptions<
-    { createForm: Form },
-    { applicationId: string; input: { name?: string; description?: string } }
-  >
-) =>
-  useMutation(
-    gql`
-      mutation CreateForm($applicationId: String!, $input: CreateFormInput!) {
-        createForm(applicationId: $applicationId, input: $input) {
-          id
-          createdAt
-          updatedAt
-          name
-          description
+const _Menu = styled(Menu)`
+  border-right: 0;
+
+  > .ant-menu-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0 !important;
+    margin: 0;
+
+    > .ant-menu-title-content {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+
+      > span {
+        flex: 1;
+        overflow: hidden;
+      }
+
+      > .hover_visible {
+        > .ant-dropdown-trigger {
+          display: none;
+        }
+
+        > .ant-dropdown-open {
+          display: block;
         }
       }
-    `,
-    { ...options, refetchQueries: ['ApplicationForms'] }
-  )
-
-const _List = styled(List)`
-  .MuiListItemIcon-root {
-    min-width: ${props => props.theme.spacing(4)};
-  }
-
-  > .MuiListItemButton-root {
-    .hover_visible {
-      margin-right: -8px;
-      display: none;
     }
 
     &:hover {
       .hover_visible {
-        display: flex;
+        .ant-dropdown-trigger {
+          display: block;
+        }
       }
     }
   }
 `
 
 const FormNameUpdater = ({
-  open = false,
-  app,
-  anchorEl,
-  onClose,
+  appId,
+  form,
+  ...props
 }: {
-  open?: boolean
-  app?: { id: string; form: { id: string; name?: string } } | null
-  anchorEl?: Element | null
-  onClose?: () => void | null
-}) => {
-  const [updateForm, { data, loading, error, reset }] = useMutation<
+  appId: string
+  form: { id: string; name?: string }
+} & PoppromptProps) => {
+  const [updateForm, { loading, error }] = useMutation<
     { updateForm: { id: string; updatedAt?: number; name?: string } },
     { applicationId: string; formId: string; input: { name: string } }
   >(gql`
@@ -313,30 +268,15 @@ const FormNameUpdater = ({
 
   const updateName = useCallback(
     (name: string) => {
-      if (!app || loading) {
+      if (loading) {
         return
       }
-      updateForm({ variables: { applicationId: app.id, formId: app.form.id, input: { name } } })
+      updateForm({
+        variables: { applicationId: appId, formId: form.id, input: { name } },
+      }).then(() => props.onVisibleChange?.(false))
     },
-    [app?.form.id, updateForm, loading]
+    [appId, form.id, updateForm, loading]
   )
 
-  useEffect(() => {
-    if (data?.updateForm.id) {
-      onClose?.()
-      reset()
-    }
-  }, [data, onClose])
-
-  return (
-    <Prompt
-      open={open}
-      anchorEl={anchorEl}
-      value={app?.form.name}
-      error={error}
-      title="修改表单名称"
-      onClose={onClose}
-      onSubmit={updateName}
-    />
-  )
+  return <Popprompt {...props} value={form.name} error={error} onSubmit={updateName} />
 }

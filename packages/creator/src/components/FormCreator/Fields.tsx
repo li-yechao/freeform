@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import styled from '@emotion/styled'
 import {
-  CalendarToday,
-  CheckBox,
-  Numbers,
-  RadioButtonChecked,
-  StarBorder,
-  TextFields,
-} from '@mui/icons-material'
-import { Button } from '@mui/material'
+  CalendarOutlined,
+  CheckCircleOutlined,
+  CheckSquareOutlined,
+  FontSizeOutlined,
+  NumberOutlined,
+  StarOutlined,
+} from '@ant-design/icons'
+import styled from '@emotion/styled'
+import { Button } from 'antd'
 import { ReactNode, useMemo } from 'react'
 import { useDrag } from 'react-dnd'
 import { useAddOrMoveField } from './state'
@@ -29,12 +29,12 @@ import { useAddOrMoveField } from './state'
 export default function Fields() {
   const fields = useMemo(
     () => [
-      { type: 'text', icon: <TextFields />, title: '文本' },
-      { type: 'number', icon: <Numbers />, title: '数字' },
-      { type: 'checkbox', icon: <CheckBox />, title: '多选' },
-      { type: 'radio', icon: <RadioButtonChecked />, title: '单选' },
-      { type: 'rating', icon: <StarBorder />, title: '评分' },
-      { type: 'time', icon: <CalendarToday />, title: '时间' },
+      { type: 'text', icon: <FontSizeOutlined />, title: '文本' },
+      { type: 'number', icon: <NumberOutlined />, title: '数字' },
+      { type: 'checkbox', icon: <CheckSquareOutlined />, title: '多选' },
+      { type: 'radio', icon: <CheckCircleOutlined />, title: '单选' },
+      { type: 'rate', icon: <StarOutlined />, title: '评分' },
+      { type: 'time', icon: <CalendarOutlined />, title: '时间' },
     ],
     []
   )
@@ -51,21 +51,14 @@ export default function Fields() {
 const Field = ({ type, icon, title }: { type: string; icon: ReactNode; title: string }) => {
   const addField = useAddOrMoveField()
 
-  const [collected, drag] = useDrag(() => ({
+  const [_, drag] = useDrag(() => ({
     type: 'field',
     item: { type },
     options: { dropEffect: 'copy' },
   }))
 
   return (
-    <_Field
-      variant="outlined"
-      disableRipple
-      ref={drag}
-      {...collected}
-      onClick={() => addField({ type })}
-      startIcon={icon}
-    >
+    <_Field ref={drag} icon={icon} onClick={() => addField({ type })}>
       {title}
     </_Field>
   )
@@ -80,5 +73,5 @@ const _Fields = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  padding: ${props => props.theme.spacing(2, 1, 1)};
+  padding: 16px 8px 8px;
 `

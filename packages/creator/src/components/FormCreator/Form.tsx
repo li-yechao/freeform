@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { DeleteOutlined } from '@ant-design/icons'
 import styled from '@emotion/styled'
-import { DeleteForever } from '@mui/icons-material'
-import { Box, Grid, IconButton, Typography } from '@mui/material'
+import { Box } from '@mui/system'
+import { Button, Col, Row } from 'antd'
 import { memo, useEffect, useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import { cx } from '../../utils/cx'
@@ -76,13 +77,13 @@ export default function Form() {
   return (
     <_Form ref={form} className={cx(isOver && 'hover')}>
       {layout.map((row, index) => (
-        <Grid container key={index}>
+        <Row key={index}>
           {row.map(id => (
-            <Grid xs={Math.max(3, 12 / row.length)} item key={id}>
+            <Col key={id} xs={Math.max(3, 24 / row.length)}>
               <FormField {...fields[id]!} selected={currentFieldId === id} />
-            </Grid>
+            </Col>
           ))}
-        </Grid>
+        </Row>
       ))}
     </_Form>
   )
@@ -120,15 +121,15 @@ const FormField = memo(({ selected, ...field }: Field & { selected?: boolean }) 
         <DropTarget id={field.id} placement="right" />
       </_DropTargets>
 
-      <_Label variant="body2">{field.label}</_Label>
+      <_Label>{field.label}</_Label>
 
       <FieldRenderer {...field} tabIndex={-1} />
 
       {selected && (
         <_FormFieldFloatActions>
-          <IconButton size="small" disableRipple onClick={() => deleteField(field.id)}>
-            <DeleteForever color="primary" />
-          </IconButton>
+          <Button size="small" type="text" tabIndex={-1} onClick={() => deleteField(field.id)}>
+            <DeleteOutlined color="primary" />
+          </Button>
         </_FormFieldFloatActions>
       )}
     </_FormField>
@@ -147,7 +148,7 @@ const _Form = styled.div`
       display: block;
       height: 8px;
       margin-top: -4px;
-      background-color: #1976d2;
+      background-color: var(--ant-primary-color);
       opacity: 0.5;
     }
   }
@@ -167,34 +168,33 @@ const _FormField = styled(Box)`
 
   &:focus,
   &.selected {
-    outline: 1px solid ${props => props.theme.palette.primary.main};
+    outline: 1px solid var(--ant-primary-color);
   }
 `
 
 const _FormFieldFloatActions = styled.div`
   position: absolute;
-  right: ${props => props.theme.spacing(1)};
+  right: 8px;
   bottom: 100%;
   display: flex;
   align-items: center;
-  background-color: ${props => props.theme.palette.background.paper};
   z-index: 10;
+  background-color: #ffffff;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
-  border: 1px solid ${props => props.theme.palette.primary.main};
+  border: 1px solid var(--ant-primary-color);
   border-bottom: none;
-  padding: ${props => props.theme.spacing(0, 1)};
 
-  > .MuiButtonBase-root {
-    padding: 0;
-
-    > .MuiSvgIcon-root {
-      font-size: 18px;
-    }
+  > button {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 16px;
+    line-height: 16px;
+    font-size: 12px;
   }
 `
 
-const _Label = styled(Typography)`
+const _Label = styled.div`
   display: block;
   white-space: nowrap;
   overflow: hidden;

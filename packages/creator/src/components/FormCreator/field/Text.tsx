@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import styled from '@emotion/styled'
-import { FormControl, FormLabel, Input, TextField } from '@mui/material'
+import { Box } from '@mui/system'
+import { Input, Typography } from 'antd'
 import { Field } from '../state'
 
 export interface TextProps extends Field {
@@ -29,25 +30,15 @@ export const initialTextProps: Omit<TextProps, 'id' | 'type'> = {
 export default function Text(props: TextProps & { tabIndex?: number }) {
   return (
     <_Input
-      disableUnderline
-      fullWidth
       readOnly={props.state === 'READONLY'}
       disabled={props.state === 'DISABLED'}
       placeholder={props.meta?.placeholder}
-      inputProps={{ tabIndex: props.tabIndex }}
+      tabIndex={props.tabIndex}
     />
   )
 }
 
-const _Input = styled(Input)`
-  border: 1px solid ${props => props.theme.palette.divider};
-  border-radius: ${props => props.theme.shape.borderRadius}px;
-
-  input {
-    padding-left: ${props => props.theme.spacing(0.5)};
-    padding-right: ${props => props.theme.spacing(0.5)};
-  }
-`
+const _Input = styled(Input)``
 
 export function TextConfigure({
   field,
@@ -58,17 +49,14 @@ export function TextConfigure({
 }) {
   return (
     <>
-      <FormControl size="small" fullWidth margin="dense">
-        <FormLabel>提示</FormLabel>
+      <Box my={2}>
+        <Typography.Text type="secondary">提示</Typography.Text>
 
-        <TextField
-          variant="outlined"
-          size="small"
-          fullWidth
+        <Input
           value={field.meta?.placeholder || ''}
           onChange={e => setField({ meta: { placeholder: e.target.value } })}
         />
-      </FormControl>
+      </Box>
     </>
   )
 }

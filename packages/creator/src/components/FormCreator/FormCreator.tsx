@@ -13,9 +13,7 @@
 // limitations under the License.
 
 import styled from '@emotion/styled'
-import { LocalizationProvider } from '@mui/lab'
-import AdapterDateFns from '@mui/lab/AdapterDateFns'
-import { Paper } from '@mui/material'
+import { Box } from '@mui/system'
 import { useEffect, useRef } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -34,9 +32,7 @@ export default function FormCreator(props: FormCreatorProps) {
   return (
     <RecoilRoot>
       <DndProvider backend={HTML5Backend}>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <_FormCreator {...props} />
-        </LocalizationProvider>
+        <_FormCreator {...props} />
       </DndProvider>
     </RecoilRoot>
   )
@@ -67,9 +63,9 @@ const _FormCreator = (props: FormCreatorProps) => {
         <Fields />
       </aside>
       <main>
-        <Paper>
+        <Box sx={{ backgroundColor: 'white' }}>
           <Form />
-        </Paper>
+        </Box>
       </main>
       <aside>
         <Configure />
@@ -89,12 +85,14 @@ const _Container = styled.div`
   > aside {
     width: 300px;
     overflow: auto;
-    background-color: ${props => props.theme.palette.background.paper};
+    background-color: white;
   }
 
   > main {
     flex: 1;
     overflow: auto;
-    padding: ${props => props.theme.spacing(2)};
+    padding: 16px 8px;
+    border-left: 1px solid #f5f5f5;
+    border-right: 1px solid #f5f5f5;
   }
 `

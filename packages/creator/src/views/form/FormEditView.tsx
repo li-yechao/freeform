@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import { gql, QueryHookOptions, useMutation, useQuery } from '@apollo/client'
-import { LoadingButton } from '@mui/lab'
-import { Box } from '@mui/material'
-import { useSnackbar } from 'notistack'
+import { Box } from '@mui/system'
+import { Button, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import FormCreator, { FieldState, Schema } from '../../components/FormCreator'
@@ -64,7 +63,7 @@ export default function FormEditView() {
     <>
       <NetworkIndicator in={appForm.loading} />
 
-      <Box sx={{ position: 'absolute', left: 0, top: 56, right: 0, bottom: 0 }}>
+      <Box sx={{ position: 'absolute', left: 0, top: 40, right: 0, bottom: 0 }}>
         <FormCreator value={schema} onChange={setSchema} />
       </Box>
     </>
@@ -157,7 +156,6 @@ const SaveButton = ({
   formId: string
   schema?: Schema
 }) => {
-  const snackbar = useSnackbar()
   const [updateForm, { loading, error, data }] = useMutation<
     { updateForm: { id: string } },
     {
@@ -196,14 +194,14 @@ const SaveButton = ({
 
   useEffect(() => {
     if (error) {
-      snackbar.enqueueSnackbar(error.message, { variant: 'error' })
+      message.error(error.message)
     } else if (data?.updateForm) {
-      snackbar.enqueueSnackbar('保存成功', { variant: 'success' })
+      message.success('保存成功')
     }
   }, [error, data])
 
   return (
-    <LoadingButton
+    <Button
       loading={loading}
       onClick={() => {
         if (!schema) {
@@ -235,6 +233,6 @@ const SaveButton = ({
       }}
     >
       保存
-    </LoadingButton>
+    </Button>
   )
 }

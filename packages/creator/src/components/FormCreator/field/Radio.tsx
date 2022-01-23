@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { FormControlLabel, Radio as _Radio, RadioGroup } from '@mui/material'
+import { Radio as _Radio } from 'antd'
 import { Field } from '../state'
 import { nextOptionId, OptionsConfigure } from './Checkbox'
 
@@ -34,17 +34,16 @@ export const initialRadioProps: Omit<RadioProps, 'id' | 'type'> = {
 
 export default function Radio(props: RadioProps & { tabIndex?: number }) {
   return (
-    <RadioGroup row>
+    <_Radio.Group disabled={props.state === 'DISABLED' || props.state === 'READONLY'}>
       {props.meta?.options?.map((option, index) => (
-        <FormControlLabel
+        <_Radio
           key={index}
-          disabled={props.state === 'DISABLED'}
-          control={<_Radio readOnly={props.state === 'READONLY'} tabIndex={props.tabIndex} />}
+          tabIndex={props.tabIndex}
           value={option.value}
-          label={option.label}
+          children={option.label}
         />
       ))}
-    </RadioGroup>
+    </_Radio.Group>
   )
 }
 

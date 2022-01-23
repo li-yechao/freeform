@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Box, CircularProgress, Fade, LinearProgress, Paper, Typography } from '@mui/material'
-import { useSnackbar } from 'notistack'
+import styled from '@emotion/styled'
+import { Box } from '@mui/system'
+import { message, Spin, Typography } from 'antd'
 import { useEffect } from 'react'
 import { useToggle } from 'react-use'
 import { queryViewerWithToken, Viewer } from '../../apollo/viewer'
+import NetworkIndicator from '../../components/NetworkIndicator'
 import { useLogin } from '../../state/account'
 import useAsync from '../../utils/useAsync'
 
 export default function AuthView() {
   const [loading, toggleLoading] = useToggle(false)
-  const snackbar = useSnackbar()
 
   const result = useAsync(async () => {
     const DTFrameLogin = await (async () => {
@@ -83,10 +84,10 @@ export default function AuthView() {
             const viewer = await queryViewerWithToken(token.accessToken)
             resolve({ viewer, accessToken: token.accessToken })
 
-            snackbar.enqueueSnackbar('登录成功', { variant: 'success' })
+            message.success('登录成功')
           } catch (error: any) {
             loading = false
-            snackbar.enqueueSnackbar(error.message, { variant: 'error' })
+            message.error(error.message)
           } finally {
             toggleLoading(false)
           }
@@ -100,7 +101,7 @@ export default function AuthView() {
 
   useEffect(() => {
     if (result.error) {
-      snackbar.enqueueSnackbar(result.error.message, { variant: 'error' })
+      message.error(result.error.message)
     }
   }, [result.error])
 
@@ -113,29 +114,15 @@ export default function AuthView() {
   }, [result.value])
 
   return (
-    <Paper
-      sx={{
-        position: 'relative',
-        overflow: 'hidden',
-        maxWidth: 500,
-        margin: 'auto',
-        marginTop: 4,
-        padding: 2,
-      }}
-    >
-      <Box position="absolute" left={0} top={0} right={0}>
-        <Fade in={loading}>
-          <LinearProgress />
-        </Fade>
-      </Box>
+    <_Form>
+      <NetworkIndicator in={loading} />
 
-      <Typography variant="h5" color="primary" align="center">
-        智能表单
-      </Typography>
-      <Box mt={2}>
-        <Typography variant="subtitle1" align="center">
-          登录
-        </Typography>
+      <Box sx={{ textAlign: 'center' }}>
+        <Typography.Title level={3}>智能表单</Typography.Title>
+
+        <Box mt={2}>
+          <Typography.Paragraph>登录</Typography.Paragraph>
+        </Box>
       </Box>
 
       <Box position="relative">
@@ -150,14 +137,24 @@ export default function AuthView() {
           justifyContent="center"
           zIndex={0}
         >
-          <CircularProgress />
+          <Spin />
         </Box>
         <Box position="relative" id="dingtalk-qr-code" width={300} height={300} margin="auto" />
       </Box>
 
       <Box textAlign="center">
-        <Typography variant="caption">使用钉钉扫码登录</Typography>
+        <Typography.Paragraph type="secondary">使用钉钉扫码登录</Typography.Paragraph>
       </Box>
-    </Paper>
+    </_Form>
   )
 }
+
+const _Form = styled.form`
+  position: relative;
+  overflow: hidden;
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 16px;
+  background-color: #ffffff;
+  border-radius: 8px;
+`

@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import styled from '@emotion/styled'
-import { Box } from '@mui/material'
-import { BoxProps } from '@mui/system'
+import { Box, BoxProps } from '@mui/system'
 import { ReactNode } from 'react'
 
 export default function AsideLayout({
@@ -43,7 +42,7 @@ const _AsideLayout = styled(Box)`
     width: 200px;
     height: 100%;
     overflow: auto;
-    background-color: ${props => props.theme.palette.background.paper};
+    background-color: #ffffff;
   }
 
   > main {

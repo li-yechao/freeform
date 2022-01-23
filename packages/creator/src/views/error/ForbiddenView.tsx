@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Box, Typography } from '@mui/material'
+import { Box } from '@mui/system'
+import Title from 'antd/lib/typography/Title'
 
-export default function ForbiddenView() {
+export default function NotFoundView() {
   return (
-    <Box>
-      <Typography variant="h1" align="center" color="textSecondary">
+    <Box sx={{ textAlign: 'center', mt: 5 }}>
+      <Title level={1} type="secondary">
         403
-      </Typography>
+      </Title>
 
-      <Typography variant="h6" align="center" color="textSecondary">
+      <Title level={5} type="secondary">
         Forbidden
-      </Typography>
+      </Title>
     </Box>
   )
 }

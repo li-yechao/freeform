@@ -12,31 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Rating as _Rating } from '@mui/material'
+import { Rate as _Rate } from 'antd'
 import { Field } from '../state'
 
-export interface RatingProps extends Field {}
+export interface RateProps extends Field {}
 
-export const initialRatingProps: Omit<RatingProps, 'id' | 'type'> = {
+export const initialRateProps: Omit<RateProps, 'id' | 'type'> = {
   label: '评分',
 }
 
-export default function Rating(props: RatingProps & { tabIndex?: number }) {
-  return (
-    <_Rating
-      readOnly={props.state === 'READONLY'}
-      disabled={props.state === 'DISABLED'}
-      tabIndex={props.tabIndex}
-    />
-  )
+export default function Rate(props: RateProps & { tabIndex?: number }) {
+  return <_Rate disabled={props.state === 'DISABLED' || props.state === 'READONLY'} />
 }
 
-export function RatingConfigure({
+export function RateConfigure({
   field: _field,
   setField: _setField,
 }: {
-  field: RatingProps
-  setField: (field: Partial<RatingProps>) => void
+  field: RateProps
+  setField: (field: Partial<RateProps>) => void
 }) {
   return <></>
 }

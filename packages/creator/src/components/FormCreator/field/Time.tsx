@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import styled from '@emotion/styled'
-import { DatePicker } from '@mui/lab'
-import { FormControl, FormLabel, TextField } from '@mui/material'
+import { Box } from '@mui/system'
+import { DatePicker, Input, Typography } from 'antd'
 import { Field } from '../state'
 
 export interface TimeProps extends Field {
@@ -29,33 +29,18 @@ export const initialTimeProps: Omit<TimeProps, 'id' | 'type'> = {
 
 export default function Time(props: TimeProps & { tabIndex?: number }) {
   return (
-    <DatePicker
+    <_DatePicker
       value={undefined}
       onChange={() => {}}
-      readOnly={props.state === 'READONLY'}
-      disabled={props.state === 'DISABLED'}
-      renderInput={params => (
-        <_TextField
-          {...params}
-          variant="standard"
-          fullWidth
-          placeholder={props.meta?.placeholder}
-          InputProps={{ ...params.InputProps, disableUnderline: true }}
-          inputProps={{ tabIndex: props.tabIndex }}
-        />
-      )}
+      disabled={props.state === 'DISABLED' || props.state === 'READONLY'}
+      placeholder={props.meta?.placeholder || ''}
+      tabIndex={props.tabIndex}
     />
   )
 }
 
-const _TextField = styled(TextField)`
-  border: 1px solid ${props => props.theme.palette.divider};
-  border-radius: ${props => props.theme.shape.borderRadius}px;
-
-  .MuiInput-root {
-    padding-left: ${props => props.theme.spacing(0.5)};
-    padding-right: ${props => props.theme.spacing(1)};
-  }
+const _DatePicker = styled(DatePicker)`
+  width: 100%;
 `
 
 export function TimeConfigure({
@@ -67,17 +52,14 @@ export function TimeConfigure({
 }) {
   return (
     <>
-      <FormControl size="small" fullWidth margin="dense">
-        <FormLabel>提示</FormLabel>
+      <Box my={2}>
+        <Typography.Text type="secondary">提示</Typography.Text>
 
-        <TextField
-          variant="outlined"
-          size="small"
-          fullWidth
+        <Input
           value={field.meta?.placeholder || ''}
           onChange={e => setField({ meta: { placeholder: e.target.value } })}
         />
-      </FormControl>
+      </Box>
     </>
   )
 }

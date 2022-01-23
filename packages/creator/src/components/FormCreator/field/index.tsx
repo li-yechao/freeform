@@ -17,7 +17,7 @@ import { Field } from '../state'
 import Checkbox, { CheckboxConfigure, initialCheckboxProps } from './Checkbox'
 import Number, { initialNumberProps, NumberConfigure } from './Number'
 import Radio, { initialRadioProps, RadioConfigure } from './Radio'
-import Rating, { initialRatingProps, RatingConfigure } from './Rating'
+import Rate, { initialRateProps, RateConfigure } from './Rate'
 import Text, { initialTextProps, TextConfigure } from './Text'
 import Time, { initialTimeProps, TimeConfigure } from './Time'
 
@@ -35,7 +35,7 @@ const FIELDS = {
   number: Number,
   radio: Radio,
   checkbox: Checkbox,
-  rating: Rating,
+  rate: Rate,
   time: Time,
 }
 
@@ -54,7 +54,7 @@ const DEFAULT_PROPS: {
   number: initialNumberProps,
   radio: initialRadioProps,
   checkbox: initialCheckboxProps,
-  rating: initialRatingProps,
+  rate: initialRateProps,
   time: initialTimeProps,
 }
 
@@ -83,6 +83,6 @@ const CONFIGURES: {
   number: NumberConfigure,
   radio: RadioConfigure,
   checkbox: CheckboxConfigure,
-  rating: RatingConfigure,
+  rate: RateConfigure,
   time: TimeConfigure,
 }

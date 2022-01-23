@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Theme as MuiTheme } from '@mui/material'
+export interface MyTheme {}
 
 declare module '@emotion/react' {
-  export interface Theme extends MuiTheme {}
+  export interface Theme extends MyTheme {}
 }

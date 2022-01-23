@@ -12,19 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { DeleteOutlined, HolderOutlined } from '@ant-design/icons'
 import styled from '@emotion/styled'
-import { DeleteForever, DragIndicator } from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  Checkbox as _Checkbox,
-  FormControl,
-  FormControlLabel,
-  FormGroup,
-  FormLabel,
-  IconButton,
-  Input,
-} from '@mui/material'
+import { Box } from '@mui/system'
+import { Button, Checkbox as _Checkbox, Input, Typography } from 'antd'
 import produce from 'immer'
 import { customAlphabet } from 'nanoid'
 import { useRef } from 'react'
@@ -57,24 +48,28 @@ export const initialCheckboxProps: Omit<CheckboxProps, 'id' | 'type'> = {
 
 export default function Checkbox(props: CheckboxProps & { tabIndex?: number }) {
   return (
-    <FormGroup row>
+    <_Group disabled={props.state === 'DISABLED' || props.state === 'READONLY'}>
       {props.meta?.options?.map(option => (
-        <FormControlLabel
+        <_Checkbox
           key={option.id}
-          control={
-            <_Checkbox
-              disabled={props.state === 'DISABLED'}
-              readOnly={props.state === 'READONLY'}
-              tabIndex={props.tabIndex}
-            />
-          }
+          tabIndex={props.tabIndex}
           value={option.value}
-          label={option.label}
+          children={option.label}
         />
       ))}
-    </FormGroup>
+    </_Group>
   )
 }
+
+const _Group = styled(_Checkbox.Group)`
+  .ant-checkbox-wrapper + .ant-checkbox-wrapper {
+    margin-left: 0;
+  }
+
+  .ant-checkbox-wrapper {
+    margin: 0 8px 0 0;
+  }
+`
 
 export function CheckboxConfigure({
   field,
@@ -145,26 +140,27 @@ export function OptionsConfigure({
 
   return (
     <>
-      <FormControl size="small" fullWidth margin="dense">
-        <FormLabel>选项</FormLabel>
-      </FormControl>
-      <div>
-        {options.map((option, index) => (
-          <OptionConfigure
-            key={index}
-            {...option}
-            onLabelChange={label => setOptionLabel(option, label)}
-            disableDelete={options.length < 2}
-            onDelete={() => deleteOption(option)}
-            moveOption={moveOption}
-          />
-        ))}
-        <Box textAlign="center">
-          <Button size="small" onClick={addOption}>
-            添加选项
-          </Button>
-        </Box>
-      </div>
+      <Box my={2}>
+        <Typography.Text type="secondary">选项</Typography.Text>
+
+        <div>
+          {options.map((option, index) => (
+            <OptionConfigure
+              key={index}
+              {...option}
+              onLabelChange={label => setOptionLabel(option, label)}
+              disableDelete={options.length < 2}
+              onDelete={() => deleteOption(option)}
+              moveOption={moveOption}
+            />
+          ))}
+          <Box textAlign="center">
+            <Button size="small" onClick={addOption}>
+              添加选项
+            </Button>
+          </Box>
+        </div>
+      </Box>
     </>
   )
 }
@@ -200,19 +196,20 @@ const OptionConfigure = (
   return (
     <_OptionConfigure ref={ref}>
       <Box ref={drag} sx={{ cursor: 'grab' }}>
-        <DragIndicator />
+        <HolderOutlined />
       </Box>
 
-      <_OptionLabelInput
-        disableUnderline
-        fullWidth
-        value={props.label}
-        onChange={e => props.onLabelChange(e.target.value)}
-      />
+      <_OptionLabelInput value={props.label} onChange={e => props.onLabelChange(e.target.value)} />
 
-      <IconButton size="small" disabled={props.disableDelete} onClick={props.onDelete}>
-        <DeleteForever />
-      </IconButton>
+      <Button
+        size="small"
+        type="text"
+        shape="circle"
+        disabled={props.disableDelete}
+        onClick={props.onDelete}
+      >
+        <DeleteOutlined />
+      </Button>
     </_OptionConfigure>
   )
 }
@@ -220,17 +217,11 @@ const OptionConfigure = (
 const _OptionConfigure = styled.div`
   display: flex;
   align-items: center;
-  margin: ${props => props.theme.spacing(0.5, 0)};
+  margin: 4px 0;
 `
 
 const _OptionLabelInput = styled(Input)`
-  border: 1px solid ${props => props.theme.palette.divider};
-  border-radius: ${props => props.theme.shape.borderRadius}px;
-
-  input {
-    padding: ${props => props.theme.spacing(0.5, 1)};
-    line-height: 24px;
-  }
+  margin: 0 8px;
 `
 
 function getNextOptionLabel(options: CheckboxOption[]): string {

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Fade } from '@mui/material'
 import {
   createContext,
   ReactElement,
@@ -86,5 +85,8 @@ NetworkIndicator.Provider = ({ children }: { children?: ReactNode }) => {
 NetworkIndicator.Renderer = ({ children }: { children: ReactElement<any, any> }) => {
   const { count } = useContext(networkIndicatorContext)
 
-  return <Fade in={count > 0}>{children}</Fade>
+  if (count === 0) {
+    return null
+  }
+  return children
 }
