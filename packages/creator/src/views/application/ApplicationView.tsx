@@ -44,7 +44,7 @@ export default function ApplicationView() {
           left={
             <Routes>
               <Route index element={<FormList app={app} />} />
-              <Route path="form/:formId/*" element={<FormList app={app} />} />
+              <Route path=":formId/*" element={<FormList app={app} />} />
             </Routes>
           }
         >
@@ -95,7 +95,7 @@ const FormList = ({ app }: { app: Application }) => {
   }
 
   const handleToEdit = (form: { id: string }) => {
-    navigate(`/application/${app.id}/form/${form.id}/edit`)
+    navigate(`/application/${app.id}/${form.id}/edit`)
   }
 
   return (
@@ -104,7 +104,7 @@ const FormList = ({ app }: { app: Application }) => {
         <Menu.Item
           key={form.id}
           icon={<UnorderedListOutlined />}
-          onClick={() => navigate(`/application/${app.id}/form/${form.id}`)}
+          onClick={() => navigate(`/application/${app.id}/${form.id}`)}
         >
           <span>
             <FormNameUpdater
@@ -157,7 +157,7 @@ const ApplicationRoutes = () => {
   return (
     <Routes>
       <Route index element={<div />} />
-      <Route path="form/:formId/*" element={<FormLazyView />} />
+      <Route path=":formId/*" element={<FormLazyView />} />
       <Route path="*" element={<NotFoundViewLazy />} />
     </Routes>
   )

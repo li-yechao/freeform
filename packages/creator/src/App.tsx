@@ -113,7 +113,7 @@ const _AppRoutes = () => {
     <Routes>
       <Route index element={<HomeViewLazy />} />
       <Route path="/application/:applicationId/*" element={<ApplicationViewLazy />} />
-      <Route path="/application/:applicationId/form/:formId/edit" element={<FormEditLazyViwe />} />
+      <Route path="/application/:applicationId/:formId/edit" element={<FormEditLazyViwe />} />
       <Route path="*" element={<NotFoundViewLazy />} />
     </Routes>
   )
