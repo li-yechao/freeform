@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import { ApplicationService } from 'src/application/application.service'
+import { ApplicationService } from '../application/application.service'
 import { CreateFormInput, UpdateFormInput, ViewInput } from './form.input'
 import { Form, View } from './form.schema'
 

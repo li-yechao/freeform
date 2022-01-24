@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
-import { Application, ApplicationSchema } from 'src/application/application.schema'
+import { Application, ApplicationSchema } from '../application/application.schema'
 import { ApplicationService } from '../application/application.service'
 import { FormResolver } from './form.resolver'
 import { Form, FormSchema } from './form.schema'
