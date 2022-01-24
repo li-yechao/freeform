@@ -30,7 +30,7 @@ export default function ApplicationView() {
     throw new Error(`Required params applicationId is missing`)
   }
 
-  const application = useApplication({ variables: { id: applicationId } })
+  const application = useApplication({ variables: { applicationId } })
 
   const app = application.data?.application
 
@@ -180,11 +180,13 @@ interface Form {
   description?: string
 }
 
-const useApplication = (options?: QueryHookOptions<{ application: Application }, { id: string }>) =>
+const useApplication = (
+  options?: QueryHookOptions<{ application: Application }, { applicationId: string }>
+) =>
   useQuery(
     gql`
-      query ApplicationForms($id: String!) {
-        application(id: $id) {
+      query ApplicationForms($applicationId: String!) {
+        application(applicationId: $applicationId) {
           id
           createdAt
           updatedAt

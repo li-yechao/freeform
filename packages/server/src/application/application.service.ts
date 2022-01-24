@@ -14,8 +14,8 @@ export class ApplicationService {
     return this.applicationModel.find({ owner, deletedAt: null })
   }
 
-  async selectApplication(owner: string, id: string): Promise<Application | null> {
-    return this.applicationModel.findOne({ _id: id, owner, deletedAt: null })
+  async selectApplication(owner: string, appId: string): Promise<Application | null> {
+    return this.applicationModel.findOne({ _id: appId, owner, deletedAt: null })
   }
 
   async createApplication(owner: string, input: CreateApplicationInput): Promise<Application> {
@@ -28,19 +28,19 @@ export class ApplicationService {
 
   async updateApplication(
     owner: string,
-    id: string,
+    appId: string,
     input: UpdateApplicationInput
   ): Promise<Application | null> {
     return this.applicationModel.findOneAndUpdate(
-      { _id: id, owner, deletedAt: null },
+      { _id: appId, owner, deletedAt: null },
       { $set: { name: input.name, updatedAt: Date.now() } },
       { new: true }
     )
   }
 
-  async deleteApplication(owner: string, id: string): Promise<Application | null> {
+  async deleteApplication(owner: string, appId: string): Promise<Application | null> {
     return this.applicationModel.findOneAndUpdate(
-      { _id: id, owner, deletedAt: null },
+      { _id: appId, owner, deletedAt: null },
       { $set: { deletedAt: Date.now() } },
       { new: true }
     )

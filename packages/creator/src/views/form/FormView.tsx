@@ -272,7 +272,7 @@ const useApplicationFormViews = (
   useQuery(
     gql`
       query ApplicationFormViews($applicationId: String!, $formId: String!) {
-        application(id: $applicationId) {
+        application(applicationId: $applicationId) {
           id
           createdAt
           updatedAt

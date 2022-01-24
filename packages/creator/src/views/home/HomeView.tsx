@@ -69,17 +69,17 @@ const useApps = () =>
 
 const AppItem = ({ app }: { app: Application }) => {
   const navigate = useNavigate()
-  const [deleteApp] = useMutation<{ deleteApplication: boolean }, { id: string }>(
+  const [deleteApp] = useMutation<{ deleteApplication: boolean }, { applicationId: string }>(
     gql`
-      mutation DeleteApplication($id: String!) {
-        deleteApplication(id: $id)
+      mutation DeleteApplication($applicationId: String!) {
+        deleteApplication(applicationId: $applicationId)
       }
     `,
     { refetchQueries: ['Applications'] }
   )
 
   const handleDelete = () => {
-    deleteApp({ variables: { id: app.id } })
+    deleteApp({ variables: { applicationId: app.id } })
       .then(() => message.success('删除成功'))
       .catch(error => message.error(error.message))
   }
@@ -159,7 +159,7 @@ const AppNameUpdater = ({
     { applicationId: string; input: { name: string } }
   >(gql`
     mutation UpdateApplication($applicationId: String!, $input: UpdateApplicationInput!) {
-      updateApplication(id: $applicationId, input: $input) {
+      updateApplication(applicationId: $applicationId, input: $input) {
         id
         updatedAt
         name
