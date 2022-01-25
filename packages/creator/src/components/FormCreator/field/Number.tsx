@@ -15,9 +15,9 @@
 import styled from '@emotion/styled'
 import { Box } from '@mui/system'
 import { Input, InputNumber, Typography } from 'antd'
-import { Field } from '../state'
+import { FieldProps } from '.'
 
-export interface NumberProps extends Field {
+export interface NumberProps extends FieldProps {
   meta?: {
     placeholder?: string
   }
@@ -34,6 +34,8 @@ export default function Number(props: NumberProps & { tabIndex?: number }) {
       disabled={props.state === 'DISABLED'}
       placeholder={props.meta?.placeholder}
       tabIndex={props.tabIndex}
+      value={props.value}
+      onChange={value => props.onChange?.(value)}
     />
   )
 }

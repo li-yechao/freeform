@@ -13,16 +13,22 @@
 // limitations under the License.
 
 import { Rate as _Rate } from 'antd'
-import { Field } from '../state'
+import { FieldProps } from '.'
 
-export interface RateProps extends Field {}
+export interface RateProps extends FieldProps {}
 
 export const initialRateProps: Omit<RateProps, 'id' | 'type'> = {
   label: '评分',
 }
 
 export default function Rate(props: RateProps & { tabIndex?: number }) {
-  return <_Rate disabled={props.state === 'DISABLED' || props.state === 'READONLY'} />
+  return (
+    <_Rate
+      disabled={props.state === 'DISABLED' || props.state === 'READONLY'}
+      value={props.value}
+      onChange={value => props.onChange?.(value)}
+    />
+  )
 }
 
 export function RateConfigure({

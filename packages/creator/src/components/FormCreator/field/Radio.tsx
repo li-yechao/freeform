@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import { Radio as _Radio } from 'antd'
-import { Field } from '../state'
+import { FieldProps } from '.'
 import { nextOptionId, OptionsConfigure } from './Checkbox'
 
-export interface RadioProps extends Field {
+export interface RadioProps extends FieldProps {
   meta?: {
     options?: { id: string; label: string; value: any }[]
   }
@@ -34,7 +34,11 @@ export const initialRadioProps: Omit<RadioProps, 'id' | 'type'> = {
 
 export default function Radio(props: RadioProps & { tabIndex?: number }) {
   return (
-    <_Radio.Group disabled={props.state === 'DISABLED' || props.state === 'READONLY'}>
+    <_Radio.Group
+      disabled={props.state === 'DISABLED' || props.state === 'READONLY'}
+      value={props.value}
+      onChange={e => props.onChange?.(e.target.value)}
+    >
       {props.meta?.options?.map((option, index) => (
         <_Radio
           key={index}

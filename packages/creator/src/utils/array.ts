@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ReactDOM from 'react-dom'
-import App from './App'
-
-import 'antd/dist/antd.variable.min.css'
-
-ReactDOM.render(<App />, document.getElementById('root'))
+export function notEmpty<TValue>(value: TValue | null | undefined | void): value is TValue {
+  return value !== null && value !== undefined
+}

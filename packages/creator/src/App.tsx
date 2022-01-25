@@ -16,7 +16,9 @@ import { HomeOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons'
 import { ApolloProvider } from '@apollo/client'
 import styled from '@emotion/styled'
 import { Box } from '@mui/system'
-import { Button, Dropdown, Menu, Typography } from 'antd'
+import { Button, ConfigProvider, Dropdown, Menu, Typography } from 'antd'
+import zhCN from 'antd/lib/locale/zh_CN'
+import 'dayjs/locale/zh-cn'
 import { Suspense, useEffect, useMemo } from 'react'
 import { IntlProvider } from 'react-intl'
 import { HashRouter, Route, Routes, useNavigate } from 'react-router-dom'
@@ -46,19 +48,21 @@ export default function App() {
 
   return (
     <ErrorBoundary.Root fallback={ErrorView}>
-      <ApolloProvider client={client}>
-        <RecoilRoot>
-          <NetworkIndicator.Provider>
-            <IntlProvider locale={navigator.language}>
-              <Suspense fallback={<NetworkIndicator in />}>
-                <HashRouter>
-                  <AppRoutes />
-                </HashRouter>
-              </Suspense>
-            </IntlProvider>
-          </NetworkIndicator.Provider>
-        </RecoilRoot>
-      </ApolloProvider>
+      <ConfigProvider locale={zhCN}>
+        <ApolloProvider client={client}>
+          <RecoilRoot>
+            <NetworkIndicator.Provider>
+              <IntlProvider locale={navigator.language}>
+                <Suspense fallback={<NetworkIndicator in />}>
+                  <HashRouter>
+                    <AppRoutes />
+                  </HashRouter>
+                </Suspense>
+              </IntlProvider>
+            </NetworkIndicator.Provider>
+          </RecoilRoot>
+        </ApolloProvider>
+      </ConfigProvider>
     </ErrorBoundary.Root>
   )
 }

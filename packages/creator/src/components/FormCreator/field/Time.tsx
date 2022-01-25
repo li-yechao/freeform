@@ -14,10 +14,13 @@
 
 import styled from '@emotion/styled'
 import { Box } from '@mui/system'
-import { DatePicker, Input, Typography } from 'antd'
-import { Field } from '../state'
+import { Input, Typography } from 'antd'
+import dayjs from 'dayjs'
+import { useEffect, useRef, useState } from 'react'
+import { FieldProps } from '.'
+import DatePicker from '../../DatePicker'
 
-export interface TimeProps extends Field {
+export interface TimeProps extends FieldProps {
   meta?: {
     placeholder?: string
   }
@@ -28,13 +31,31 @@ export const initialTimeProps: Omit<TimeProps, 'id' | 'type'> = {
 }
 
 export default function Time(props: TimeProps & { tabIndex?: number }) {
+  const ref = useRef<number | null>()
+  const [value, setValue] = useState<dayjs.Dayjs | null>()
+
+  useEffect(() => {
+    if (ref.current !== props.value) {
+      ref.current = props.value
+      setValue(typeof props.value === 'number' ? dayjs(props.value * 1000) : null)
+    }
+  }, [props.value])
+
+  useEffect(() => {
+    const v = value?.unix() ?? null
+    if (ref.current !== v) {
+      ref.current = v
+      props.onChange?.(ref.current)
+    }
+  }, [value])
+
   return (
     <_DatePicker
-      value={undefined}
-      onChange={() => {}}
       disabled={props.state === 'DISABLED' || props.state === 'READONLY'}
       placeholder={props.meta?.placeholder || ''}
       tabIndex={props.tabIndex}
+      value={value}
+      onChange={setValue}
     />
   )
 }

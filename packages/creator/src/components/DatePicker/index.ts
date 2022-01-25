@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import ReactDOM from 'react-dom'
-import App from './App'
+import generatePicker from 'antd/es/date-picker/generatePicker'
+import dayjs from 'dayjs'
+import dayjsGenerateConfig from 'rc-picker/es/generate/dayjs'
 
-import 'antd/dist/antd.variable.min.css'
+const DatePicker = generatePicker<dayjs.Dayjs>(dayjsGenerateConfig)
 
-ReactDOM.render(<App />, document.getElementById('root'))
+export default DatePicker

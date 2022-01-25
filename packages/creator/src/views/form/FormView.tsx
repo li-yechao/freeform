@@ -12,15 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaretDownOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import {
+  CaretDownOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  QuestionCircleOutlined,
+} from '@ant-design/icons'
 import { gql, QueryHookOptions, useMutation, useQuery } from '@apollo/client'
 import styled from '@emotion/styled'
 import { Box } from '@mui/system'
-import { Dropdown, Menu, message, Tabs, Typography } from 'antd'
-import { useCallback, useEffect, useState } from 'react'
+import {
+  Breadcrumb,
+  Button,
+  Dropdown,
+  Menu,
+  message,
+  Modal,
+  Popconfirm,
+  Space,
+  Table,
+  TableColumnsType,
+  Tabs,
+  Typography,
+} from 'antd'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Route, Routes, useNavigate, useParams } from 'react-router-dom'
+import { useToggle } from 'react-use'
+import FormRenderer, { FormRendererProps } from '../../components/FormRenderer'
+import { Value } from '../../components/FormRenderer/state'
 import Popprompt, { PoppromptProps } from '../../components/Modal/Popprompt'
 import NetworkIndicator from '../../components/NetworkIndicator'
+import { notEmpty } from '../../utils/array'
 
 export default function FormView() {
   const { applicationId, formId } = useParams<{ applicationId: string; formId: string }>()
@@ -50,6 +73,7 @@ export default function FormView() {
 
           <Routes>
             <Route index element={<RedirectToFirstView app={application} />} />
+            <Route path=":viewId" element={<FormTable app={application} />} />
           </Routes>
         </_FormView>
       )}
@@ -143,10 +167,27 @@ const FormHeader = ({ app }: { app: ApplicationForm }) => {
 
   const [nameUpdaterTarget, setNameUpdaterTarget] = useState<{ id: string; name?: string }>()
 
+  const [recordCreatorVisible, toggleRecordCreatorVisible] = useToggle(false)
+
   return (
     <>
-      <Box px={2} py={1}>
+      <RecordCreator
+        app={app}
+        visible={recordCreatorVisible}
+        onCancel={toggleRecordCreatorVisible}
+      />
+
+      <Box px={2} py={1} sx={{ display: 'flex' }}>
         <Typography.Title level={5}>{app.form.name || '未命名'}</Typography.Title>
+        <Box flex={1} />
+        <Button
+          type="primary"
+          shape="round"
+          icon={<PlusOutlined />}
+          onClick={toggleRecordCreatorVisible}
+        >
+          记录
+        </Button>
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -364,4 +405,424 @@ const ViewNameUpdater = ({
   )
 
   return <Popprompt {...props} value={view.name} error={error} onSubmit={updateName} />
+}
+
+const RecordCreator = ({
+  app,
+  visible,
+  onCancel,
+}: {
+  app: ApplicationForm
+  visible?: boolean
+  onCancel?: () => void
+}) => {
+  const [createRecord, { loading }] = useMutation<
+    { createRecord: { id: string } },
+    { applicationId: string; formId: string; input: { data: { [key: string]: { value: any } } } }
+  >(
+    gql`
+      mutation CreateRecord($applicationId: String!, $formId: String!, $input: CreateRecordInput!) {
+        createRecord(applicationId: $applicationId, formId: $formId, input: $input) {
+          id
+        }
+      }
+    `,
+    { refetchQueries: ['Records'] }
+  )
+
+  const formProps = useMemo<FormRendererProps>(() => {
+    return {
+      fields:
+        app.form.fields?.reduce<FormRendererProps['fields']>(
+          (res, field) => Object.assign(res, { [field.id]: field }),
+          {}
+        ) ?? {},
+      layout: app.form.layout?.rows.map(row => row.children.map(col => col.fieldId)) ?? [],
+    }
+  }, [app])
+
+  // TODO: initialize field value
+  const [value, setValue] = useState<Value>(() => ({ data: {} }))
+
+  useEffect(() => {
+    if (visible) {
+      setValue(() => ({ data: {} }))
+    }
+  }, [visible])
+
+  const handleSubmit = () => {
+    if (loading) {
+      return
+    }
+    createRecord({
+      variables: { applicationId: app.id, formId: app.form.id, input: { data: value.data } },
+    })
+      .then(() => {
+        message.success('创建成功')
+        onCancel?.()
+      })
+      .catch(error => {
+        message.error(error.message)
+      })
+  }
+
+  return (
+    <_Modal
+      title="创建记录"
+      centered
+      destroyOnClose
+      visible={visible}
+      footer={
+        <>
+          <Button type="primary" onClick={handleSubmit} loading={loading}>
+            提交
+          </Button>
+        </>
+      }
+      onCancel={onCancel}
+    >
+      <FormRenderer {...formProps} value={value} onChange={setValue} />
+    </_Modal>
+  )
+}
+
+const _Modal = styled(Modal)`
+  height: 80%;
+  width: 50% !important;
+  max-width: 680px;
+
+  .ant-modal-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .ant-modal-body {
+      flex: 1;
+      overflow: auto;
+    }
+  }
+`
+
+const FormTable = ({ app }: { app: ApplicationForm }) => {
+  const { viewId } = useParams<'viewId'>()
+  if (!viewId) {
+    throw new Error(`Required parameter viewId is missing`)
+  }
+
+  const view = useMemo(() => app.form.views?.find(i => i.id === viewId), [app, viewId])
+
+  const columns = useMemo(() => {
+    const columns: TableColumnsType<{ id: string }> | undefined = view?.fields
+      ?.map(({ fieldId }) => app.form.fields?.find(f => f.id === fieldId))
+      .filter(notEmpty)
+      .map(field => ({
+        title: field.label,
+        dataIndex: ['data', field.id, 'value'],
+        ellipsis: true,
+      }))
+
+    columns?.push({
+      title: '操作',
+      width: 80,
+      align: 'center',
+      render: (_, record) => (
+        <Space size="small">
+          <RecordDeleter appId={app.id} formId={app.form.id} recordId={record.id} />
+        </Space>
+      ),
+    })
+
+    return columns ?? []
+  }, [view])
+
+  const [{ page, limit }, setPage] = useState({ page: 0, limit: 10 })
+
+  const { data } = useQuery<
+    {
+      application: {
+        form: {
+          records: {
+            nodes: { id: string; createdAt: number; updatedAt?: number; data: any }[]
+            pageInfo: { count: number }
+          }
+        }
+      }
+    },
+    {
+      applicationId: string
+      formId: string
+      viewId: string
+      page: number
+      limit: number
+    }
+  >(
+    gql`
+      query Records(
+        $applicationId: String!
+        $formId: String!
+        $viewId: String!
+        $page: Int!
+        $limit: Int!
+      ) {
+        application(applicationId: $applicationId) {
+          form(formId: $formId) {
+            records(viewId: $viewId, page: $page, limit: $limit) {
+              nodes {
+                id
+                createdAt
+                updatedAt
+                data
+              }
+
+              pageInfo {
+                count
+              }
+            }
+          }
+        }
+      }
+    `,
+    { variables: { applicationId: app.id, formId: app.form.id, viewId, page, limit } }
+  )
+
+  const [currentRecord, setCurrentRecord] = useState<{ id: string }>()
+
+  return (
+    <Box px={2}>
+      <Table
+        bordered
+        rowKey="id"
+        size="small"
+        columns={columns}
+        dataSource={data?.application.form.records.nodes ?? []}
+        onRow={record => ({
+          onClick: () => setCurrentRecord(record),
+        })}
+        pagination={{
+          current: page + 1,
+          pageSize: limit,
+          total: data?.application.form.records.pageInfo.count,
+          showSizeChanger: true,
+          onChange: (page, limit) => setPage({ page: page - 1, limit }),
+        }}
+      />
+
+      {currentRecord && (
+        <RecordUpdater
+          appId={app.id}
+          formId={app.form.id}
+          viewId={viewId}
+          recordId={currentRecord.id}
+          onCancel={() => setCurrentRecord(undefined)}
+        />
+      )}
+    </Box>
+  )
+}
+
+const RecordDeleter = ({
+  appId,
+  formId,
+  recordId,
+}: {
+  appId: string
+  formId: string
+  recordId: string
+}) => {
+  const [deleteRecord] = useMutation<
+    { deleteRecord: boolean },
+    { applicationId: string; formId: string; recordId: string }
+  >(
+    gql`
+      mutation DeleteRecord($applicationId: String!, $formId: String!, $recordId: String!) {
+        deleteRecord(applicationId: $applicationId, formId: $formId, recordId: $recordId)
+      }
+    `,
+    { refetchQueries: ['Records'] }
+  )
+
+  return (
+    <span onClick={e => e.stopPropagation()}>
+      <Popconfirm
+        title="确定删除？"
+        cancelText="取消"
+        okText="删除"
+        icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+        onConfirm={() =>
+          deleteRecord({ variables: { applicationId: appId, formId, recordId } }).catch(error => {
+            message.error(error.message)
+          })
+        }
+      >
+        <a>删除</a>
+      </Popconfirm>
+    </span>
+  )
+}
+
+const RecordUpdater = ({
+  appId,
+  formId,
+  viewId,
+  recordId,
+  onCancel,
+}: {
+  appId: string
+  formId: string
+  viewId: string
+  recordId: string
+  onCancel?: () => void
+}) => {
+  const [updateRecord, { loading }] = useMutation<
+    { updateRecord: { id: string } },
+    {
+      applicationId: string
+      formId: string
+      recordId: string
+      input: { data?: { [key: string]: { value: any } } }
+    }
+  >(
+    gql`
+      mutation UpdateRecord(
+        $applicationId: String!
+        $formId: String!
+        $recordId: String!
+        $input: UpdateRecordInput!
+      ) {
+        updateRecord(
+          applicationId: $applicationId
+          formId: $formId
+          recordId: $recordId
+          input: $input
+        ) {
+          id
+          updatedAt
+          data
+        }
+      }
+    `,
+    { refetchQueries: ['Records'] }
+  )
+
+  const { data: { application: app } = {} } = useQuery<
+    {
+      application: {
+        id: string
+        form: Pick<ApplicationForm['form'], 'id' | 'name' | 'fields' | 'layout'> & {
+          record: {
+            id: string
+            createdAt: number
+            updatedAt?: number
+            data: { [key: string]: any }
+          }
+        }
+      }
+    },
+    {
+      applicationId: string
+      formId: string
+      viewId: string
+      recordId: string
+    }
+  >(
+    gql`
+      query ApplicationFormWithRecord(
+        $applicationId: String!
+        $formId: String!
+        $viewId: String!
+        $recordId: String!
+      ) {
+        application(applicationId: $applicationId) {
+          id
+          form(formId: $formId) {
+            id
+            name
+            fields {
+              id
+              type
+              name
+              label
+              state
+              meta
+            }
+
+            layout {
+              rows {
+                children {
+                  fieldId
+                }
+              }
+            }
+
+            record(viewId: $viewId, recordId: $recordId) {
+              id
+              createdAt
+              updatedAt
+              data
+            }
+          }
+        }
+      }
+    `,
+    { variables: { applicationId: appId, formId, viewId, recordId } }
+  )
+
+  const formProps = useMemo<FormRendererProps>(() => {
+    return {
+      fields:
+        app?.form.fields?.reduce<FormRendererProps['fields']>(
+          (res, field) => Object.assign(res, { [field.id]: field }),
+          {}
+        ) ?? {},
+      layout: app?.form.layout?.rows.map(row => row.children.map(col => col.fieldId)) ?? [],
+    }
+  }, [app])
+
+  // TODO: initialize field value
+  const [value, setValue] = useState<Value>()
+
+  useEffect(() => {
+    if (app?.form.record) {
+      setValue({ data: app.form.record.data })
+    }
+  }, [app?.form.record])
+
+  const handleSubmit = () => {
+    if (loading || !value) {
+      return
+    }
+    updateRecord({
+      variables: { applicationId: appId, formId, recordId, input: { data: value.data } },
+    })
+      .then(() => {
+        message.success('保存成功')
+        onCancel?.()
+      })
+      .catch(error => {
+        message.error(error.message)
+      })
+  }
+
+  return (
+    <_Modal
+      title={
+        <Breadcrumb>
+          <Breadcrumb.Item>{app?.form.name}</Breadcrumb.Item>
+        </Breadcrumb>
+      }
+      centered
+      destroyOnClose
+      visible
+      footer={
+        <>
+          <Button type="primary" onClick={handleSubmit} loading={loading}>
+            提交
+          </Button>
+        </>
+      }
+      onCancel={onCancel}
+    >
+      <FormRenderer {...formProps} value={value} onChange={setValue} />
+    </_Modal>
+  )
 }

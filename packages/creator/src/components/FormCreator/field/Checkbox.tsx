@@ -20,11 +20,11 @@ import produce from 'immer'
 import { customAlphabet } from 'nanoid'
 import { useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
-import { Field } from '../state'
+import { FieldProps } from '.'
 
 export const nextOptionId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 5)
 
-export interface CheckboxProps extends Field {
+export interface CheckboxProps extends FieldProps {
   meta?: {
     options?: CheckboxOption[]
   }
@@ -48,7 +48,11 @@ export const initialCheckboxProps: Omit<CheckboxProps, 'id' | 'type'> = {
 
 export default function Checkbox(props: CheckboxProps & { tabIndex?: number }) {
   return (
-    <_Group disabled={props.state === 'DISABLED' || props.state === 'READONLY'}>
+    <_Group
+      disabled={props.state === 'DISABLED' || props.state === 'READONLY'}
+      value={props.value}
+      onChange={value => props.onChange?.(value)}
+    >
       {props.meta?.options?.map(option => (
         <_Checkbox
           key={option.id}

@@ -21,7 +21,13 @@ import Rate, { initialRateProps, RateConfigure } from './Rate'
 import Text, { initialTextProps, TextConfigure } from './Text'
 import Time, { initialTimeProps, TimeConfigure } from './Time'
 
-export default function FieldRenderer(props: Field & { tabIndex?: number }) {
+export interface FieldProps extends Field {
+  value?: any
+  onChange?: (value: any) => void
+  tabIndex?: number
+}
+
+export default function FieldRenderer(props: FieldProps) {
   const F = FIELDS[props.type as keyof typeof FIELDS]
   if (F) {
     return <F {...props} />
