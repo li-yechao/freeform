@@ -26,9 +26,9 @@ export class Record {
   @Prop()
   deletedAt?: number
 
-  @Prop({ type: Types.Map, required: true })
-  @Field(() => GraphQLJSONObject)
-  data!: { [key: string]: { value: any } }
+  @Prop({ type: Types.Map })
+  @Field(() => GraphQLJSONObject, { nullable: true })
+  data?: { [key: string]: { value: any } }
 }
 
 export const RecordSchema = SchemaFactory.createForClass(Record)
