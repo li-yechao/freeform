@@ -50,5 +50,6 @@ const _AsideLayout = styled(Box)`
     flex: 1;
     height: 100%;
     overflow: auto;
+    border-left: 1px solid #efefef;
   }
 `

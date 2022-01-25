@@ -26,6 +26,7 @@ export type PoppromptProps = {
 } & Partial<TooltipProps>
 
 export default function Popprompt({
+  visible,
   value,
   error,
   title,
@@ -63,6 +64,7 @@ export default function Popprompt({
 
   return (
     <_Tooltip
+      visible={visible ?? false}
       placement="bottom"
       color="white"
       trigger="click"
@@ -70,7 +72,11 @@ export default function Popprompt({
       destroyTooltipOnHide
       overlayInnerStyle={{ padding: 0 }}
       overlay={() => (
-        <Box sx={{ p: 1, maxWidth: 300 }} onClick={e => e.stopPropagation()}>
+        <Box
+          sx={{ p: 1, maxWidth: 300 }}
+          onClick={e => e.stopPropagation()}
+          onKeyDown={e => e.stopPropagation()}
+        >
           <Form>
             <Form.Item
               validateStatus={error ? 'error' : ''}

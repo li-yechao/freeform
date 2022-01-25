@@ -19,80 +19,84 @@ import {
   MoreOutlined,
   PlusOutlined,
 } from '@ant-design/icons'
-import { gql, useMutation, useQuery } from '@apollo/client'
 import styled from '@emotion/styled'
 import { Box } from '@mui/system'
 import { Button, Col, Dropdown, Menu, message, Row, Typography } from 'antd'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { FormattedDate } from 'react-intl'
 import { useNavigate } from 'react-router-dom'
-import { useToggle } from 'react-use'
 import Popprompt, { PoppromptProps } from '../../components/Modal/Popprompt'
+import {
+  Application,
+  useApplications,
+  useCreateApplication,
+  useDeleteApplication,
+  useUpdateApplication,
+} from './graphql'
 
 export default function HomeView() {
-  const apps = useApps()
+  const { data: { applications } = {} } = useApplications()
 
   return (
     <Box pb={10} sx={{ maxWidth: 800, margin: 'auto' }}>
       <Row gutter={16}>
-        {apps.data?.applications.map(app => (
+        {applications?.map(app => (
           <Col key={app.id} xs={8}>
-            <AppItem app={app} />
+            <AppItem application={app} />
           </Col>
         ))}
         <Col key="add" xs={8}>
-          <AddApp />
+          <AppCreator />
         </Col>
       </Row>
     </Box>
   )
 }
 
-interface Application {
-  id: string
-  createdAt: number
-  updatedAt?: number
-  name?: string
-}
-
-const useApps = () =>
-  useQuery<{ applications: Application[] }>(gql`
-    query Applications {
-      applications {
-        id
-        createdAt
-        updatedAt
-        name
-      }
-    }
-  `)
-
-const AppItem = ({ app }: { app: Application }) => {
+const AppItem = ({ application }: { application: Application }) => {
   const navigate = useNavigate()
-  const [deleteApp] = useMutation<{ deleteApplication: boolean }, { applicationId: string }>(
-    gql`
-      mutation DeleteApplication($applicationId: String!) {
-        deleteApplication(applicationId: $applicationId)
-      }
-    `,
-    { refetchQueries: ['Applications'] }
-  )
+  const [deleteApplication] = useDeleteApplication()
+  const [updateApplication] = useUpdateApplication()
 
-  const handleDelete = () => {
-    deleteApp({ variables: { applicationId: app.id } })
+  const handleDelete = useCallback(() => {
+    deleteApplication({ variables: { applicationId: application.id } })
       .then(() => message.success('删除成功'))
-      .catch(error => message.error(error.message))
-  }
+      .catch(error => {
+        message.error(error.message)
+        throw error
+      })
+  }, [application])
 
-  const handleToDetail = () => {
-    navigate(`/application/${app.id}`)
-  }
+  const handleDetail = useCallback(() => {
+    navigate(`/application/${application.id}`)
+  }, [application])
 
-  const [nameUpdaterVisible, toggleNameUpdaterVisible] = useToggle(false)
+  const [nameUpdaterProps, setNameUpdaterProps] = useState<PoppromptProps>()
+
+  const handleToggleNameUpdater = useCallback(() => {
+    setNameUpdaterProps({
+      value: application.name,
+      visible: true,
+      onSubmit: name => {
+        updateApplication({
+          variables: {
+            applicationId: application.id,
+            input: { name },
+          },
+        })
+          .then(() => setNameUpdaterProps(undefined))
+          .catch(error => {
+            setNameUpdaterProps(props => ({ ...props, error }))
+            throw error
+          })
+      },
+      onVisibleChange: () => setNameUpdaterProps(undefined),
+    })
+  }, [application])
 
   return (
     <_ItemContainer>
-      <Box sx={{ display: 'flex', alignItems: 'center' }} onClick={handleToDetail}>
+      <Box sx={{ display: 'flex', alignItems: 'center' }} onClick={handleDetail}>
         <Box sx={{ p: 2, color: '#eeeeee' }}>
           <AppstoreOutlined style={{ fontSize: 60 }} />
         </Box>
@@ -100,19 +104,15 @@ const AppItem = ({ app }: { app: Application }) => {
         <Box sx={{ flex: 1, overflow: 'hidden', pr: 2 }}>
           <Box>
             <Typography.Title level={5} ellipsis>
-              <AppNameUpdater
-                app={app}
-                visible={nameUpdaterVisible}
-                onVisibleChange={toggleNameUpdaterVisible}
-              >
-                <span>{app.name || '未命名'}</span>
-              </AppNameUpdater>
+              <Popprompt {...nameUpdaterProps}>
+                <span>{application.name || '未命名'}</span>
+              </Popprompt>
             </Typography.Title>
           </Box>
 
           <Typography.Text ellipsis type="secondary">
             <FormattedDate
-              value={app.updatedAt ?? app.createdAt}
+              value={application.updatedAt ?? application.createdAt}
               year="numeric"
               month="numeric"
               day="numeric"
@@ -131,7 +131,7 @@ const AppItem = ({ app }: { app: Application }) => {
         placement="bottomCenter"
         overlay={() => (
           <Menu>
-            <Menu.Item key="rename" icon={<EditOutlined />} onClick={toggleNameUpdaterVisible}>
+            <Menu.Item key="rename" icon={<EditOutlined />} onClick={handleToggleNameUpdater}>
               重命名
             </Menu.Item>
             <Menu.Item key="delete" icon={<DeleteOutlined />} onClick={handleDelete}>
@@ -148,60 +148,20 @@ const AppItem = ({ app }: { app: Application }) => {
   )
 }
 
-const AppNameUpdater = ({
-  app,
-  ...props
-}: {
-  app: { id: string; name?: string }
-} & PoppromptProps) => {
-  const [updateApp, { loading, error }] = useMutation<
-    { updateApplication: { id: string; updatedAt?: number; name?: string } },
-    { applicationId: string; input: { name: string } }
-  >(gql`
-    mutation UpdateApplication($applicationId: String!, $input: UpdateApplicationInput!) {
-      updateApplication(applicationId: $applicationId, input: $input) {
-        id
-        updatedAt
-        name
-      }
-    }
-  `)
+const AppCreator = () => {
+  const [createApplication] = useCreateApplication()
 
-  const updateName = useCallback(
-    (name: string) => {
-      if (loading) {
-        return
-      }
-      updateApp({ variables: { applicationId: app.id, input: { name } } }).then(() =>
-        props.onVisibleChange?.(false)
-      )
-    },
-    [app.id]
-  )
-
-  return <Popprompt {...props} error={error} value={app.name} onSubmit={updateName} />
-}
-
-const AddApp = () => {
-  const [createApplication] = useMutation<
-    { createApplication: { id: string; createdAt: number; updated?: number; name?: string } },
-    { input: { name?: string } }
-  >(
-    gql`
-      mutation CreateApplication($input: CreateApplicationInput!) {
-        createApplication(input: $input) {
-          id
-          createdAt
-          updatedAt
-          name
-        }
-      }
-    `,
-    { refetchQueries: ['Applications'] }
-  )
+  const handleCreate = useCallback(() => {
+    createApplication({ variables: { input: {} } })
+      .then(() => message.success('创建成功'))
+      .catch(error => {
+        message.error(error.message)
+        throw error
+      })
+  }, [])
 
   return (
-    <_ItemContainer onClick={() => createApplication({ variables: { input: {} } })}>
+    <_ItemContainer onClick={handleCreate}>
       <PlusOutlined />
     </_ItemContainer>
   )
