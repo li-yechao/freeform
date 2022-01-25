@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose'
 import { ApplicationModule } from './application/application.module'
 import { AuthModule } from './auth/auth.module'
 import { FormModule } from './form/form.module'
-
+import { RecordModule } from './record/record.module'
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath: ['.env.local', '.env'] }),
@@ -23,6 +23,7 @@ import { FormModule } from './form/form.module'
     FormModule,
     AuthModule,
     ApplicationModule,
+    RecordModule,
   ],
   controllers: [],
   providers: [],

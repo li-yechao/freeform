@@ -1,6 +1,5 @@
 import { Field as GraphqlField, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { Application } from 'express'
 import { GraphQLJSONObject } from 'graphql-type-json'
 import { Types } from 'mongoose'
 
@@ -87,8 +86,8 @@ export class Form {
   @GraphqlField(() => ID)
   id!: string
 
-  @Prop({ required: true, type: Types.ObjectId, ref: 'Application' })
-  application!: Application
+  @Prop({ type: Types.ObjectId, required: true })
+  application!: string
 
   @Prop({ required: true })
   @GraphqlField()
