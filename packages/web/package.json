@@ -1,6 +1,6 @@
 {
-  "name": "@freeform/creator",
-  "description": "freeform creator",
+  "name": "@freeform/web",
+  "description": "freeform web",
   "version": "0.0.0",
   "author": "LiYechao <liyechao@yechao.xyz>",
   "private": true,
