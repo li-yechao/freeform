@@ -20,6 +20,7 @@ import { ApplicationModule } from './application/application.module'
 import { AuthModule } from './auth/auth.module'
 import { FormModule } from './form/form.module'
 import { RecordModule } from './record/record.module'
+import { WorkflowModule } from './workflow/workflow.module'
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath: ['.env.local', '.env'] }),
@@ -38,6 +39,7 @@ import { RecordModule } from './record/record.module'
     AuthModule,
     ApplicationModule,
     RecordModule,
+    WorkflowModule,
   ],
   controllers: [],
   providers: [],
