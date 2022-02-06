@@ -12,13 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react'
-import LazyView from '../../components/LazyView'
+import styled from '@emotion/styled'
+import { ReactNode } from 'react'
 
-export const ApplicationViewLazy = LazyView(React.lazy(() => import('./ApplicationView')))
+export default function NodeIcon({ children }: { children: ReactNode }) {
+  return <_Container children={children} />
+}
 
-export const WorkflowViewLazy = LazyView(React.lazy(() => import('./workflow/WorkflowView')))
-
-export const WorkflowEditViewLazy = LazyView(
-  React.lazy(() => import('./workflow-edit/WorkflowEditView'))
-)
+const _Container = styled.div`
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.2);
+`

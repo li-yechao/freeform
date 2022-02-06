@@ -12,14 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { Button } from 'antd'
 import { useEffect } from 'react'
 import { Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import AsideLayout from '../../components/Layout/AsideLayout'
+import { HeaderAction, useHeaderActionsCtrl } from '../../state/header'
 import { FormLazyView } from '../form'
 import FormList from './FormList'
 import { useApplication } from './graphql'
 
 export default function ApplicationView() {
+  const { applicationId } = useParams<'applicationId'>()
+  if (!applicationId) {
+    throw new Error('Required parameter applicationId is missing')
+  }
+
+  const headerActionsCtrl = useHeaderActionsCtrl()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const workflowButton: HeaderAction<React.ComponentProps<typeof Button>> = {
+      key: 'ApplicationView-WorkflowButton',
+      component: Button,
+      props: {
+        children: '工作流',
+        type: 'link',
+        onClick: () => navigate(`/application/${applicationId}/workflow`),
+      },
+    }
+    headerActionsCtrl.set(workflowButton)
+
+    return () => headerActionsCtrl.remove(workflowButton)
+  }, [applicationId])
+
   return (
     <AsideLayout
       sx={{ pt: 6 }}

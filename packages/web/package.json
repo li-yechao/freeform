@@ -20,6 +20,7 @@
     "dayjs": "^1.10.7",
     "graphql": "^16.2.0",
     "immer": "^9.0.12",
+    "monaco-editor": "^0.32.1",
     "react": "^17.0.2",
     "react-dnd": "^14.0.5",
     "react-dnd-html5-backend": "^14.1.0",

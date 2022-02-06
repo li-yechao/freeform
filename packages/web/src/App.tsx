@@ -36,7 +36,7 @@ import {
 } from './state/account'
 import { useHeaderActions } from './state/header'
 import useAsync from './utils/useAsync'
-import { ApplicationViewLazy } from './views/application'
+import { ApplicationViewLazy, WorkflowEditViewLazy, WorkflowViewLazy } from './views/application'
 import { AuthViewLazy } from './views/auth'
 import { ErrorViewLazy, NotFoundViewLazy } from './views/error'
 import ErrorView from './views/error/ErrorView'
@@ -117,6 +117,12 @@ const _AppRoutes = () => {
     <Routes>
       <Route index element={<HomeViewLazy />} />
       <Route path="/application/:applicationId/*" element={<ApplicationViewLazy />} />
+      <Route path="/application/:applicationId/workflow/*" element={<NotFoundViewLazy />} />
+      <Route path="/application/:applicationId/workflow" element={<WorkflowViewLazy />} />
+      <Route
+        path="/application/:applicationId/workflow/:workflowId/edit"
+        element={<WorkflowEditViewLazy />}
+      />
       <Route path="/application/:applicationId/:formId/edit" element={<FormEditorLazyViwe />} />
       <Route path="*" element={<NotFoundViewLazy />} />
     </Routes>
