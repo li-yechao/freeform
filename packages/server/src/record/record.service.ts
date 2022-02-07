@@ -16,6 +16,7 @@ import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { FormService } from '../form/form.service'
+import { WorkflowService } from '../workflow/workflow.service'
 import { CreateRecordInput, UpdateRecordInput } from './record.input'
 import { Record } from './record.schema'
 
@@ -23,7 +24,8 @@ import { Record } from './record.schema'
 export class RecordService {
   constructor(
     @InjectModel(Record.name) private readonly recordModel: Model<Record>,
-    private readonly formService: FormService
+    private readonly formService: FormService,
+    private readonly workflowService: WorkflowService
   ) {}
 
   async selectRecord(
@@ -109,12 +111,16 @@ export class RecordService {
     // TODO: verify input data schema
     const data: Record['data'] = input.data
 
-    return this.recordModel.create({
+    const record = await this.recordModel.create({
       owner: viewerId,
       form: formId,
       createdAt: Date.now(),
       data,
     })
+
+    this.postCreateEvent(appId, formId, record)
+
+    return record
   }
 
   async updateRecord(
@@ -166,5 +172,9 @@ export class RecordService {
       },
       { new: true }
     )
+  }
+
+  async postCreateEvent(applicationId: string, formId: string, record: Record) {
+    await this.workflowService.onCreateRecordSuccess(applicationId, formId, record)
   }
 }

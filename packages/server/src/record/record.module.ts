@@ -19,6 +19,8 @@ import { Application, ApplicationSchema } from '../application/application.schem
 import { ApplicationService } from '../application/application.service'
 import { Form, FormSchema } from '../form/form.schema'
 import { FormService } from '../form/form.service'
+import { Workflow, WorkflowSchema } from '../workflow/workflow.schema'
+import { WorkflowService } from '../workflow/workflow.service'
 import { RecordResolver } from './record.resolver'
 import { Record, RecordSchema } from './record.schema'
 import { RecordService } from './record.service'
@@ -27,10 +29,18 @@ import { RecordService } from './record.service'
   imports: [
     MongooseModule.forFeature([
       { name: Application.name, schema: ApplicationSchema },
+      { name: Workflow.name, schema: WorkflowSchema },
       { name: Form.name, schema: FormSchema },
       { name: Record.name, schema: RecordSchema },
     ]),
   ],
-  providers: [ConfigService, ApplicationService, FormService, RecordResolver, RecordService],
+  providers: [
+    ConfigService,
+    ApplicationService,
+    WorkflowService,
+    FormService,
+    RecordResolver,
+    RecordService,
+  ],
 })
 export class RecordModule {}

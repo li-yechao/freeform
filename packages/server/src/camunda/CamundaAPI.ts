@@ -45,6 +45,20 @@ export default class CamundaAPI {
     })
   }
 
+  async processDefinitionStart({
+    key,
+    variables,
+  }: {
+    key: string
+    variables: { [key: string]: { value: string | boolean } }
+  }) {
+    return this.request({
+      path: `/process-definition/key/${key}/start`,
+      method: 'POST',
+      body: { variables },
+    })
+  }
+
   private async request({
     path,
     method,

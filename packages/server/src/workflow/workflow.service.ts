@@ -5,6 +5,7 @@ import { Model } from 'mongoose'
 import { ApplicationService } from '../application/application.service'
 import CamundaAPI from '../camunda/CamundaAPI'
 import workflowToBpmn from '../camunda/workflowToBpmn'
+import { Record } from '../record/record.schema'
 import { CreateWorkflowInput, UpdateWorkflowInput } from './workflow.input'
 import { Workflow } from './workflow.schema'
 
@@ -114,5 +115,23 @@ export class WorkflowService {
       deploymentName: workflow.id,
       xml: await workflowToBpmn(workflow),
     })
+  }
+
+  async onCreateRecordSuccess(applicationId: string, formId: string, record: Record) {
+    const workflows = await this.workflowModel.find({
+      application: applicationId,
+      deletedAt: null,
+      'trigger.type': 'form_trigger',
+      'trigger.formId': formId,
+      'trigger.actions.type': 'create',
+    })
+    for (const workflow of workflows) {
+      this.camundaAPI.processDefinitionStart({
+        key: `Process_${workflow.id}`,
+        variables: {
+          form_trigger_data: { value: JSON.stringify(record) },
+        },
+      })
+    }
   }
 }
