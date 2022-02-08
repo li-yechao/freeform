@@ -117,7 +117,12 @@ export class WorkflowService {
     })
   }
 
-  async onCreateRecordSuccess(applicationId: string, formId: string, record: Record) {
+  async onCreateRecordSuccess(
+    viewerId: string,
+    applicationId: string,
+    formId: string,
+    record: Record
+  ) {
     const workflows = await this.workflowModel.find({
       application: applicationId,
       deletedAt: null,
@@ -129,7 +134,10 @@ export class WorkflowService {
       this.camundaAPI.processDefinitionStart({
         key: `Process_${workflow.id}`,
         variables: {
-          form_trigger_data: { value: JSON.stringify(record) },
+          form_trigger_viewer_id: { value: viewerId },
+          form_trigger_application_id: { value: applicationId },
+          form_trigger_form_id: { value: formId },
+          form_trigger_record: { value: JSON.stringify(record) },
         },
       })
     }

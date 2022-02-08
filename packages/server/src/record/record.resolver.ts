@@ -62,13 +62,13 @@ export class RecordResolver {
     @Args('viewId') viewId: string,
     @Args('recordId') recordId: string
   ): Promise<Record> {
-    const record = await this.recordService.selectRecord(
-      viewer.unionId,
-      form.application,
-      form.id,
+    const record = await this.recordService.selectRecord({
+      viewerId: viewer.unionId,
+      applicationId: form.application,
+      formId: form.id,
       viewId,
-      recordId
-    )
+      recordId,
+    })
     if (!record) {
       throw new Error('Not found')
     }
@@ -78,28 +78,33 @@ export class RecordResolver {
   @Mutation(() => Record)
   async createRecord(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string,
+    @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('input') input: CreateRecordInput
   ): Promise<Record> {
-    return await this.recordService.createRecord(viewer.unionId, appId, formId, input)
+    return await this.recordService.createRecord({
+      viewerId: viewer.unionId,
+      applicationId,
+      formId,
+      input,
+    })
   }
 
   @Mutation(() => Record)
   async updateRecord(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string,
+    @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('recordId') recordId: string,
     @Args('input') input: UpdateRecordInput
   ): Promise<Record> {
-    const record = await this.recordService.updateRecord(
-      viewer.unionId,
-      appId,
+    const record = await this.recordService.updateRecord({
+      viewerId: viewer.unionId,
+      applicationId,
       formId,
       recordId,
-      input
-    )
+      input,
+    })
     if (!record) {
       throw new Error(`Not found`)
     }
@@ -109,11 +114,16 @@ export class RecordResolver {
   @Mutation(() => Boolean)
   async deleteRecord(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string,
+    @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('recordId') recordId: string
   ): Promise<boolean> {
-    const record = await this.recordService.deleteRecord(viewer.unionId, appId, formId, recordId)
+    const record = await this.recordService.deleteRecord({
+      viewerId: viewer.unionId,
+      applicationId,
+      formId,
+      recordId,
+    })
     if (!record) {
       throw new Error(`Not found`)
     }
@@ -126,7 +136,7 @@ export class RecordConnection {
   constructor(
     private readonly recordService: RecordService,
     private readonly viewer: Viewer,
-    private readonly appId: string,
+    private readonly applicationId: string,
     private readonly formId: string,
     private readonly viewId: string,
     private readonly page: number,
@@ -137,14 +147,14 @@ export class RecordConnection {
 
   private get list() {
     if (!this._list) {
-      this._list = this.recordService.selectRecords(
-        this.viewer.unionId,
-        this.appId,
-        this.formId,
-        this.viewId,
-        this.page,
-        this.limit
-      )
+      this._list = this.recordService.selectRecords({
+        viewerId: this.viewer.unionId,
+        applicationId: this.applicationId,
+        formId: this.formId,
+        viewId: this.viewId,
+        page: this.page,
+        limit: this.limit,
+      })
     }
     return this._list
   }
@@ -159,12 +169,12 @@ export class RecordConnection {
   private get _pageInfo() {
     if (!this.__pageInfo) {
       this.__pageInfo = new PageInfo(() =>
-        this.recordService.selectRecordCount(
-          this.viewer.unionId,
-          this.appId,
-          this.formId,
-          this.viewId
-        )
+        this.recordService.selectRecordCount({
+          viewerId: this.viewer.unionId,
+          applicationId: this.applicationId,
+          formId: this.formId,
+          viewId: this.viewId,
+        })
       )
     }
     return this.__pageInfo

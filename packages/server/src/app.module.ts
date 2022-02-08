@@ -21,6 +21,8 @@ import { AuthModule } from './auth/auth.module'
 import { FormModule } from './form/form.module'
 import { RecordModule } from './record/record.module'
 import { WorkflowModule } from './workflow/workflow.module'
+import { CamundaModule } from './camunda/camunda.module'
+
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath: ['.env.local', '.env'] }),
@@ -40,6 +42,7 @@ import { WorkflowModule } from './workflow/workflow.module'
     ApplicationModule,
     RecordModule,
     WorkflowModule,
+    CamundaModule,
   ],
   controllers: [],
   providers: [],

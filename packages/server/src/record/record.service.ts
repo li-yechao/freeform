@@ -28,14 +28,20 @@ export class RecordService {
     private readonly workflowService: WorkflowService
   ) {}
 
-  async selectRecord(
-    viewerId: string,
-    appId: string,
-    formId: string,
-    viewId: string,
+  async selectRecord({
+    viewerId,
+    applicationId,
+    formId,
+    viewId,
+    recordId,
+  }: {
+    viewerId: string
+    applicationId: string
+    formId: string
+    viewId: string
     recordId: string
-  ): Promise<Record | null> {
-    const form = await this.formService.selectForm(viewerId, appId, formId)
+  }): Promise<Record | null> {
+    const form = await this.formService.selectForm(viewerId, applicationId, formId)
     if (!form) {
       throw new Error(`Form ${formId} not found`)
     }
@@ -51,15 +57,22 @@ export class RecordService {
     return record
   }
 
-  async selectRecords(
-    viewerId: string,
-    appId: string,
-    formId: string,
-    viewId: string,
-    page: number,
+  async selectRecords({
+    viewerId,
+    applicationId,
+    formId,
+    viewId,
+    page,
+    limit,
+  }: {
+    viewerId: string
+    applicationId: string
+    formId: string
+    viewId: string
+    page: number
     limit: number
-  ): Promise<Record[]> {
-    const form = await this.formService.selectForm(viewerId, appId, formId)
+  }): Promise<Record[]> {
+    const form = await this.formService.selectForm(viewerId, applicationId, formId)
     if (!form) {
       throw new Error(`Form ${formId} not found`)
     }
@@ -79,13 +92,18 @@ export class RecordService {
     return records
   }
 
-  async selectRecordCount(
-    viewerId: string,
-    appId: string,
-    formId: string,
+  async selectRecordCount({
+    viewerId,
+    applicationId,
+    formId,
+    viewId,
+  }: {
+    viewerId: string
+    applicationId: string
+    formId: string
     viewId: string
-  ): Promise<number> {
-    const form = await this.formService.selectForm(viewerId, appId, formId)
+  }): Promise<number> {
+    const form = await this.formService.selectForm(viewerId, applicationId, formId)
     if (!form) {
       throw new Error(`Form ${formId} not found`)
     }
@@ -97,84 +115,183 @@ export class RecordService {
     return this.recordModel.countDocuments({ form: formId, deletedAt: null })
   }
 
-  async createRecord(
-    viewerId: string,
-    appId: string,
-    formId: string,
+  async createRecord({
+    viewerId,
+    applicationId,
+    formId,
+    input,
+  }: {
+    viewerId: string
+    applicationId: string
+    formId: string
     input: CreateRecordInput
-  ): Promise<Record> {
-    const form = await this.formService.selectForm(viewerId, appId, formId)
+  }): Promise<Record> {
+    const form = await this.formService.selectForm(viewerId, applicationId, formId)
     if (!form) {
       throw new Error(`Form ${formId} not found`)
     }
 
-    // TODO: verify input data schema
-    const data: Record['data'] = input.data
-
-    const record = await this.recordModel.create({
+    const record = await this._createRecord({
       owner: viewerId,
-      form: formId,
-      createdAt: Date.now(),
-      data,
+      formId,
+      data: input.data,
     })
 
-    this.postCreateEvent(appId, formId, record)
+    // post create record event
+    {
+      this.workflowService.onCreateRecordSuccess(viewerId, applicationId, formId, record)
+    }
 
     return record
   }
 
-  async updateRecord(
-    viewerId: string,
-    appId: string,
-    formId: string,
-    recordId: string,
+  async updateRecord({
+    viewerId,
+    applicationId,
+    formId,
+    recordId,
+    input,
+  }: {
+    viewerId: string
+    applicationId: string
+    formId: string
+    recordId: string
     input: UpdateRecordInput
-  ): Promise<Record | null> {
-    const form = await this.formService.selectForm(viewerId, appId, formId)
+  }): Promise<Record | null> {
+    const form = await this.formService.selectForm(viewerId, applicationId, formId)
     if (!form) {
       throw new Error(`Form ${formId} not found`)
     }
 
+    return this._updateRecord({ formId, recordId, data: input.data })
+  }
+
+  async deleteRecord({
+    viewerId,
+    applicationId,
+    formId,
+    recordId,
+  }: {
+    viewerId: string
+    applicationId: string
+    formId: string
+    recordId: string
+  }): Promise<Record | null> {
+    const form = await this.formService.selectForm(viewerId, applicationId, formId)
+    if (!form) {
+      throw new Error(`Form ${formId} not found`)
+    }
+
+    return this._deleteRecord({ formId, recordId })
+  }
+
+  async workflow_selectRecord({
+    formId,
+    recordId,
+  }: {
+    formId: string
+    recordId: string
+  }): Promise<Record | null> {
+    return this._selectRecord({ formId, recordId })
+  }
+
+  async workflow_createRecord({
+    owner,
+    formId,
+    data,
+  }: {
+    owner: string
+    formId: string
+    data: { [key: string]: { value: any } }
+  }): Promise<Record | null> {
+    return this._createRecord({ owner, formId, data })
+  }
+
+  async workflow_updateRecord({
+    formId,
+    recordId,
+    data,
+  }: {
+    formId: string
+    recordId: string
+    data: { [key: string]: { value: any } }
+  }): Promise<Record | null> {
+    return this._updateRecord({ formId, recordId, data })
+  }
+
+  async workflow_deleteRecord({
+    formId,
+    recordId,
+  }: {
+    formId: string
+    recordId: string
+  }): Promise<Record | null> {
+    return this._deleteRecord({ formId, recordId })
+  }
+
+  private async _selectRecord({
+    formId,
+    recordId,
+  }: {
+    formId: string
+    recordId: string
+  }): Promise<Record | null> {
+    return this.recordModel.findOne({ _id: recordId, form: formId, deletedAt: null })
+  }
+
+  private async _createRecord({
+    owner,
+    formId,
+    data,
+  }: {
+    owner: string
+    formId: string
+    data?: { [key: string]: { value: any } }
+  }): Promise<Record> {
     // TODO: verify input data schema
-    const data = Object.entries(input.data ?? {}).reduce<{
-      [key: `data.${string}`]: { value: any }
-    }>((res, [key, val]) => Object.assign(res, { [`data.${key}`]: val }), {})
+
+    return this.recordModel.create({
+      owner,
+      form: formId,
+      createdAt: Date.now(),
+      data,
+    })
+  }
+
+  private async _updateRecord({
+    formId,
+    recordId,
+    data = {},
+  }: {
+    formId: string
+    recordId: string
+    data?: { [key: string]: { value: any } } | undefined
+  }): Promise<Record | null> {
+    // TODO: verify input data schema
+
+    const update = Object.entries(data).reduce(
+      (res, [key, value]) => Object.assign(res, { [`data.${key}`]: value }),
+      {}
+    )
 
     return this.recordModel.findOneAndUpdate(
       { _id: recordId, form: formId, deletedAt: null },
-      {
-        $set: {
-          updatedAt: Date.now(),
-          ...data,
-        },
-      },
+      { $set: { updatedAt: Date.now(), ...update } },
       { new: true }
     )
   }
 
-  async deleteRecord(
-    viewerId: string,
-    appId: string,
-    formId: string,
+  private async _deleteRecord({
+    formId,
+    recordId,
+  }: {
+    formId: string
     recordId: string
-  ): Promise<Record | null> {
-    const form = await this.formService.selectForm(viewerId, appId, formId)
-    if (!form) {
-      throw new Error(`Form ${formId} not found`)
-    }
-
+  }): Promise<Record | null> {
     return this.recordModel.findOneAndUpdate(
-      { _id: recordId, form: formId },
-      {
-        $set: {
-          deletedAt: Date.now(),
-        },
-      },
+      { _id: recordId, form: formId, deletedAt: null },
+      { $set: { deletedAt: Date.now() } },
       { new: true }
     )
-  }
-
-  async postCreateEvent(applicationId: string, formId: string, record: Record) {
-    await this.workflowService.onCreateRecordSuccess(applicationId, formId, record)
   }
 }
