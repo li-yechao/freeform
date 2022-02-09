@@ -142,4 +142,56 @@ export class WorkflowService {
       })
     }
   }
+
+  async onUpdateRecordSuccess(
+    viewerId: string,
+    applicationId: string,
+    formId: string,
+    record: Record
+  ) {
+    const workflows = await this.workflowModel.find({
+      application: applicationId,
+      deletedAt: null,
+      'trigger.type': 'form_trigger',
+      'trigger.formId': formId,
+      'trigger.actions.type': 'update',
+    })
+    for (const workflow of workflows) {
+      this.camundaAPI.processDefinitionStart({
+        key: `Process_${workflow.id}`,
+        variables: {
+          form_trigger_viewer_id: { value: viewerId },
+          form_trigger_application_id: { value: applicationId },
+          form_trigger_form_id: { value: formId },
+          form_trigger_record: { value: JSON.stringify(record) },
+        },
+      })
+    }
+  }
+
+  async onDeleteRecordSuccess(
+    viewerId: string,
+    applicationId: string,
+    formId: string,
+    record: Record
+  ) {
+    const workflows = await this.workflowModel.find({
+      application: applicationId,
+      deletedAt: null,
+      'trigger.type': 'form_trigger',
+      'trigger.formId': formId,
+      'trigger.actions.type': 'delete',
+    })
+    for (const workflow of workflows) {
+      this.camundaAPI.processDefinitionStart({
+        key: `Process_${workflow.id}`,
+        variables: {
+          form_trigger_viewer_id: { value: viewerId },
+          form_trigger_application_id: { value: applicationId },
+          form_trigger_form_id: { value: formId },
+          form_trigger_record: { value: JSON.stringify(record) },
+        },
+      })
+    }
+  }
 }

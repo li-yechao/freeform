@@ -163,7 +163,14 @@ export class RecordService {
       throw new Error(`Form ${formId} not found`)
     }
 
-    return this._updateRecord({ formId, recordId, data: input.data })
+    const record = await this._updateRecord({ formId, recordId, data: input.data })
+
+    // post create record event
+    {
+      record && this.workflowService.onUpdateRecordSuccess(viewerId, applicationId, formId, record)
+    }
+
+    return record
   }
 
   async deleteRecord({
@@ -182,7 +189,14 @@ export class RecordService {
       throw new Error(`Form ${formId} not found`)
     }
 
-    return this._deleteRecord({ formId, recordId })
+    const record = await this._deleteRecord({ formId, recordId })
+
+    // post create record event
+    {
+      record && this.workflowService.onDeleteRecordSuccess(viewerId, applicationId, formId, record)
+    }
+
+    return record
   }
 
   async workflow_selectRecord({

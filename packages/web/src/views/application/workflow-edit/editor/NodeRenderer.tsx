@@ -108,6 +108,10 @@ export default function NodeRenderer({
 function actionText(action: FormTriggerAction): string {
   if (action.type === 'create') {
     return '创建成功'
+  } else if (action.type === 'update') {
+    return '更新成功'
+  } else if (action.type === 'delete') {
+    return '删除成功'
   }
   throw new Error(`Invalid form tirgger action ${action}`)
 }

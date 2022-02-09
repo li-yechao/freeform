@@ -34,7 +34,7 @@ export interface FormTrigger {
   actions?: FormTriggerAction[]
 }
 
-export type FormTriggerAction = { type: 'create' }
+export type FormTriggerAction = { type: 'create' } | { type: 'update' } | { type: 'delete' }
 
 export type Node = ScriptJsNode
 

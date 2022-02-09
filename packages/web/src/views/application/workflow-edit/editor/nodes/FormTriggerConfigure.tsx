@@ -14,7 +14,7 @@
 
 import { gql, QueryHookOptions, useQuery } from '@apollo/client'
 import { Checkbox, Select, Space, Typography } from 'antd'
-import { FormTrigger } from '../state'
+import { FormTrigger, FormTriggerAction } from '../state'
 
 export default function FormTriggerConfigure({
   applicationId,
@@ -27,6 +27,16 @@ export default function FormTriggerConfigure({
 }) {
   const { data: { application } = {} } = useApplicationForms({ variables: { applicationId } })
   const forms = application?.forms
+
+  const toggleAction = (type: FormTriggerAction['type']) => {
+    if (node.actions?.some(i => i.type === type)) {
+      onChange({ actions: node.actions?.filter(i => i.type !== type) })
+    } else {
+      const actions = [...(node.actions ?? [])]
+      actions.push({ type })
+      onChange({ actions })
+    }
+  }
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
@@ -52,28 +62,28 @@ export default function FormTriggerConfigure({
         <div>
           <Checkbox
             checked={node.actions?.some(i => i.type === 'create')}
-            onChange={v => {
-              if (v.target.checked) {
-                const actions = [...(node.actions ?? [])]
-                if (!actions.some(i => i.type === 'create')) {
-                  actions.push({ type: 'create' })
-                }
-                onChange({ actions })
-              } else {
-                onChange({ actions: node.actions?.filter(i => i.type !== 'create') })
-              }
-            }}
+            onChange={() => toggleAction('create')}
           >
             创建成功
           </Checkbox>
         </div>
 
-        <div title="暂不支持">
-          <Checkbox disabled>更新成功</Checkbox>
+        <div>
+          <Checkbox
+            checked={node.actions?.some(i => i.type === 'update')}
+            onChange={() => toggleAction('update')}
+          >
+            更新成功
+          </Checkbox>
         </div>
 
-        <div title="暂不支持">
-          <Checkbox disabled>删除成功</Checkbox>
+        <div>
+          <Checkbox
+            checked={node.actions?.some(i => i.type === 'delete')}
+            onChange={() => toggleAction('delete')}
+          >
+            删除成功
+          </Checkbox>
         </div>
       </div>
     </Space>
