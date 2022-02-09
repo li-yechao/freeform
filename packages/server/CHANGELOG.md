@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.1](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.0...@freeform/server@0.1.0-alpha.1) (2022-02-10)
+
+### Features
+
+- add workflow api ([f2d1afb](https://github.com/li-yechao/freeform/commit/f2d1afbe7332d9436c9f7c2a67a484946654e884))
+- start workflow after create record ([ba12113](https://github.com/li-yechao/freeform/commit/ba121130db49aca3f606f616eb80360b2c4f2d40))
+- support update and delete trigger ([fc09b7b](https://github.com/li-yechao/freeform/commit/fc09b7b02cf76138e4fe729d7e4c224b32aebccf))
+- worker for camunda ([944bd47](https://github.com/li-yechao/freeform/commit/944bd478b9cfea5b2fd91f207d445bf0fbdd426d))
+
 # 0.1.0-alpha.0 (2022-01-27)
 
 ### Bug Fixes
