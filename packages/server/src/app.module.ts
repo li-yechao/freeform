@@ -35,7 +35,7 @@ import { CamundaModule } from './camunda/camunda.module'
     }),
     GraphQLModule.forRoot({
       autoSchemaFile: true,
-      context: ({ req }) => ({ headers: req.headers }),
+      context: ({ req }: any) => ({ headers: req.headers }),
     }),
     FormModule,
     AuthModule,
