@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.2](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.1...@freeform/server@0.1.0-alpha.2) (2022-02-10)
+
+### Bug Fixes
+
+- add any type ([cd812ef](https://github.com/li-yechao/freeform/commit/cd812ef4bdc77bc42cd8b30af2fc045ac60d662c))
+
 # [0.1.0-alpha.1](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.0...@freeform/server@0.1.0-alpha.1) (2022-02-10)
 
 ### Features
