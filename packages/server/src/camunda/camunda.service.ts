@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as camunda from 'camunda-external-task-client-js'
-import { NodeVM } from 'vm2'
+import { VM } from 'vm2'
 import { RecordService } from '../record/record.service'
 
 @Injectable()
@@ -17,7 +17,7 @@ export class CamundaService {
   private client: camunda.Client
 
   start() {
-    this.client.subscribe('script_js', e => {
+    this.client.subscribe('script_js', async e => {
       const script = e.task.variables.get(`${e.task.activityId}_script`)
 
       const viewerId = e.task.variables.get('form_trigger_viewer_id')
@@ -35,7 +35,7 @@ export class CamundaService {
         throw new Error(`Required variable form_trigger_form_id is missing`)
       }
 
-      const vm = new NodeVM({
+      const vm = new VM({
         sandbox: {
           variables: {
             get formTriggerViewerId() {
@@ -83,7 +83,7 @@ export class CamundaService {
           },
         },
       })
-      vm.run(script)
+      await vm.run(script)
       e.taskService.complete(e.task)
     })
   }
