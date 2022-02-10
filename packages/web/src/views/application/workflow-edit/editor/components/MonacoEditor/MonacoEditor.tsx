@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import styled from '@emotion/styled'
-import { editor } from 'monaco-editor'
+import { editor, languages } from 'monaco-editor'
 import { useRef, useEffect } from 'react'
 import './monaco.vite'
 
@@ -23,8 +23,8 @@ export type MonacoInstance = {
 
 export interface MonacoEditorProps {
   className?: string
-  language?: string
   value?: string
+  extraLibs?: { content: string }[]
   onChange?: (value: string) => void
 }
 
@@ -34,13 +34,26 @@ export default function MonacoEditor(props: MonacoEditorProps) {
   const monacoEditor = useRef<editor.ICodeEditor>()
 
   useEffect(() => {
+    languages.typescript.typescriptDefaults.setCompilerOptions({
+      lib: ['esnext', 'es2015'],
+      target: languages.typescript.ScriptTarget.ESNext,
+      allowNonTsExtensions: true,
+      allowJs: true,
+      checkJs: true,
+      strict: true,
+    })
+
+    languages.typescript.typescriptDefaults.setExtraLibs(props.extraLibs ?? [])
+  }, [props.extraLibs])
+
+  useEffect(() => {
     if (!container.current) {
       return
     }
 
     monacoEditor.current = editor.create(container.current, {
-      model: createModel(props.value, props.language),
-      language: props.language,
+      model: createModel(props.value),
+      language: 'typescript',
       automaticLayout: true,
       minimap: {
         enabled: true,
@@ -73,16 +86,11 @@ export default function MonacoEditor(props: MonacoEditorProps) {
     }
   }, [props.value])
 
-  useEffect(() => {
-    const model = monacoEditor.current?.getModel()
-    model && editor.setModelLanguage(model, props.language || 'plaintext')
-  }, [props.language])
-
   return <_Editor className={props.className} ref={container} />
 }
 
-function createModel(value?: string, language?: string) {
-  const model = editor.createModel(value || '', language)
+function createModel(value?: string) {
+  const model = editor.createModel(value || '', 'typescript')
   model.updateOptions({ tabSize: 2 })
   return model
 }

@@ -35,50 +35,66 @@ export class CamundaService {
         throw new Error(`Required variable form_trigger_form_id is missing`)
       }
 
+      const record = e.task.variables.get('form_trigger_record')
+
       const vm = new VM({
         sandbox: {
-          variables: {
-            get formTriggerViewerId() {
+          application: new Proxy(
+            {},
+            {
+              get: (_, p) => {
+                const m = p.toString().match(/^form_(?<formId>\S+)$/)
+                const formId = m?.groups?.['formId']
+                if (formId) {
+                  return {
+                    id: formId,
+                    get fields() {
+                      return new Proxy({}, { get: (_, p) => ({ id: p.toString() }) })
+                    },
+                    selectRecord: ({ recordId }: { recordId: string }) => {
+                      return this.recordService.workflow_selectRecord({ formId, recordId })
+                    },
+                    createRecord: ({ data }: { data: { [key: string]: { value: any } } }) => {
+                      return this.recordService.workflow_createRecord({
+                        owner: viewerId,
+                        formId,
+                        data,
+                      })
+                    },
+                    updateRecord: ({
+                      recordId,
+                      data,
+                    }: {
+                      recordId: string
+                      data: { [key: string]: { value: any } }
+                    }) => {
+                      return this.recordService.workflow_updateRecord({
+                        formId,
+                        recordId,
+                        data,
+                      })
+                    },
+                    deleteRecord: ({ recordId }: { recordId: string }) => {
+                      return this.recordService.workflow_deleteRecord({
+                        formId,
+                        recordId,
+                      })
+                    },
+                  }
+                }
+                return undefined
+              },
+            }
+          ),
+          formTrigger: {
+            get viewerId() {
               return viewerId
             },
-            get formTriggerApplicationId() {
-              return applicationId
-            },
-            get formTriggerFormId() {
+            get formId() {
               return formId
             },
-            get formTriggerRecord() {
-              return JSON.parse(e.task.variables.get('form_trigger_record'))
-            },
-          },
-          query: {
-            selectRecord: ({ formId, recordId }: { formId: string; recordId: string }) => {
-              return this.recordService.workflow_selectRecord({ formId, recordId })
-            },
-          },
-          mutation: {
-            createRecord: ({
-              formId,
-              data,
-            }: {
-              formId: string
-              data: { [key: string]: { value: any } }
-            }) => {
-              return this.recordService.workflow_createRecord({ owner: viewerId, formId, data })
-            },
-            updateRecord: ({
-              formId,
-              recordId,
-              data,
-            }: {
-              formId: string
-              recordId: string
-              data: { [key: string]: { value: any } }
-            }) => {
-              return this.recordService.workflow_updateRecord({ formId, recordId, data })
-            },
-            deleteRecord: ({ formId, recordId }: { formId: string; recordId: string }) => {
-              return this.recordService.workflow_deleteRecord({ formId, recordId })
+            get record() {
+              return JSON.parse(record)
             },
           },
         },

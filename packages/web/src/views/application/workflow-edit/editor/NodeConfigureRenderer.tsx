@@ -20,9 +20,17 @@ import { ComponentType, ReactNode, useEffect, useState } from 'react'
 import NodeIcon from './components/NodeIcon'
 import FormTriggerConfigure from './nodes/FormTriggerConfigure'
 import ScriptJsNodeConfigure from './nodes/ScriptJsNodeConfigure'
-import { Node, Trigger, useCurrentNode, useSetCurrentNode, useUpdateNode } from './state'
+import {
+  Node,
+  Trigger,
+  useCurrentNode,
+  useSetCurrentNode,
+  useUpdateNode,
+  useWorkflow,
+} from './state'
 
 export default function NodeConfigureRenderer({ applicationId }: { applicationId: string }) {
+  const { nodes, ids } = useWorkflow()
   const node = useCurrentNode()
   const setCurrentNode = useSetCurrentNode()
   const updateNode = useUpdateNode()
@@ -63,13 +71,23 @@ export default function NodeConfigureRenderer({ applicationId }: { applicationId
         </Space>
       }
     >
-      {C && draft && <C applicationId={applicationId} node={draft} onChange={handleChange} />}
+      {C && draft && (
+        <C
+          nodes={nodes}
+          ids={ids}
+          applicationId={applicationId}
+          node={draft}
+          onChange={handleChange}
+        />
+      )}
     </_Drawer>
   )
 }
 
 const RENDERERS: {
   [key in Node['type'] | Trigger['type']]: ComponentType<{
+    nodes: { [key: string]: Trigger | Node }
+    ids: string[]
     applicationId: string
     node: any
     onChange: (node: any) => void
