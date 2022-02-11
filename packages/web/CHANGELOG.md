@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.1](https://github.com/li-yechao/freeform/compare/@freeform/web@0.1.0-alpha.0...@freeform/web@0.1.0-alpha.1) (2022-02-11)
+
+### Features
+
+- script intellsence ([e657295](https://github.com/li-yechao/freeform/commit/e65729522d8d91b6f1c9f58b96e7ddb1a573316c))
+
 # [0.1.0-alpha.0](https://github.com/li-yechao/freeform/compare/@freeform/web@0.0.1-alpha.1...@freeform/web@0.1.0-alpha.0) (2022-02-10)
 
 ### Features

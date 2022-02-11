@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.3](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.2...@freeform/server@0.1.0-alpha.3) (2022-02-11)
+
+### Bug Fixes
+
+- await script result ([eceebad](https://github.com/li-yechao/freeform/commit/eceebad733ac2f6ecf7db960369e60366d56324d))
+
+### Features
+
+- script intellsence ([e657295](https://github.com/li-yechao/freeform/commit/e65729522d8d91b6f1c9f58b96e7ddb1a573316c))
+
 # [0.1.0-alpha.2](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.1...@freeform/server@0.1.0-alpha.2) (2022-02-10)
 
 ### Bug Fixes
