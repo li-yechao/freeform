@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import produce from 'immer'
-import { customAlphabet } from 'nanoid'
 import { useCallback } from 'react'
 import { atom, useRecoilValue, useSetRecoilState } from 'recoil'
+import { idGeneratorUpperAndNumber } from '../../utils/customIdGenerator'
 import { defaultProps } from './field'
 
-const generateFieldId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 5)
+const generateFieldId = idGeneratorUpperAndNumber(5)
 
 export type FieldState = 'DISABLED' | 'READONLY'
 

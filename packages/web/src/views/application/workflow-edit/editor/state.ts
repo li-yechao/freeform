@@ -13,11 +13,11 @@
 // limitations under the License.
 
 import produce from 'immer'
-import { customAlphabet } from 'nanoid'
 import { useCallback } from 'react'
 import { atom, useRecoilValue, useSetRecoilState } from 'recoil'
+import { idGeneratorUpperAndNumber } from '../../../../utils/customIdGenerator'
 
-export const generateNodeId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 16)
+export const generateNodeId = idGeneratorUpperAndNumber(16)
 
 export interface State {
   nodes: { [key: string]: Node | Trigger }
