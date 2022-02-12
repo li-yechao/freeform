@@ -12,25 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Field as GraphqlField, ObjectType } from '@nestjs/graphql'
+import { Field, ObjectType } from '@nestjs/graphql'
 
 @ObjectType({ description: 'auth' })
 export class AuthResult {
-  @GraphqlField()
+  @Field()
   accessToken!: string
 
-  @GraphqlField()
+  @Field()
   expiresIn!: number
 }
 
 @ObjectType({ description: 'viewer' })
 export class Viewer {
-  @GraphqlField()
-  nick!: string
-
-  @GraphqlField()
-  openId!: string
-
-  @GraphqlField()
-  unionId!: string
+  @Field()
+  id!: string
 }

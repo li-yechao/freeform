@@ -17,7 +17,7 @@ export class WorkflowResolver {
     @Context('viewer') viewer: Viewer,
     @Parent() application: Application
   ): Promise<Workflow[]> {
-    return this.workflowService.selectWorkflows(viewer.unionId, application.id)
+    return this.workflowService.selectWorkflows(viewer.id, application.id)
   }
 
   @ResolveField(() => Workflow)
@@ -27,7 +27,7 @@ export class WorkflowResolver {
     @Args('workflowId') workflowId: string
   ): Promise<Workflow> {
     const workflow = await this.workflowService.selectWorkflow(
-      viewer.unionId,
+      viewer.id,
       application.id,
       workflowId
     )
@@ -43,7 +43,7 @@ export class WorkflowResolver {
     @Args('applicationId') applicationId: string,
     @Args('input') input: CreateWorkflowInput
   ): Promise<Workflow> {
-    return this.workflowService.createWorkflow(viewer.unionId, applicationId, input)
+    return this.workflowService.createWorkflow(viewer.id, applicationId, input)
   }
 
   @Mutation(() => Workflow)
@@ -54,7 +54,7 @@ export class WorkflowResolver {
     @Args('input') input: UpdateWorkflowInput
   ): Promise<Workflow> {
     const workflow = await this.workflowService.updateWorkflow(
-      viewer.unionId,
+      viewer.id,
       applicationId,
       workflowId,
       input
@@ -71,11 +71,7 @@ export class WorkflowResolver {
     @Args('applicationId') applicationId: string,
     @Args('workflowId') workflowId: string
   ): Promise<boolean> {
-    const workflow = await this.workflowService.deleteWorkflow(
-      viewer.unionId,
-      applicationId,
-      workflowId
-    )
+    const workflow = await this.workflowService.deleteWorkflow(viewer.id, applicationId, workflowId)
     if (!workflow) {
       throw new Error('Not found')
     }

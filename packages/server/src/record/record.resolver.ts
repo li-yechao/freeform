@@ -63,7 +63,7 @@ export class RecordResolver {
     @Args('recordId') recordId: string
   ): Promise<Record> {
     const record = await this.recordService.selectRecord({
-      viewerId: viewer.unionId,
+      viewerId: viewer.id,
       applicationId: form.application,
       formId: form.id,
       viewId,
@@ -83,7 +83,7 @@ export class RecordResolver {
     @Args('input') input: CreateRecordInput
   ): Promise<Record> {
     return await this.recordService.createRecord({
-      viewerId: viewer.unionId,
+      viewerId: viewer.id,
       applicationId,
       formId,
       input,
@@ -99,7 +99,7 @@ export class RecordResolver {
     @Args('input') input: UpdateRecordInput
   ): Promise<Record> {
     const record = await this.recordService.updateRecord({
-      viewerId: viewer.unionId,
+      viewerId: viewer.id,
       applicationId,
       formId,
       recordId,
@@ -119,7 +119,7 @@ export class RecordResolver {
     @Args('recordId') recordId: string
   ): Promise<boolean> {
     const record = await this.recordService.deleteRecord({
-      viewerId: viewer.unionId,
+      viewerId: viewer.id,
       applicationId,
       formId,
       recordId,
@@ -148,7 +148,7 @@ export class RecordConnection {
   private get list() {
     if (!this._list) {
       this._list = this.recordService.selectRecords({
-        viewerId: this.viewer.unionId,
+        viewerId: this.viewer.id,
         applicationId: this.applicationId,
         formId: this.formId,
         viewId: this.viewId,
@@ -170,7 +170,7 @@ export class RecordConnection {
     if (!this.__pageInfo) {
       this.__pageInfo = new PageInfo(() =>
         this.recordService.selectRecordCount({
-          viewerId: this.viewer.unionId,
+          viewerId: this.viewer.id,
           applicationId: this.applicationId,
           formId: this.formId,
           viewId: this.viewId,

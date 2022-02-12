@@ -31,7 +31,7 @@ export class FormResolver {
     @Context('viewer') viewer: Viewer,
     @Parent() application: Application
   ): Promise<Form[]> {
-    return this.formService.selectForms(viewer.unionId, application.id)
+    return this.formService.selectForms(viewer.id, application.id)
   }
 
   @ResolveField(() => Form)
@@ -40,7 +40,7 @@ export class FormResolver {
     @Parent() application: Application,
     @Args('formId') formId: string
   ): Promise<Form> {
-    const form = await this.formService.selectForm(viewer.unionId, application.id, formId)
+    const form = await this.formService.selectForm(viewer.id, application.id, formId)
     if (!form) {
       throw new Error('Not found')
     }
@@ -53,7 +53,7 @@ export class FormResolver {
     @Args('applicationId') appId: string,
     @Args('input') input: CreateFormInput
   ): Promise<Form> {
-    return await this.formService.createForm(viewer.unionId, appId, input)
+    return await this.formService.createForm(viewer.id, appId, input)
   }
 
   @Mutation(() => Form)
@@ -63,7 +63,7 @@ export class FormResolver {
     @Args('formId') formId: string,
     @Args('input') input: UpdateFormInput
   ): Promise<Form> {
-    const form = await this.formService.updateForm(viewer.unionId, appId, formId, input)
+    const form = await this.formService.updateForm(viewer.id, appId, formId, input)
     if (!form) {
       throw new Error('Not found')
     }
@@ -76,7 +76,7 @@ export class FormResolver {
     @Args('applicationId') appId: string,
     @Args('formId') formId: string
   ) {
-    const form = await this.formService.deleteForm(viewer.unionId, appId, formId)
+    const form = await this.formService.deleteForm(viewer.id, appId, formId)
     if (!form) {
       throw new Error('Not found')
     }
@@ -90,7 +90,7 @@ export class FormResolver {
     @Args('formId') formId: string,
     @Args('input') input: ViewInput
   ): Promise<View> {
-    return await this.formService.createView(viewer.unionId, appId, formId, input)
+    return await this.formService.createView(viewer.id, appId, formId, input)
   }
 
   @Mutation(() => View)
@@ -101,7 +101,7 @@ export class FormResolver {
     @Args('viewId') viewId: string,
     @Args('input') input: ViewInput
   ): Promise<View> {
-    const view = await this.formService.updateView(viewer.unionId, appId, formId, viewId, input)
+    const view = await this.formService.updateView(viewer.id, appId, formId, viewId, input)
     if (!view) {
       throw new Error('Not found')
     }
@@ -115,7 +115,7 @@ export class FormResolver {
     @Args('formId') formId: string,
     @Args('viewId') viewId: string
   ): Promise<boolean> {
-    const form = await this.formService.deleteView(viewer.unionId, appId, formId, viewId)
+    const form = await this.formService.deleteView(viewer.id, appId, formId, viewId)
     if (!form) {
       throw new Error('Not found')
     }

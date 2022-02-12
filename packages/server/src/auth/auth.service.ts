@@ -18,10 +18,14 @@ import { RuntimeOptions } from '@alicloud/tea-util'
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { sign } from 'jsonwebtoken'
+import { UserService } from '../user/user.service'
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly userService: UserService
+  ) {}
 
   async authDingtalk(code: string) {
     const secret = this.configService.get<string>('ACCESS_TOKEN_SECRET')
@@ -61,14 +65,29 @@ export class AuthService {
     const headers = new contact_1_0.GetUserHeaders()
     headers.commonHeaders = { 'x-acs-dingtalk-access-token': accessToken! }
 
-    const { body: user } = await contactClient.getUserWithOptions(
+    const { body: dingtalkUser } = await contactClient.getUserWithOptions(
       'me',
       headers,
       new RuntimeOptions()
     )
 
+    if (!dingtalkUser.unionId) {
+      throw new Error(`Missing required property unionId in dingtalk user`)
+    }
+
+    const user =
+      (await this.userService.selectUserByDingtalkUnionId({
+        clientId,
+        unionId: dingtalkUser.unionId,
+      })) ||
+      (await this.userService.createDingtalkUser({
+        ...dingtalkUser,
+        clientId,
+        unionId: dingtalkUser.unionId,
+      }))
+
     return {
-      accessToken: sign({ ...user, exp: Math.ceil(Date.now() / 1000) + expiresIn }, secret),
+      accessToken: sign({ sub: user.id, exp: Math.ceil(Date.now() / 1000) + expiresIn }, secret),
       expiresIn,
     }
   }

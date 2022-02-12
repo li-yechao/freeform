@@ -22,6 +22,7 @@ import { FormModule } from './form/form.module'
 import { RecordModule } from './record/record.module'
 import { WorkflowModule } from './workflow/workflow.module'
 import { CamundaModule } from './camunda/camunda.module'
+import { UserModule } from './user/user.module'
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { CamundaModule } from './camunda/camunda.module'
     RecordModule,
     WorkflowModule,
     CamundaModule,
+    UserModule,
   ],
   controllers: [],
   providers: [],

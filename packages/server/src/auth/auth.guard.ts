@@ -45,6 +45,12 @@ export class AuthGuard implements CanActivate {
       throw new Error('Required env ACCESS_TOKEN_SECRET is missing')
     }
 
-    return verify(token, secret) as Viewer
+    const payload = verify(token, secret)
+
+    if (typeof payload.sub !== 'string' || !payload.sub) {
+      throw new Error(`Invalid jwt token`)
+    }
+
+    return { id: payload.sub }
   }
 }

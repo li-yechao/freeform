@@ -18,12 +18,9 @@ import * as mongoose from 'mongoose'
 
 @ObjectType()
 @Schema()
-export class Application {
+export class User {
   @Field(() => ID)
   id!: string
-
-  @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
-  owner!: mongoose.Types.ObjectId
 
   @Field()
   @Prop({ required: true })
@@ -36,9 +33,8 @@ export class Application {
   @Prop()
   deletedAt?: number
 
-  @Field({ nullable: true })
-  @Prop()
-  name?: string
+  @Prop({ type: mongoose.Schema.Types.Map })
+  third?: { [key: string]: any }
 }
 
-export const ApplicationSchema = SchemaFactory.createForClass(Application)
+export const UserSchema = SchemaFactory.createForClass(User)
