@@ -40,9 +40,15 @@ export default function FormViewHeader() {
   const navigate = useNavigate()
   const [createView, { data: newViewData, reset: resetNewViewData }] = useCreateView()
 
-  const { data: { application } = {} } = useApplicationFormViews({
+  const { data } = useApplicationFormViews({
     variables: { applicationId, formId },
   })
+  let application = data?.application
+  // FIXME: when formId changed, application is not changed immediately.
+  if (application?.form.id !== formId) {
+    application = undefined
+  }
+
   const views = application?.form.views
 
   // Auto navigate to new view tab

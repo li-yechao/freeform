@@ -74,7 +74,10 @@ export default function RecordTable() {
 
   const [{ page, limit }, setPage] = useState({ page: 0, limit: 20 })
 
-  const { data } = useRecords({ variables: { applicationId, formId, viewId, page, limit } })
+  const { data } = useRecords({
+    variables: { applicationId, formId, viewId, page, limit },
+    fetchPolicy: 'cache-and-network',
+  })
   const records = data?.application.form.records
 
   const [currentRecord, setCurrentRecord] = useState<{ id: string }>()
