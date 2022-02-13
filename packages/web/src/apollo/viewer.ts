@@ -23,13 +23,13 @@ import {
 } from '@apollo/client'
 
 export interface Viewer {
-  nick: string
+  id: string
 }
 
 export const VIEWER_QUERY = gql`
   query Viewer {
     viewer {
-      nick
+      id
     }
   }
 `
