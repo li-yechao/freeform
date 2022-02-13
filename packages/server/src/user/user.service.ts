@@ -7,6 +7,10 @@ import { User } from './user.schema'
 export class UserService {
   constructor(@InjectModel(User.name) private readonly userModel: Model<User>) {}
 
+  async selectUserById({ userId }: { userId: string }): Promise<User | null> {
+    return this.userModel.findById(userId)
+  }
+
   async selectUserByDingtalkUnionId({
     clientId,
     unionId,

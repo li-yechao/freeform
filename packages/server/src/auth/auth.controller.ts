@@ -24,4 +24,9 @@ export class AuthController {
   async auth(@Query('code') code: string): Promise<AuthResult> {
     return this.authService.authDingtalk(code)
   }
+
+  @Post('refreshToken')
+  async refreshToken(@Query('refreshToken') refreshToken: string): Promise<AuthResult> {
+    return this.authService.refreshToken(refreshToken)
+  }
 }

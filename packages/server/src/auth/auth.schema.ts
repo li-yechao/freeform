@@ -20,6 +20,9 @@ export class AuthResult {
   accessToken!: string
 
   @Field()
+  refreshToken!: string
+
+  @Field()
   expiresIn!: number
 }
 

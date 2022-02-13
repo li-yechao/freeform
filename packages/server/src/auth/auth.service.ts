@@ -17,32 +17,58 @@ import { Config } from '@alicloud/openapi-client'
 import { RuntimeOptions } from '@alicloud/tea-util'
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { sign } from 'jsonwebtoken'
+import { sign, verify } from 'jsonwebtoken'
 import { UserService } from '../user/user.service'
+import { AuthResult } from './auth.schema'
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly configService: ConfigService,
     private readonly userService: UserService
-  ) {}
-
-  async authDingtalk(code: string) {
-    const secret = this.configService.get<string>('ACCESS_TOKEN_SECRET')
-    if (!secret) {
+  ) {
+    const accessTokenSecret = this.configService.get<string>('ACCESS_TOKEN_SECRET')
+    if (!accessTokenSecret) {
       throw new Error('Required env ACCESS_TOKEN_SECRET is missing')
     }
-    const expiresIn = parseInt(this.configService.get<string>('ACCESS_TOKEN_EXPIRES_IN')!)
-    if (!expiresIn) {
+    const accessTokenExpiresIn = parseInt(
+      this.configService.get<string>('ACCESS_TOKEN_EXPIRES_IN')!
+    )
+    if (!accessTokenExpiresIn) {
       throw new Error('Required env ACCESS_TOKEN_EXPIRES_IN is invalid')
     }
 
-    const clientId = this.configService.get<string>('DING_TALK_CLIENT_ID')
-    const clientSecret = this.configService.get<string>('DING_TALK_CLIENT_SECRET')
-    if (!clientId || !clientSecret) {
+    const refreshTokenSecret = this.configService.get<string>('REFRESH_TOKEN_SECRET')
+    if (!refreshTokenSecret) {
+      throw new Error('Required env REFRESH_TOKEN_SECRET is missing')
+    }
+    const refreshTokenExpiresIn = parseInt(
+      this.configService.get<string>('REFRESH_TOKEN_EXPIRES_IN')!
+    )
+    if (!refreshTokenExpiresIn) {
+      throw new Error('Required env REFRESH_TOKEN_EXPIRES_IN is invalid')
+    }
+
+    const dingtalkClientId = this.configService.get<string>('DING_TALK_CLIENT_ID')
+    const dingtalkClientSecret = this.configService.get<string>('DING_TALK_CLIENT_SECRET')
+    if (!dingtalkClientId || !dingtalkClientSecret) {
       throw new Error('Required env DING_TALK_CLIENT_ID or DING_TALK_CLIENT_SECRET is missing')
     }
 
+    this.config = {
+      accessToken: { secret: accessTokenSecret, expiresIn: accessTokenExpiresIn },
+      refreshToken: { secret: refreshTokenSecret, expiresIn: refreshTokenExpiresIn },
+      dingtalk: { clientId: dingtalkClientId, clientSecret: dingtalkClientSecret },
+    }
+  }
+
+  private config: {
+    accessToken: { secret: string; expiresIn: number }
+    refreshToken: { secret: string; expiresIn: number }
+    dingtalk: { clientId: string; clientSecret: string }
+  }
+
+  async authDingtalk(code: string): Promise<AuthResult> {
     const config = new Config()
     config.protocol = 'https'
     config.regionId = 'central'
@@ -54,8 +80,8 @@ export class AuthService {
     } = await oauth2Client.getUserToken(
       new oauth2_1_0.GetUserTokenRequest({
         grantType: 'authorization_code',
-        clientId,
-        clientSecret,
+        clientId: this.config.dingtalk.clientId,
+        clientSecret: this.config.dingtalk.clientSecret,
         code,
       })
     )
@@ -77,18 +103,43 @@ export class AuthService {
 
     const user =
       (await this.userService.selectUserByDingtalkUnionId({
-        clientId,
+        clientId: this.config.dingtalk.clientId,
         unionId: dingtalkUser.unionId,
       })) ||
       (await this.userService.createDingtalkUser({
         ...dingtalkUser,
-        clientId,
+        clientId: this.config.dingtalk.clientId,
         unionId: dingtalkUser.unionId,
       }))
 
+    return this.createToken(user.id)
+  }
+
+  async refreshToken(refreshToken: string): Promise<AuthResult> {
+    const payload = verify(refreshToken, this.config.refreshToken.secret)
+    if (typeof payload.sub !== 'string' || !payload.sub) {
+      throw new Error(`Invalid jwt token`)
+    }
+
+    const user = await this.userService.selectUserById({ userId: payload.sub })
+    if (!user) {
+      throw new Error(`User ${payload.sub} not found`)
+    }
+
+    return this.createToken(user.id)
+  }
+
+  private createToken(userId: string): AuthResult {
     return {
-      accessToken: sign({ sub: user.id, exp: Math.ceil(Date.now() / 1000) + expiresIn }, secret),
-      expiresIn,
+      accessToken: sign({}, this.config.accessToken.secret, {
+        subject: userId,
+        expiresIn: this.config.accessToken.expiresIn,
+      }),
+      refreshToken: sign({}, this.config.refreshToken.secret, {
+        subject: userId,
+        expiresIn: this.config.refreshToken.expiresIn,
+      }),
+      expiresIn: this.config.accessToken.expiresIn,
     }
   }
 }
