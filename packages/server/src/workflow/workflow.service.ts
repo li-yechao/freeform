@@ -111,10 +111,12 @@ export class WorkflowService {
   }
 
   private async deployBpmnToCamunda(workflow: Workflow) {
-    await this.camundaAPI.deploymentCreate({
-      deploymentName: workflow.id,
-      xml: await workflowToBpmn(workflow),
-    })
+    if (workflow.trigger && workflow.children.length) {
+      await this.camundaAPI.deploymentCreate({
+        deploymentName: workflow.id,
+        xml: await workflowToBpmn(workflow),
+      })
+    }
   }
 
   async onCreateRecordSuccess(
