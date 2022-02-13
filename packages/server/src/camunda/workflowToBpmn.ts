@@ -87,7 +87,7 @@ export default async function workflowToBpmn(
               inputParameters: [
                 moddle.create('camunda:InputParameter', {
                   name: `${task.id}_script`,
-                  value: node.script,
+                  value: node.script && Buffer.from(node.script).toString('base64'),
                 }),
               ],
             }),

@@ -18,7 +18,8 @@ export class CamundaService {
 
   start() {
     this.client.subscribe('script_js', async e => {
-      const script = e.task.variables.get(`${e.task.activityId}_script`)
+      const scriptRaw = e.task.variables.get(`${e.task.activityId}_script`)
+      const script = Buffer.from(scriptRaw, 'base64').toString()
 
       const viewerId = e.task.variables.get('form_trigger_viewer_id')
       if (!viewerId) {
