@@ -56,7 +56,7 @@ export class CamundaService {
                     },
                     createRecord: ({ data }: { data: { [key: string]: { value: any } } }) => {
                       return this.recordService.workflow_createRecord({
-                        owner: viewerId,
+                        userId: viewerId,
                         formId,
                         data,
                       })

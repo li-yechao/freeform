@@ -50,7 +50,7 @@ export class RecordService {
       throw new Error(`View ${viewId} not found`)
     }
 
-    const record = await this.recordModel.findOne({ _id: recordId, form: formId, deletedAt: null })
+    const record = await this.recordModel.findOne({ _id: recordId, formId, deletedAt: null })
 
     // TODO: remove fields that not exists in the view
 
@@ -82,7 +82,7 @@ export class RecordService {
     }
 
     const records = await this.recordModel
-      .find({ form: formId, deletedAt: null })
+      .find({ formId, deletedAt: null })
       .sort({ _id: -1 })
       .skip(page * limit)
       .limit(limit)
@@ -112,7 +112,7 @@ export class RecordService {
       throw new Error(`View ${viewId} not found`)
     }
 
-    return this.recordModel.countDocuments({ form: formId, deletedAt: null })
+    return this.recordModel.countDocuments({ formId, deletedAt: null })
   }
 
   async createRecord({
@@ -132,7 +132,7 @@ export class RecordService {
     }
 
     const record = await this._createRecord({
-      owner: viewerId,
+      userId: viewerId,
       formId,
       data: input.data,
     })
@@ -210,15 +210,15 @@ export class RecordService {
   }
 
   async workflow_createRecord({
-    owner,
+    userId,
     formId,
     data,
   }: {
-    owner: string
+    userId: string
     formId: string
     data: { [key: string]: { value: any } }
   }): Promise<Record | null> {
-    return this._createRecord({ owner, formId, data })
+    return this._createRecord({ userId, formId, data })
   }
 
   async workflow_updateRecord({
@@ -250,23 +250,23 @@ export class RecordService {
     formId: string
     recordId: string
   }): Promise<Record | null> {
-    return this.recordModel.findOne({ _id: recordId, form: formId, deletedAt: null })
+    return this.recordModel.findOne({ _id: recordId, formId, deletedAt: null })
   }
 
   private async _createRecord({
-    owner,
+    userId,
     formId,
     data,
   }: {
-    owner: string
+    userId: string
     formId: string
     data?: { [key: string]: { value: any } }
   }): Promise<Record> {
     // TODO: verify input data schema
 
     return this.recordModel.create({
-      owner,
-      form: formId,
+      userId,
+      formId,
       createdAt: Date.now(),
       data,
     })
@@ -289,7 +289,7 @@ export class RecordService {
     )
 
     return this.recordModel.findOneAndUpdate(
-      { _id: recordId, form: formId, deletedAt: null },
+      { _id: recordId, formId, deletedAt: null },
       { $set: { updatedAt: Date.now(), ...update } },
       { new: true }
     )
@@ -303,7 +303,7 @@ export class RecordService {
     recordId: string
   }): Promise<Record | null> {
     return this.recordModel.findOneAndUpdate(
-      { _id: recordId, form: formId, deletedAt: null },
+      { _id: recordId, formId, deletedAt: null },
       { $set: { deletedAt: Date.now() } },
       { new: true }
     )

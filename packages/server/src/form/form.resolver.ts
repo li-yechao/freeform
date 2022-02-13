@@ -50,20 +50,20 @@ export class FormResolver {
   @Mutation(() => Form)
   async createForm(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string,
+    @Args('applicationId') applicationId: string,
     @Args('input') input: CreateFormInput
   ): Promise<Form> {
-    return await this.formService.createForm(viewer.id, appId, input)
+    return await this.formService.createForm(viewer.id, applicationId, input)
   }
 
   @Mutation(() => Form)
   async updateForm(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string,
+    @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('input') input: UpdateFormInput
   ): Promise<Form> {
-    const form = await this.formService.updateForm(viewer.id, appId, formId, input)
+    const form = await this.formService.updateForm(viewer.id, applicationId, formId, input)
     if (!form) {
       throw new Error('Not found')
     }
@@ -73,10 +73,10 @@ export class FormResolver {
   @Mutation(() => Boolean)
   async deleteForm(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string,
+    @Args('applicationId') applicationId: string,
     @Args('formId') formId: string
   ) {
-    const form = await this.formService.deleteForm(viewer.id, appId, formId)
+    const form = await this.formService.deleteForm(viewer.id, applicationId, formId)
     if (!form) {
       throw new Error('Not found')
     }
@@ -86,22 +86,22 @@ export class FormResolver {
   @Mutation(() => View)
   async createView(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string,
+    @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('input') input: ViewInput
   ): Promise<View> {
-    return await this.formService.createView(viewer.id, appId, formId, input)
+    return await this.formService.createView(viewer.id, applicationId, formId, input)
   }
 
   @Mutation(() => View)
   async updateView(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string,
+    @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('viewId') viewId: string,
     @Args('input') input: ViewInput
   ): Promise<View> {
-    const view = await this.formService.updateView(viewer.id, appId, formId, viewId, input)
+    const view = await this.formService.updateView(viewer.id, applicationId, formId, viewId, input)
     if (!view) {
       throw new Error('Not found')
     }
@@ -111,11 +111,11 @@ export class FormResolver {
   @Mutation(() => Boolean)
   async deleteView(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string,
+    @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('viewId') viewId: string
   ): Promise<boolean> {
-    const form = await this.formService.deleteView(viewer.id, appId, formId, viewId)
+    const form = await this.formService.deleteView(viewer.id, applicationId, formId, viewId)
     if (!form) {
       throw new Error('Not found')
     }

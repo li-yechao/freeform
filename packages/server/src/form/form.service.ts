@@ -26,23 +26,23 @@ export class FormService {
     @InjectModel(Form.name) private readonly formModel: Model<Form>
   ) {}
 
-  async selectForms(userId: string, appId: string): Promise<Form[]> {
-    await this.checkApplication(userId, appId)
+  async selectForms(userId: string, applicationId: string): Promise<Form[]> {
+    await this.checkApplication(userId, applicationId)
 
-    return this.formModel.find({ application: appId, deletedAt: null })
+    return this.formModel.find({ applicationId, deletedAt: null })
   }
 
-  async selectForm(userId: string, appId: string, formId: string): Promise<Form | null> {
-    await this.checkApplication(userId, appId)
+  async selectForm(userId: string, applicationId: string, formId: string): Promise<Form | null> {
+    await this.checkApplication(userId, applicationId)
 
-    return this.formModel.findOne({ _id: formId, application: appId, deletedAt: null })
+    return this.formModel.findOne({ _id: formId, applicationId, deletedAt: null })
   }
 
-  async createForm(userId: string, appId: string, input: CreateFormInput): Promise<Form> {
-    await this.checkApplication(userId, appId)
+  async createForm(userId: string, applicationId: string, input: CreateFormInput): Promise<Form> {
+    await this.checkApplication(userId, applicationId)
 
     return this.formModel.create({
-      application: appId,
+      applicationId,
       createdAt: Date.now(),
       ...input,
     })
@@ -50,14 +50,14 @@ export class FormService {
 
   async updateForm(
     userId: string,
-    appId: string,
+    applicationId: string,
     formId: string,
     input: UpdateFormInput
   ): Promise<Form | null> {
-    await this.checkApplication(userId, appId)
+    await this.checkApplication(userId, applicationId)
 
     return this.formModel.findOneAndUpdate(
-      { _id: formId, application: appId, deletedAt: null },
+      { _id: formId, applicationId, deletedAt: null },
       {
         $set: {
           updatedAt: Date.now(),
@@ -68,21 +68,26 @@ export class FormService {
     )
   }
 
-  async deleteForm(userId: string, appId: string, formId: string): Promise<Form | null> {
-    await this.checkApplication(userId, appId)
+  async deleteForm(userId: string, applicationId: string, formId: string): Promise<Form | null> {
+    await this.checkApplication(userId, applicationId)
 
     return this.formModel.findOneAndUpdate(
-      { _id: formId, application: appId, deletedAt: null },
+      { _id: formId, applicationId, deletedAt: null },
       { $set: { deletedAt: Date.now() } }
     )
   }
 
-  async createView(userId: string, appId: string, formId: string, input: ViewInput): Promise<View> {
-    await this.checkForm(userId, appId, formId)
+  async createView(
+    userId: string,
+    applicationId: string,
+    formId: string,
+    input: ViewInput
+  ): Promise<View> {
+    await this.checkForm(userId, applicationId, formId)
 
     return this.formModel
       .findOneAndUpdate(
-        { _id: formId, application: appId, deletedAt: null },
+        { _id: formId, applicationId, deletedAt: null },
         {
           $set: {
             updatedAt: Date.now(),
@@ -107,16 +112,16 @@ export class FormService {
 
   async updateView(
     userId: string,
-    appId: string,
+    applicationId: string,
     formId: string,
     viewId: string,
     input: ViewInput
   ): Promise<View | null> {
-    await this.checkForm(userId, appId, formId)
+    await this.checkForm(userId, applicationId, formId)
 
     return this.formModel
       .findOneAndUpdate(
-        { _id: formId, application: appId, deletedAt: null, 'views._id': viewId },
+        { _id: formId, applicationId, deletedAt: null, 'views._id': viewId },
         {
           $set: {
             updatedAt: Date.now(),
@@ -131,14 +136,14 @@ export class FormService {
 
   async deleteView(
     userId: string,
-    appId: string,
+    applicationId: string,
     formId: string,
     viewId: string
   ): Promise<Form | null> {
-    await this.checkForm(userId, appId, formId)
+    await this.checkForm(userId, applicationId, formId)
 
     return this.formModel.findOneAndUpdate(
-      { _id: formId, application: appId, deletedAt: null },
+      { _id: formId, applicationId, deletedAt: null },
       {
         $set: { updatedAt: Date.now() },
         $pull: { views: { _id: viewId } },
@@ -147,15 +152,15 @@ export class FormService {
     )
   }
 
-  private async checkApplication(userId: string, appId: string) {
-    const app = await this.applicationService.selectApplication(userId, appId)
+  private async checkApplication(userId: string, applicationId: string) {
+    const app = await this.applicationService.selectApplication(userId, applicationId)
     if (!app) {
-      throw new Error(`Application ${appId} is not found`)
+      throw new Error(`Application ${applicationId} is not found`)
     }
   }
 
-  private async checkForm(userId: string, appId: string, formId: string) {
-    const form = await this.selectForm(userId, appId, formId)
+  private async checkForm(userId: string, applicationId: string, formId: string) {
+    const form = await this.selectForm(userId, applicationId, formId)
     if (!form) {
       throw new Error(`Form ${formId} is not found`)
     }

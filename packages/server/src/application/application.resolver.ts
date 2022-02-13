@@ -34,9 +34,9 @@ export class ApplicationResolver {
   @UseGuards(AuthGuard)
   async application(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string
+    @Args('applicationId') applicationId: string
   ): Promise<Application> {
-    const application = await this.applicationService.selectApplication(viewer.id, appId)
+    const application = await this.applicationService.selectApplication(viewer.id, applicationId)
     if (!application) {
       throw new Error('Not Found')
     }
@@ -56,10 +56,14 @@ export class ApplicationResolver {
   @UseGuards(AuthGuard)
   async updateApplication(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string,
+    @Args('applicationId') applicationId: string,
     @Args('input') input: UpdateApplicationInput
   ): Promise<Application> {
-    const application = await this.applicationService.updateApplication(viewer.id, appId, input)
+    const application = await this.applicationService.updateApplication(
+      viewer.id,
+      applicationId,
+      input
+    )
     if (!application) {
       throw new Error('Not Found')
     }
@@ -70,9 +74,9 @@ export class ApplicationResolver {
   @UseGuards(AuthGuard)
   async deleteApplication(
     @Context('viewer') viewer: Viewer,
-    @Args('applicationId') appId: string
+    @Args('applicationId') applicationId: string
   ): Promise<boolean> {
-    const application = await this.applicationService.deleteApplication(viewer.id, appId)
+    const application = await this.applicationService.deleteApplication(viewer.id, applicationId)
     if (!application) {
       throw new Error('Not Found')
     }

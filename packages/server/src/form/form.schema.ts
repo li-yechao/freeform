@@ -15,7 +15,7 @@
 import { Field as GraphqlField, ID, ObjectType, registerEnumType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { GraphQLJSONObject } from 'graphql-type-json'
-import { Types } from 'mongoose'
+import * as mongoose from 'mongoose'
 
 export enum FieldState {
   READONLY,
@@ -46,7 +46,7 @@ export class Field {
   @GraphqlField(() => FieldState, { nullable: true })
   state?: FieldState
 
-  @Prop({ type: Types.Map })
+  @Prop({ type: mongoose.Schema.Types.Mixed })
   @GraphqlField(() => GraphQLJSONObject, { nullable: true })
   meta?: {}
 }
@@ -100,8 +100,8 @@ export class Form {
   @GraphqlField(() => ID)
   id!: string
 
-  @Prop({ type: Types.ObjectId, required: true })
-  application!: string
+  @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
+  applicationId!: mongoose.Types.ObjectId
 
   @Prop({ required: true })
   @GraphqlField()

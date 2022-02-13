@@ -15,7 +15,7 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { GraphQLJSONObject } from 'graphql-type-json'
-import { Types } from 'mongoose'
+import * as mongoose from 'mongoose'
 
 @Schema()
 @ObjectType({ description: 'workflow' })
@@ -23,8 +23,8 @@ export class Workflow {
   @Field(() => ID)
   id!: string
 
-  @Prop({ type: Types.ObjectId, required: true })
-  application!: string
+  @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
+  applicationId!: mongoose.Types.ObjectId
 
   @Prop({ required: true })
   @Field()
@@ -41,11 +41,11 @@ export class Workflow {
   @Field({ nullable: true })
   name?: string
 
-  @Prop({ type: Types.Map, required: true })
+  @Prop({ type: mongoose.Schema.Types.Mixed, required: true })
   @Field(() => GraphQLJSONObject)
   trigger!: Trigger
 
-  @Prop({ type: Types.DocumentArray, required: true })
+  @Prop({ type: mongoose.Schema.Types.Array, required: true })
   @Field(() => [GraphQLJSONObject])
   children!: Node[]
 }

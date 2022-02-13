@@ -23,7 +23,7 @@ export class Application {
   id!: string
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
-  owner!: mongoose.Types.ObjectId
+  userId!: mongoose.Types.ObjectId
 
   @Field()
   @Prop({ required: true })

@@ -33,7 +33,7 @@ export class User {
   @Prop()
   deletedAt?: number
 
-  @Prop({ type: mongoose.Schema.Types.Map })
+  @Prop({ type: mongoose.Schema.Types.Mixed })
   third?: { [key: string]: any }
 }
 

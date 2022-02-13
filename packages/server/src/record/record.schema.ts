@@ -15,7 +15,7 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { GraphQLJSONObject } from 'graphql-type-json'
-import { Types } from 'mongoose'
+import * as mongoose from 'mongoose'
 
 @Schema()
 @ObjectType({ description: 'record' })
@@ -23,11 +23,11 @@ export class Record {
   @Field(() => ID)
   id!: string
 
-  @Prop({ required: true })
-  owner!: string
+  @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
+  userId!: mongoose.Types.ObjectId
 
-  @Prop({ type: Types.ObjectId, required: true })
-  form!: string
+  @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
+  formId!: mongoose.Types.ObjectId
 
   @Prop({ required: true })
   @Field()
@@ -40,7 +40,7 @@ export class Record {
   @Prop()
   deletedAt?: number
 
-  @Prop({ type: Types.Map })
+  @Prop({ type: mongoose.Schema.Types.Mixed })
   @Field(() => GraphQLJSONObject, { nullable: true })
   data?: { [key: string]: { value: any } }
 }

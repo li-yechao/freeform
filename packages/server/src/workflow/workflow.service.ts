@@ -28,7 +28,7 @@ export class WorkflowService {
   async selectWorkflows(viewerId: string, applicationId: string): Promise<Workflow[]> {
     await this.checkApplication(viewerId, applicationId)
 
-    return this.workflowModel.find({ application: applicationId, deletedAt: null })
+    return this.workflowModel.find({ applicationId, deletedAt: null })
   }
 
   async selectWorkflow(
@@ -40,7 +40,7 @@ export class WorkflowService {
 
     return this.workflowModel.findOne({
       _id: workflowId,
-      application: applicationId,
+      applicationId,
       deletedAt: null,
     })
   }
@@ -53,7 +53,7 @@ export class WorkflowService {
     await this.checkApplication(userId, applicationId)
 
     const workflow = await this.workflowModel.create({
-      application: applicationId,
+      applicationId,
       createdAt: Date.now(),
       ...input,
     })
@@ -72,7 +72,7 @@ export class WorkflowService {
     await this.checkApplication(userId, applicationId)
 
     const workflow = await this.workflowModel.findOneAndUpdate(
-      { _id: workflowId, application: applicationId, deletedAt: null },
+      { _id: workflowId, applicationId, deletedAt: null },
       {
         $set: {
           updatedAt: Date.now(),
@@ -97,7 +97,7 @@ export class WorkflowService {
     await this.checkApplication(userId, applicationId)
 
     return this.workflowModel.findOneAndUpdate(
-      { _id: workflowId, application: applicationId, deletedAt: null },
+      { _id: workflowId, applicationId, deletedAt: null },
       { $set: { deletedAt: Date.now() } },
       { new: true }
     )
@@ -124,7 +124,7 @@ export class WorkflowService {
     record: Record
   ) {
     const workflows = await this.workflowModel.find({
-      application: applicationId,
+      applicationId,
       deletedAt: null,
       'trigger.type': 'form_trigger',
       'trigger.formId': formId,
@@ -150,7 +150,7 @@ export class WorkflowService {
     record: Record
   ) {
     const workflows = await this.workflowModel.find({
-      application: applicationId,
+      applicationId,
       deletedAt: null,
       'trigger.type': 'form_trigger',
       'trigger.formId': formId,
@@ -176,7 +176,7 @@ export class WorkflowService {
     record: Record
   ) {
     const workflows = await this.workflowModel.find({
-      application: applicationId,
+      applicationId,
       deletedAt: null,
       'trigger.type': 'form_trigger',
       'trigger.formId': formId,

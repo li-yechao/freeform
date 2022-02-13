@@ -24,37 +24,37 @@ export class ApplicationService {
     @InjectModel(Application.name) private readonly applicationModel: Model<Application>
   ) {}
 
-  async selectApplications(owner: string): Promise<Application[]> {
-    return this.applicationModel.find({ owner, deletedAt: null })
+  async selectApplications(userId: string): Promise<Application[]> {
+    return this.applicationModel.find({ userId, deletedAt: null })
   }
 
-  async selectApplication(owner: string, appId: string): Promise<Application | null> {
-    return this.applicationModel.findOne({ _id: appId, owner, deletedAt: null })
+  async selectApplication(userId: string, applicationId: string): Promise<Application | null> {
+    return this.applicationModel.findOne({ _id: applicationId, userId, deletedAt: null })
   }
 
-  async createApplication(owner: string, input: CreateApplicationInput): Promise<Application> {
+  async createApplication(userId: string, input: CreateApplicationInput): Promise<Application> {
     return this.applicationModel.create({
-      owner,
+      userId,
       name: input.name,
       createdAt: Date.now(),
     })
   }
 
   async updateApplication(
-    owner: string,
-    appId: string,
+    userId: string,
+    applicationId: string,
     input: UpdateApplicationInput
   ): Promise<Application | null> {
     return this.applicationModel.findOneAndUpdate(
-      { _id: appId, owner, deletedAt: null },
+      { _id: applicationId, userId, deletedAt: null },
       { $set: { name: input.name, updatedAt: Date.now() } },
       { new: true }
     )
   }
 
-  async deleteApplication(owner: string, appId: string): Promise<Application | null> {
+  async deleteApplication(userId: string, applicationId: string): Promise<Application | null> {
     return this.applicationModel.findOneAndUpdate(
-      { _id: appId, owner, deletedAt: null },
+      { _id: applicationId, userId, deletedAt: null },
       { $set: { deletedAt: Date.now() } },
       { new: true }
     )

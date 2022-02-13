@@ -47,7 +47,7 @@ export class RecordResolver {
     return new RecordConnection(
       this.recordService,
       viewer,
-      form.application,
+      form.applicationId.toHexString(),
       form.id,
       viewId,
       page,
@@ -64,7 +64,7 @@ export class RecordResolver {
   ): Promise<Record> {
     const record = await this.recordService.selectRecord({
       viewerId: viewer.id,
-      applicationId: form.application,
+      applicationId: form.applicationId.toHexString(),
       formId: form.id,
       viewId,
       recordId,
