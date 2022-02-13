@@ -15,7 +15,7 @@
 import { useCallback } from 'react'
 import { atom, selector, useRecoilValue, useSetRecoilState } from 'recoil'
 import { Viewer } from '../apollo/viewer'
-import Storage from '../Storage'
+import Storage, { Token } from '../Storage'
 
 export type AccountState = {
   viewer: Viewer
@@ -58,8 +58,8 @@ export function useSetAccount() {
 export function useLogin() {
   const setAccount = useSetAccount()
 
-  return useCallback((account: { viewer: Viewer; accessToken: string }) => {
-    Storage.token = { accessToken: account.accessToken }
+  return useCallback((account: { viewer: Viewer; token: Token }) => {
+    Storage.token = account.token
     setAccount(account.viewer)
   }, [])
 }

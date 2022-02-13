@@ -14,6 +14,7 @@
 
 export interface Token {
   accessToken: string
+  refreshToken: string
 }
 
 export default class Storage {
@@ -23,8 +24,8 @@ export default class Storage {
     if (!this._token) {
       try {
         const v = JSON.parse(localStorage.getItem(this.TOKEN_KEY) || '{}')
-        if (typeof v.accessToken === 'string') {
-          this._token = { accessToken: v.accessToken }
+        if (typeof v.accessToken === 'string' && typeof v.refreshToken === 'string') {
+          this._token = { accessToken: v.accessToken, refreshToken: v.refreshToken }
         }
       } catch {}
     }
@@ -33,7 +34,7 @@ export default class Storage {
   static set token(token: Token | null) {
     this._token = token
     if (token) {
-      localStorage.setItem(this.TOKEN_KEY, JSON.stringify({ accessToken: token.accessToken }))
+      localStorage.setItem(this.TOKEN_KEY, JSON.stringify(token))
     } else {
       localStorage.removeItem(this.TOKEN_KEY)
     }

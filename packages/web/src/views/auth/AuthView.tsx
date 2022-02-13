@@ -20,6 +20,7 @@ import { useToggle } from 'react-use'
 import { queryViewerWithToken, Viewer } from '../../apollo/viewer'
 import NetworkIndicator from '../../components/NetworkIndicator'
 import { useLogin } from '../../state/account'
+import { Token } from '../../Storage'
 import useAsync from '../../utils/useAsync'
 
 export default function AuthView() {
@@ -50,7 +51,7 @@ export default function AuthView() {
       })
     })()
 
-    return new Promise<{ viewer: Viewer; accessToken: string } | undefined>((resolve, reject) => {
+    return new Promise<{ viewer: Viewer; token: Token } | undefined>((resolve, reject) => {
       let loading = false
 
       DTFrameLogin(
@@ -71,18 +72,19 @@ export default function AuthView() {
 
           try {
             toggleLoading(true)
-            const token = await fetch(
-              `${import.meta.env.VITE_AUTH_API}/auth/dingtalk?code=${result.authCode}`,
-              { method: 'POST' }
-            ).then(res => {
-              if (res.status >= 200 && res.status < 300) {
-                return res.json()
-              }
-              throw new Error(res.statusText)
-            })
+            const token: { accessToken: string; refreshToken: string; expiresIn: number } =
+              await fetch(
+                `${import.meta.env.VITE_AUTH_API}/auth/dingtalk?code=${result.authCode}`,
+                { method: 'POST' }
+              ).then(res => {
+                if (res.status >= 200 && res.status < 300) {
+                  return res.json()
+                }
+                throw new Error(res.statusText)
+              })
 
             const viewer = await queryViewerWithToken(token.accessToken)
-            resolve({ viewer, accessToken: token.accessToken })
+            resolve({ viewer, token })
 
             message.success('登录成功')
           } catch (error: any) {
