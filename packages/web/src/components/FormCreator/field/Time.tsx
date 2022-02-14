@@ -45,7 +45,7 @@ export default function Time(props: TimeProps & { tabIndex?: number }) {
   }, [props.value])
 
   useEffect(() => {
-    const v = value?.unix() ?? null
+    const v = value?.startOf(START_OF[props.meta?.type || 'datetime']).unix() ?? null
     if (ref.current !== v) {
       ref.current = v
       props.onChange?.(ref.current)
@@ -72,9 +72,37 @@ export default function Time(props: TimeProps & { tabIndex?: number }) {
   )
 }
 
+const START_OF = {
+  year: 'year',
+  month: 'month',
+  date: 'date',
+  datetime: 'second',
+} as const
+
 const _DatePicker = styled(DatePicker)`
   width: 100%;
 `
+
+export function TimeCell(props: TimeProps) {
+  if (!props.value) {
+    return null
+  }
+
+  const type = props.meta?.type || 'date'
+
+  const format = {
+    year: 'YYYY',
+    month: 'YYYY-MM',
+    date: 'YYYY-MM-DD',
+    datetime: 'YYYY-MM-DD HH:mm:ss',
+  }[type]
+
+  if (!format) {
+    return null
+  }
+
+  return <>{dayjs(props.value * 1000).format(format)}</>
+}
 
 export function TimeConfigure({
   field,

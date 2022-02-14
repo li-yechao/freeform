@@ -27,6 +27,7 @@ import {
 } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { CellRenderer } from '../../../components/FormCreator/field'
 import FormRenderer, { FormRendererProps } from '../../../components/FormRenderer'
 import { Value } from '../../../components/FormRenderer/state'
 import { notEmpty } from '../../../utils/array'
@@ -56,6 +57,7 @@ export default function RecordTable() {
         title: field.label,
         dataIndex: ['data', field.id, 'value'],
         ellipsis: true,
+        render: value => <CellRenderer {...field} value={value} />,
       }))
 
     columns?.push({

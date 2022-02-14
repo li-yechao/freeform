@@ -19,7 +19,7 @@ import Number, { initialNumberProps, NumberConfigure } from './Number'
 import Radio, { initialRadioProps, RadioConfigure } from './Radio'
 import Rate, { initialRateProps, RateConfigure } from './Rate'
 import Text, { initialTextProps, TextConfigure } from './Text'
-import Time, { initialTimeProps, TimeConfigure } from './Time'
+import Time, { initialTimeProps, TimeCell, TimeConfigure } from './Time'
 
 export interface FieldProps extends Field {
   value?: any
@@ -91,4 +91,19 @@ const CONFIGURES: {
   checkbox: CheckboxConfigure,
   rate: RateConfigure,
   time: TimeConfigure,
+}
+
+export function CellRenderer(props: FieldProps) {
+  const F = CELLS[props.type as keyof typeof FIELDS]
+  if (F) {
+    return <F {...props} />
+  }
+
+  return props.value
+}
+
+const CELLS: {
+  [key in keyof typeof FIELDS]?: ComponentType<FieldProps>
+} = {
+  time: TimeCell,
 }
