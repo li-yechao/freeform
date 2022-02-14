@@ -66,7 +66,15 @@ export default function NodeConfigureRenderer({ applicationId }: { applicationId
   }
 
   return (
-    <>
+    <div
+      onKeyDown={e => {
+        if (e.metaKey && e.key === 's') {
+          e.preventDefault()
+          e.stopPropagation()
+          handleSave()
+        }
+      }}
+    >
       <_Drawer
         visible={Boolean(node) && node?.type !== 'script_js'}
         width=""
@@ -113,7 +121,7 @@ export default function NodeConfigureRenderer({ applicationId }: { applicationId
           />
         )}
       </_Modal>
-    </>
+    </div>
   )
 }
 

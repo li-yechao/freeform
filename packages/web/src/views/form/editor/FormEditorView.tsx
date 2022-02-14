@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import FormCreator, { Schema } from '../../../components/FormCreator'
 import { HeaderAction, useHeaderActionsCtrl } from '../../../state/header'
+import useOnSave from '../../../utils/useOnSave'
 import { useApplicationForm, useUpdateForm } from './graphql'
 
 export default function FormEditorView() {
@@ -116,6 +117,10 @@ const SaveButton = ({
       message.success('保存成功')
     }
   }, [error, data])
+
+  useOnSave(() => {
+    handleUpdate()
+  }, [handleUpdate])
 
   return (
     <Button loading={loading} onClick={handleUpdate}>

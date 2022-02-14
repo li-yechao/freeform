@@ -20,6 +20,7 @@ import { useEffect, useState } from 'react'
 import { isNode, State } from './editor/state'
 import { HeaderAction, useHeaderActionsCtrl } from '../../../state/header'
 import { Button, message } from 'antd'
+import useOnSave from '../../../utils/useOnSave'
 
 export default function WorkflowEditView() {
   const { applicationId, workflowId } = useParams<'applicationId' | 'workflowId'>()
@@ -123,6 +124,10 @@ const SaveButton = ({
       message.success('保存成功')
     }
   }, [error, data])
+
+  useOnSave(() => {
+    handleUpdate()
+  }, [handleUpdate])
 
   return (
     <Button loading={loading} onClick={handleUpdate}>
