@@ -14,8 +14,10 @@
 
 import { CodeOutlined, FileTextOutlined } from '@ant-design/icons'
 import styled from '@emotion/styled'
-import { Button, Drawer, Space } from 'antd'
+import { Button, Drawer, Modal, Space } from 'antd'
 import produce from 'immer'
+import { format } from 'prettier/standalone'
+import parseTypescript from 'prettier/parser-typescript'
 import { ComponentType, ReactNode, useEffect, useState } from 'react'
 import NodeIcon from './components/NodeIcon'
 import FormTriggerConfigure from './nodes/FormTriggerConfigure'
@@ -40,7 +42,11 @@ export default function NodeConfigureRenderer({ applicationId }: { applicationId
   const [draft, setDraft] = useState(node)
 
   useEffect(() => {
-    setDraft(node)
+    setDraft(
+      node?.type === 'script_js'
+        ? { ...node, script: node.script && prettierJs(node.script) }
+        : node
+    )
   }, [node])
 
   const handleChange = (n: NonNullable<typeof node>) => {
@@ -50,37 +56,64 @@ export default function NodeConfigureRenderer({ applicationId }: { applicationId
   const handleClose = () => setCurrentNode()
 
   const handleSave = () => {
-    draft && updateNode(draft)
+    draft &&
+      updateNode(
+        draft?.type === 'script_js'
+          ? { ...draft, script: draft.script && prettierJs(draft.script) }
+          : draft
+      )
     handleClose()
   }
 
   return (
-    <_Drawer
-      visible={Boolean(node)}
-      width=""
-      onClose={handleClose}
-      title={node && <Title node={node} />}
-      footer={
-        <Space>
-          <Button type="primary" onClick={handleSave}>
-            保存
-          </Button>
-          <Button type="default" onClick={handleClose}>
-            取消
-          </Button>
-        </Space>
-      }
-    >
-      {C && draft && (
-        <C
-          nodes={nodes}
-          ids={ids}
-          applicationId={applicationId}
-          node={draft}
-          onChange={handleChange}
-        />
-      )}
-    </_Drawer>
+    <>
+      <_Drawer
+        visible={Boolean(node) && node?.type !== 'script_js'}
+        width=""
+        onClose={handleClose}
+        title={node && <Title node={node} />}
+        footer={
+          <Space>
+            <Button type="primary" onClick={handleSave}>
+              保存
+            </Button>
+            <Button type="default" onClick={handleClose}>
+              取消
+            </Button>
+          </Space>
+        }
+      >
+        {C && draft && (
+          <C
+            nodes={nodes}
+            ids={ids}
+            applicationId={applicationId}
+            node={draft}
+            onChange={handleChange}
+          />
+        )}
+      </_Drawer>
+
+      <_Modal
+        visible={node?.type === 'script_js'}
+        title={node && <Title node={node} />}
+        closable={false}
+        maskClosable={false}
+        width="90%"
+        onCancel={handleClose}
+        onOk={handleSave}
+      >
+        {C && draft && (
+          <C
+            nodes={nodes}
+            ids={ids}
+            applicationId={applicationId}
+            node={draft}
+            onChange={handleChange}
+          />
+        )}
+      </_Modal>
+    </>
   )
 }
 
@@ -104,6 +137,26 @@ const _Drawer = styled(Drawer)`
 
   > .ant-drawer-content-wrapper {
     width: 40%;
+  }
+`
+
+const _Modal = styled(Modal)`
+  height: 90%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+
+  > .ant-modal-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    > .ant-modal-body {
+      flex: 1;
+    }
   }
 `
 
@@ -138,4 +191,16 @@ const Title = ({ node }: { node: Node | Trigger }) => {
       <span>{name}</span>
     </Space>
   )
+}
+
+function prettierJs(script: string): string {
+  return format(script, {
+    parser: 'typescript',
+    plugins: [parseTypescript],
+    printWidth: 100,
+    semi: false,
+    singleQuote: true,
+    arrowParens: 'avoid',
+    trailingComma: 'es5',
+  })
 }

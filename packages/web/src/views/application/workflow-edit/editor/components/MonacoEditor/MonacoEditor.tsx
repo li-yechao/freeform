@@ -58,6 +58,7 @@ export default function MonacoEditor(props: MonacoEditorProps) {
       minimap: {
         enabled: true,
       },
+      rulers: [80, 100],
       scrollbar: {
         verticalScrollbarSize: 4,
         horizontalScrollbarSize: 4,

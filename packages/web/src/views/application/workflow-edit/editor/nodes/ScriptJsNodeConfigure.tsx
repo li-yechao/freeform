@@ -38,20 +38,13 @@ export default function ScriptJsNodeConfigure({
   })
 
   return (
-    <_Container>
-      <_MonacoEditor
-        value={node.script}
-        extraLibs={defines}
-        onChange={script => onChange({ script })}
-      />
-    </_Container>
+    <_MonacoEditor
+      value={node.script}
+      extraLibs={defines}
+      onChange={script => onChange({ script })}
+    />
   )
 }
-
-const _Container = styled.div`
-  height: 50vh;
-  min-height: 200px;
-`
 
 const _MonacoEditor = styled(MonacoEditor)`
   border: 1px solid #d9d9d9;
