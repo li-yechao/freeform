@@ -14,15 +14,18 @@
 
 import styled from '@emotion/styled'
 import { Box } from '@mui/system'
-import { Input, Typography } from 'antd'
+import { Input, Select, Typography } from 'antd'
 import dayjs from 'dayjs'
 import { useEffect, useRef, useState } from 'react'
 import { FieldProps } from '.'
 import DatePicker from '../../DatePicker'
 
+export type TimeType = 'date' | 'year' | 'month' | 'datetime'
+
 export interface TimeProps extends FieldProps {
   meta?: {
     placeholder?: string
+    type?: TimeType
   }
 }
 
@@ -49,6 +52,13 @@ export default function Time(props: TimeProps & { tabIndex?: number }) {
     }
   }, [value])
 
+  let picker = props.meta?.type
+  let showTime = false
+  if (picker === 'datetime') {
+    picker = 'date'
+    showTime = true
+  }
+
   return (
     <_DatePicker
       disabled={props.state === 'DISABLED' || props.state === 'READONLY'}
@@ -56,6 +66,8 @@ export default function Time(props: TimeProps & { tabIndex?: number }) {
       tabIndex={props.tabIndex}
       value={value}
       onChange={setValue}
+      picker={picker}
+      showTime={showTime}
     />
   )
 }
@@ -80,6 +92,23 @@ export function TimeConfigure({
           value={field.meta?.placeholder || ''}
           onChange={e => setField({ meta: { placeholder: e.target.value } })}
         />
+      </Box>
+
+      <Box my={2}>
+        <Typography.Text type="secondary">类型</Typography.Text>
+
+        <div>
+          <Select
+            value={field.meta?.type || 'date'}
+            onChange={type => setField({ meta: { type } })}
+            style={{ width: '100%' }}
+          >
+            <Select.Option value="year">年份</Select.Option>
+            <Select.Option value="month">月份</Select.Option>
+            <Select.Option value="date">日期</Select.Option>
+            <Select.Option value="datetime">日期时间</Select.Option>
+          </Select>
+        </div>
       </Box>
     </>
   )
