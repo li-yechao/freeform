@@ -14,12 +14,15 @@
 
 import styled from '@emotion/styled'
 import { Box } from '@mui/system'
-import { Input, InputNumber, Typography } from 'antd'
+import { Input, InputNumber, Space, Typography } from 'antd'
 import { FieldProps } from '.'
 
 export interface NumberProps extends FieldProps {
   meta?: {
     placeholder?: string
+    min?: number
+    max?: number
+    step?: number
   }
 }
 
@@ -36,6 +39,9 @@ export default function Number(props: NumberProps & { tabIndex?: number }) {
       tabIndex={props.tabIndex}
       value={props.value}
       onChange={value => props.onChange?.(value)}
+      min={props.meta?.min}
+      max={props.meta?.max}
+      step={props.meta?.step}
     />
   )
 }
@@ -60,6 +66,36 @@ export function NumberConfigure({
           value={field.meta?.placeholder || ''}
           onChange={e => setField({ meta: { placeholder: e.target.value } })}
         />
+      </Box>
+
+      <Box my={2}>
+        <Space direction="vertical">
+          <Space>
+            <Typography.Text type="secondary">步长</Typography.Text>
+
+            <InputNumber value={field.meta?.step} onChange={step => setField({ meta: { step } })} />
+          </Space>
+
+          <Space>
+            <Typography.Text type="secondary">最大</Typography.Text>
+
+            <InputNumber
+              step={field.meta?.step}
+              value={field.meta?.max}
+              onChange={max => setField({ meta: { max } })}
+            />
+          </Space>
+
+          <Space>
+            <Typography.Text type="secondary">最小</Typography.Text>
+
+            <InputNumber
+              step={field.meta?.step}
+              value={field.meta?.min}
+              onChange={min => setField({ meta: { min } })}
+            />
+          </Space>
+        </Space>
       </Box>
     </>
   )
