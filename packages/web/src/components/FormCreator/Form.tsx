@@ -170,6 +170,12 @@ const _FormField = styled(Box)`
   &.selected {
     outline: 1px solid var(--ant-primary-color);
   }
+
+  &:after {
+    content: '';
+    display: block;
+    clear: both;
+  }
 `
 
 const _FormFieldFloatActions = styled.div`

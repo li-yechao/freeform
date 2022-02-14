@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import styled from '@emotion/styled'
 import { Box } from '@mui/system'
-import { Input, Typography } from 'antd'
+import { Input, InputNumber, Space, Switch, Typography } from 'antd'
 import { FieldProps } from '.'
 
 export interface TextProps extends FieldProps {
   meta?: {
     placeholder?: string
+    maxLength?: number
+    multiline?: boolean
   }
 }
 
@@ -28,19 +29,30 @@ export const initialTextProps: Omit<TextProps, 'id' | 'type'> = {
 }
 
 export default function Text(props: TextProps & { tabIndex?: number }) {
-  return (
-    <_Input
+  return props.meta?.multiline ? (
+    <Input.TextArea
       readOnly={props.state === 'READONLY'}
       disabled={props.state === 'DISABLED'}
       placeholder={props.meta?.placeholder}
       tabIndex={props.tabIndex}
       value={props.value}
       onChange={e => props.onChange?.(e.target.value)}
+      maxLength={props.meta.maxLength}
+      autoSize={{ minRows: 2 }}
+      showCount={!!props.meta.maxLength}
+    />
+  ) : (
+    <Input
+      readOnly={props.state === 'READONLY'}
+      disabled={props.state === 'DISABLED'}
+      placeholder={props.meta?.placeholder}
+      tabIndex={props.tabIndex}
+      value={props.value}
+      onChange={e => props.onChange?.(e.target.value)}
+      maxLength={props.meta?.maxLength}
     />
   )
 }
-
-const _Input = styled(Input)``
 
 export function TextConfigure({
   field,
@@ -58,6 +70,30 @@ export function TextConfigure({
           value={field.meta?.placeholder || ''}
           onChange={e => setField({ meta: { placeholder: e.target.value } })}
         />
+      </Box>
+
+      <Box my={2}>
+        <Space>
+          <Typography.Text type="secondary">多行输入</Typography.Text>
+
+          <Switch
+            checked={field.meta?.multiline === true}
+            onChange={checked => setField({ meta: { multiline: checked } })}
+          />
+        </Space>
+      </Box>
+
+      <Box my={2}>
+        <Space>
+          <Typography.Text type="secondary">最大长度</Typography.Text>
+
+          <InputNumber
+            value={field.meta?.maxLength}
+            min={1}
+            step={1}
+            onChange={maxLength => setField({ meta: { maxLength } })}
+          />
+        </Space>
       </Box>
     </>
   )

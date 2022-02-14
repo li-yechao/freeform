@@ -205,7 +205,9 @@ export function useSetField() {
     (id: string, field: Partial<Omit<Field, 'id'>>) =>
       setSchema(v =>
         produce(v, draft => {
-          Object.assign(draft.fields[id], field)
+          Object.assign(draft.fields[id], field, {
+            meta: Object.assign(draft.fields[id]!.meta ?? {}, field.meta),
+          })
         })
       ),
     [setSchema]
