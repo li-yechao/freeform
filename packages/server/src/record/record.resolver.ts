@@ -55,6 +55,28 @@ export class RecordResolver {
     )
   }
 
+  @ResolveField(() => RecordConnectionByAssociationFormFieldSearch)
+  async recordsByAssociationFormFieldSearch(
+    @Context('viewer') viewer: Viewer,
+    @Parent() form: Form,
+    @Args('sourceFormId') sourceFormId: string,
+    @Args('sourceFieldId') sourceFieldId: string,
+    @Args({ type: () => Int, name: 'page' }) page: number,
+    @Args({ type: () => Int, name: 'limit' }) limit: number,
+    @Args({ type: () => [String], name: 'recordIds', nullable: true }) recordIds?: string[]
+  ): Promise<RecordConnectionByAssociationFormFieldSearch> {
+    return new RecordConnectionByAssociationFormFieldSearch({
+      recordService: this.recordService,
+      viewer,
+      form,
+      sourceFormId,
+      sourceFieldId,
+      page,
+      limit,
+      recordIds,
+    })
+  }
+
   @ResolveField(() => Record)
   async record(
     @Context('viewer') viewer: Viewer,
@@ -198,5 +220,66 @@ class PageInfo {
       this._count = this.__count()
     }
     return this._count
+  }
+}
+
+@ObjectType()
+export class RecordConnectionByAssociationFormFieldSearch {
+  constructor(
+    private readonly options: {
+      recordService: RecordService
+      viewer: Viewer
+      form: Form
+      sourceFormId: string
+      sourceFieldId: string
+      page: number
+      limit: number
+      recordIds?: string[] | undefined
+    }
+  ) {}
+
+  private _list?: Promise<Record[]>
+
+  private get list() {
+    if (!this._list) {
+      this._list = this.options.recordService.selectRecordsByAssociationFormFieldSearch({
+        viewerId: this.options.viewer.id,
+        applicationId: this.options.form.applicationId.toHexString(),
+        formId: this.options.form.id,
+        sourceFormId: this.options.sourceFormId,
+        sourceFieldId: this.options.sourceFieldId,
+        page: this.options.page,
+        limit: this.options.limit,
+        recordIds: this.options.recordIds,
+      })
+    }
+    return this._list
+  }
+
+  @Field(() => [Record])
+  get nodes() {
+    return this.list
+  }
+
+  private __pageInfo?: PageInfo
+
+  private get _pageInfo() {
+    if (!this.__pageInfo) {
+      this.__pageInfo = new PageInfo(() =>
+        this.options.recordIds?.length
+          ? this.list.then(res => res.length)
+          : this.options.recordService.selectRecordCountByAssociationFormFieldSearch({
+              viewerId: this.options.viewer.id,
+              applicationId: this.options.form.applicationId.toHexString(),
+              formId: this.options.form.id,
+            })
+      )
+    }
+    return this.__pageInfo
+  }
+
+  @Field(() => PageInfo)
+  get pageInfo() {
+    return this._pageInfo
   }
 }

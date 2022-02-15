@@ -48,7 +48,7 @@ export class Field {
 
   @Prop({ type: mongoose.Schema.Types.Mixed })
   @GraphqlField(() => GraphQLJSONObject, { nullable: true })
-  meta?: {}
+  meta?: { [key: string]: any }
 }
 
 @ObjectType()

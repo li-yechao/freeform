@@ -14,7 +14,7 @@
 
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { FilterQuery, Model } from 'mongoose'
 import { FormService } from '../form/form.service'
 import { WorkflowService } from '../workflow/workflow.service'
 import { CreateRecordInput, UpdateRecordInput } from './record.input'
@@ -110,6 +110,86 @@ export class RecordService {
     const view = form.views?.find(i => i.id === viewId)
     if (!view) {
       throw new Error(`View ${viewId} not found`)
+    }
+
+    return this.recordModel.countDocuments({ formId, deletedAt: null })
+  }
+
+  async selectRecordsByAssociationFormFieldSearch({
+    viewerId,
+    applicationId,
+    formId,
+    sourceFormId,
+    sourceFieldId,
+    page,
+    limit,
+    recordIds,
+  }: {
+    viewerId: string
+    applicationId: string
+    formId: string
+    sourceFormId: string
+    sourceFieldId: string
+    page: number
+    limit: number
+    recordIds?: string[] | undefined
+  }): Promise<Record[]> {
+    const form = await this.formService.selectForm(viewerId, applicationId, formId)
+    if (!form) {
+      throw new Error(`Form ${formId} not found`)
+    }
+    const sourceForm = await this.formService.selectForm(viewerId, applicationId, sourceFormId)
+    const sourceField = sourceForm?.fields?.find(i => i.id === sourceFieldId)
+    if (!sourceField) {
+      throw new Error(`Source field ${sourceFieldId} not found`)
+    }
+    if (sourceField.type !== 'associationForm') {
+      throw new Error(
+        `Source field ${sourceFieldId} type ${sourceField.type} is not an associationForm`
+      )
+    }
+    if (sourceField.meta?.['associationFormId'] !== formId) {
+      throw new Error(`Source field ${sourceFieldId} associationFormId is not match`)
+    }
+    const mainFieldId = sourceField.meta?.['mainFieldId']
+    const mainField = form.fields?.find(i => i.id === mainFieldId)
+    if (!mainField) {
+      throw new Error(`Source field ${sourceFieldId} mainField is not found`)
+    }
+
+    const filter: FilterQuery<Record> = { formId, deletedAt: null }
+    if (recordIds?.length) {
+      filter['_id'] = { $in: [recordIds] }
+    }
+
+    const records = await this.recordModel
+      .find(filter, {
+        id: 1,
+        userId: 1,
+        formId: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        [`data.${mainField.id}`]: 1,
+      })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+
+    return records
+  }
+
+  async selectRecordCountByAssociationFormFieldSearch({
+    viewerId,
+    applicationId,
+    formId,
+  }: {
+    viewerId: string
+    applicationId: string
+    formId: string
+  }): Promise<number> {
+    const form = await this.formService.selectForm(viewerId, applicationId, formId)
+    if (!form) {
+      throw new Error(`Form ${formId} not found`)
     }
 
     return this.recordModel.countDocuments({ formId, deletedAt: null })
