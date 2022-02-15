@@ -13,14 +13,15 @@
 // limitations under the License.
 
 import styled from '@emotion/styled'
-import { useParams } from 'react-router-dom'
-import { useApplication, useUpdateWorkflow } from './graphql'
-import WorkflowEditor from './editor/WorkflowEditor'
-import { useEffect, useState } from 'react'
-import { isNode, State } from './editor/state'
-import { HeaderAction, useHeaderActionsCtrl } from '../../../state/header'
 import { Button, message } from 'antd'
+import equal from 'fast-deep-equal'
+import { useEffect, useRef, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { HeaderAction, useHeaderActionsCtrl } from '../../../state/header'
 import useOnSave from '../../../utils/useOnSave'
+import { isNode, State } from './editor/state'
+import WorkflowEditor from './editor/WorkflowEditor'
+import { useApplication, useUpdateWorkflow } from './graphql'
 
 export default function WorkflowEditView() {
   const { applicationId, workflowId } = useParams<'applicationId' | 'workflowId'>()
@@ -33,6 +34,7 @@ export default function WorkflowEditView() {
   })
   const workflow = application?.workflow
 
+  const valueRef = useRef<State>()
   const [value, setValue] = useState<State>()
 
   useEffect(() => {
@@ -48,7 +50,8 @@ export default function WorkflowEditView() {
         ids.push(n.id)
       }
 
-      setValue({ nodes, ids })
+      valueRef.current = { nodes, ids }
+      setValue(valueRef.current)
     }
   }, [workflow])
 
@@ -58,7 +61,13 @@ export default function WorkflowEditView() {
     const exportButton: HeaderAction<React.ComponentProps<typeof SaveButton>> = {
       key: 'WorkflowEditView-SaveButton',
       component: SaveButton,
-      props: { applicationId, workflowId, value },
+      props: {
+        applicationId,
+        workflowId,
+        value,
+        disabled:
+          equal(valueRef.current?.nodes, value?.nodes) && equal(valueRef.current?.ids, value?.ids),
+      },
     }
     headerActionsCtrl.set(exportButton)
 
@@ -78,10 +87,12 @@ const SaveButton = ({
   applicationId,
   workflowId,
   value,
+  disabled,
 }: {
   applicationId: string
   workflowId: string
   value?: State
+  disabled?: boolean
 }) => {
   const [updateWorkflow, { loading, error, data }] = useUpdateWorkflow()
 
@@ -130,7 +141,7 @@ const SaveButton = ({
   }, [handleUpdate])
 
   return (
-    <Button loading={loading} onClick={handleUpdate}>
+    <Button loading={loading} disabled={disabled} onClick={handleUpdate}>
       保存
     </Button>
   )

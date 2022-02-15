@@ -14,7 +14,8 @@
 
 import { Box } from '@mui/system'
 import { Button, message } from 'antd'
-import { useEffect, useState } from 'react'
+import equal from 'fast-deep-equal'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import FormCreator, { Schema } from '../../../components/FormCreator'
 import { HeaderAction, useHeaderActionsCtrl } from '../../../state/header'
@@ -31,6 +32,7 @@ export default function FormEditorView() {
     variables: { applicationId, formId },
   })
 
+  const schemaRef = useRef<Schema>()
   const [schema, setSchema] = useState<Schema>()
 
   useEffect(() => {
@@ -38,23 +40,31 @@ export default function FormEditorView() {
 
     type Fields = NonNullable<typeof schema>['fields']
 
-    setSchema({
+    schemaRef.current = {
       fields:
         form?.fields?.reduce<Fields>(
           (res, field) => Object.assign(res, { [field.id]: field }),
           {}
         ) ?? {},
       layout: form?.layout?.rows.map(row => row.children.map(col => col.fieldId)) ?? [],
-    })
+    }
+    setSchema(schemaRef.current)
   }, [application])
 
   const headerActionsCtrl = useHeaderActionsCtrl()
 
   useEffect(() => {
     const exportButton: HeaderAction<React.ComponentProps<typeof SaveButton>> = {
-      key: 'ObjectView-MenuButton',
+      key: 'FormEditorView-SaveButton',
       component: SaveButton,
-      props: { applicationId, formId, schema },
+      props: {
+        applicationId,
+        formId,
+        schema,
+        disabled:
+          equal(schemaRef.current?.fields, schema?.fields) &&
+          equal(schemaRef.current?.layout, schema?.layout),
+      },
     }
     headerActionsCtrl.set(exportButton)
 
@@ -74,10 +84,12 @@ const SaveButton = ({
   applicationId,
   formId,
   schema,
+  disabled,
 }: {
   applicationId: string
   formId: string
   schema?: Schema
+  disabled?: boolean
 }) => {
   const [updateForm, { loading, error, data }] = useUpdateForm()
 
@@ -123,7 +135,7 @@ const SaveButton = ({
   }, [handleUpdate])
 
   return (
-    <Button loading={loading} onClick={handleUpdate}>
+    <Button loading={loading} disabled={disabled} onClick={handleUpdate}>
       保存
     </Button>
   )
