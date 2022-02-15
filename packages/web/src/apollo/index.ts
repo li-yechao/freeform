@@ -15,12 +15,12 @@
 import {
   ApolloClient,
   ApolloLink,
-  createHttpLink,
   FetchResult,
   InMemoryCache,
   Observable,
   Operation,
 } from '@apollo/client'
+import { BatchHttpLink } from '@apollo/client/link/batch-http'
 import { ErrorLink } from '@apollo/client/link/error'
 import { GraphQLError } from 'graphql'
 import Storage from '../Storage'
@@ -72,8 +72,10 @@ export function createClient() {
     return forward(operation)
   })
 
-  const httpLink = createHttpLink({
+  const httpLink = new BatchHttpLink({
     uri: import.meta.env.VITE_GRAPHQL_URI,
+    batchMax: 5,
+    batchInterval: 100,
   })
 
   const client = new ApolloClient({
