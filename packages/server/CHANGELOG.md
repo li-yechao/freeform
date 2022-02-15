@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.4](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.3...@freeform/server@0.1.0-alpha.4) (2022-02-16)
+
+### Bug Fixes
+
+- deploy only valid workflow ([243c538](https://github.com/li-yechao/freeform/commit/243c5387d02e692e752f65540b0c488fe64153fb))
+
+### Features
+
+- add association form records api ([fcae76d](https://github.com/li-yechao/freeform/commit/fcae76d0f8cb12e0c36e51a0f54b25ba502c061e))
+- add refreshToken api ([edc48ef](https://github.com/li-yechao/freeform/commit/edc48efff4ce0b38219ede0e7806645f78896cfb))
+- add user module ([b55f452](https://github.com/li-yechao/freeform/commit/b55f45215ef9cb5273676c0e203494d8936521a9))
+
 # [0.1.0-alpha.3](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.2...@freeform/server@0.1.0-alpha.3) (2022-02-11)
 
 ### Bug Fixes
