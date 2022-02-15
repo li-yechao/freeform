@@ -15,7 +15,7 @@
 import styled from '@emotion/styled'
 import { Box } from '@mui/system'
 import { Input, InputNumber, Space, Typography } from 'antd'
-import { FieldProps } from '.'
+import { FieldProps, InitialFieldProps } from '.'
 
 export interface NumberProps extends FieldProps {
   meta?: {
@@ -26,7 +26,7 @@ export interface NumberProps extends FieldProps {
   }
 }
 
-export const initialNumberProps: Omit<NumberProps, 'id' | 'type'> = {
+export const initialNumberProps: InitialFieldProps<NumberProps> = {
   label: '数字',
 }
 
@@ -54,8 +54,8 @@ export function NumberConfigure({
   field,
   setField,
 }: {
-  field: NumberProps
-  setField: (field: Partial<NumberProps>) => void
+  field: InitialFieldProps<NumberProps>
+  setField: (field: Partial<InitialFieldProps<NumberProps>>) => void
 }) {
   return (
     <>

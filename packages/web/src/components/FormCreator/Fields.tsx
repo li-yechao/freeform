@@ -17,6 +17,7 @@ import {
   CheckCircleOutlined,
   CheckSquareOutlined,
   FontSizeOutlined,
+  LinkOutlined,
   NumberOutlined,
   StarOutlined,
 } from '@ant-design/icons'
@@ -35,6 +36,7 @@ export default function Fields() {
       { type: 'radio', icon: <CheckCircleOutlined />, title: '单选' },
       { type: 'rate', icon: <StarOutlined />, title: '评分' },
       { type: 'time', icon: <CalendarOutlined />, title: '时间' },
+      { type: 'associationForm', icon: <LinkOutlined />, title: '关联表' },
     ],
     []
   )

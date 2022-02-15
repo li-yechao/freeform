@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { Radio as _Radio } from 'antd'
-import { FieldProps } from '.'
+import { FieldProps, InitialFieldProps } from '.'
 import { nextOptionId, OptionsConfigure } from './Checkbox'
 
 export interface RadioProps extends FieldProps {
@@ -22,7 +22,7 @@ export interface RadioProps extends FieldProps {
   }
 }
 
-export const initialRadioProps: Omit<RadioProps, 'id' | 'type'> = {
+export const initialRadioProps: InitialFieldProps<RadioProps> = {
   label: '单选',
   meta: {
     options: [
@@ -55,8 +55,8 @@ export function RadioConfigure({
   field,
   setField,
 }: {
-  field: RadioProps
-  setField: (field: Partial<RadioProps>) => void
+  field: InitialFieldProps<RadioProps>
+  setField: (field: Partial<InitialFieldProps<RadioProps>>) => void
 }) {
   return (
     <>

@@ -74,7 +74,12 @@ export default function FormEditorView() {
   return (
     <>
       <Box sx={{ position: 'absolute', left: 0, top: 40, right: 0, bottom: 0 }}>
-        <FormCreator value={schema} onChange={setSchema} />
+        <FormCreator
+          applicationId={applicationId}
+          formId={formId}
+          value={schema}
+          onChange={setSchema}
+        />
       </Box>
     </>
   )

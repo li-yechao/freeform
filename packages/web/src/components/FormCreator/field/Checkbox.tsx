@@ -20,7 +20,7 @@ import produce from 'immer'
 import { customAlphabet } from 'nanoid'
 import { useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
-import { FieldProps } from '.'
+import { FieldProps, InitialFieldProps } from '.'
 
 export const nextOptionId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 5)
 
@@ -36,7 +36,7 @@ export interface CheckboxOption {
   value: any
 }
 
-export const initialCheckboxProps: Omit<CheckboxProps, 'id' | 'type'> = {
+export const initialCheckboxProps: InitialFieldProps<CheckboxProps> = {
   label: '多选',
   meta: {
     options: [
@@ -79,8 +79,8 @@ export function CheckboxConfigure({
   field,
   setField,
 }: {
-  field: CheckboxProps
-  setField: (field: Partial<CheckboxProps>) => void
+  field: InitialFieldProps<CheckboxProps>
+  setField: (field: Partial<InitialFieldProps<CheckboxProps>>) => void
 }) {
   return (
     <>
@@ -93,8 +93,8 @@ export function OptionsConfigure({
   field,
   setField,
 }: {
-  field: CheckboxProps
-  setField: (field: Partial<CheckboxProps>) => void
+  field: InitialFieldProps<CheckboxProps>
+  setField: (field: Partial<InitialFieldProps<CheckboxProps>>) => void
 }) {
   const options = field.meta?.options || []
 

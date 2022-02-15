@@ -57,7 +57,9 @@ export default function RecordTable() {
         title: field.label,
         dataIndex: ['data', field.id, 'value'],
         ellipsis: true,
-        render: value => <CellRenderer {...field} value={value} />,
+        render: value => (
+          <CellRenderer applicationId={applicationId} formId={formId} {...field} value={value} />
+        ),
       }))
 
     columns?.push({
@@ -199,6 +201,8 @@ const RecordUpdater = ({
 
   const formProps = useMemo<FormRendererProps>(() => {
     return {
+      applicationId,
+      formId,
       fields:
         application?.form.fields?.reduce<FormRendererProps['fields']>(
           (res, field) => Object.assign(res, { [field.id]: field }),

@@ -14,6 +14,11 @@
 
 import { ComponentProps, ComponentType } from 'react'
 import { Field } from '../state'
+import AssociationForm, {
+  AssociationFormCell,
+  AssociationFormConfigure,
+  initialAssociationFormProps,
+} from './AssociationForm'
 import Checkbox, { CheckboxConfigure, initialCheckboxProps } from './Checkbox'
 import Number, { initialNumberProps, NumberConfigure } from './Number'
 import Radio, { initialRadioProps, RadioConfigure } from './Radio'
@@ -22,10 +27,17 @@ import Text, { initialTextProps, TextConfigure } from './Text'
 import Time, { initialTimeProps, TimeCell, TimeConfigure } from './Time'
 
 export interface FieldProps extends Field {
+  applicationId: string
+  formId: string
   value?: any
   onChange?: (value: any) => void
   tabIndex?: number
 }
+
+export type InitialFieldProps<T extends FieldProps> = Omit<
+  T,
+  'applicationId' | 'formId' | 'id' | 'type'
+>
 
 export default function FieldRenderer(props: FieldProps) {
   const F = FIELDS[props.type as keyof typeof FIELDS]
@@ -43,6 +55,7 @@ const FIELDS = {
   checkbox: Checkbox,
   rate: Rate,
   time: Time,
+  associationForm: AssociationForm,
 }
 
 export function defaultProps(type: string) {
@@ -54,7 +67,7 @@ export function defaultProps(type: string) {
 }
 
 const DEFAULT_PROPS: {
-  [key in keyof typeof FIELDS]: Omit<ComponentProps<typeof FIELDS[key]>, 'id' | 'type'>
+  [key in keyof typeof FIELDS]: InitialFieldProps<ComponentProps<typeof FIELDS[key]>>
 } = {
   text: initialTextProps,
   number: initialNumberProps,
@@ -62,18 +75,21 @@ const DEFAULT_PROPS: {
   checkbox: initialCheckboxProps,
   rate: initialRateProps,
   time: initialTimeProps,
+  associationForm: initialAssociationFormProps,
 }
 
 export function ConfigureRenderer({
+  applicationId,
   field,
   setField,
 }: {
+  applicationId: string
   field: Field
   setField: (field: Partial<Field>) => void
 }) {
   const F = CONFIGURES[field.type as keyof typeof FIELDS]
   if (F) {
-    return <F field={field} setField={setField} />
+    return <F applicationId={applicationId} field={field} setField={setField} />
   }
 
   throw new Error(`Unsupported field type ${field.type}`)
@@ -81,6 +97,7 @@ export function ConfigureRenderer({
 
 const CONFIGURES: {
   [key in keyof typeof FIELDS]: ComponentType<{
+    applicationId: string
     field: Field
     setField: (field: Partial<Field>) => void
   }>
@@ -91,6 +108,7 @@ const CONFIGURES: {
   checkbox: CheckboxConfigure,
   rate: RateConfigure,
   time: TimeConfigure,
+  associationForm: AssociationFormConfigure,
 }
 
 export function CellRenderer(props: FieldProps) {
@@ -106,4 +124,5 @@ const CELLS: {
   [key in keyof typeof FIELDS]?: ComponentType<FieldProps>
 } = {
   time: TimeCell,
+  associationForm: AssociationFormCell,
 }

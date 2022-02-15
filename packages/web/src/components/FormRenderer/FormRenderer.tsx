@@ -22,6 +22,8 @@ import FieldRenderer, { FieldProps } from '../FormCreator/field'
 import { useFieldValue, useSetFieldValue, useSetValue, useValue, Value } from './state'
 
 export interface FormRendererProps {
+  applicationId: string
+  formId: string
   fields: { [key: string]: Field }
   layout: string[][]
   value?: Value
@@ -61,7 +63,11 @@ const _FormRenderer = ({ fields, layout, ...props }: FormRendererProps) => {
         <Row key={index}>
           {row.map(id => (
             <Col key={id} xs={Math.max(3, 24 / row.length)}>
-              <FormField {...fields[id]!} />
+              <FormField
+                {...fields[id]!}
+                applicationId={props.applicationId}
+                formId={props.formId}
+              />
             </Col>
           ))}
         </Row>

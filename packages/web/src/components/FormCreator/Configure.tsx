@@ -19,7 +19,7 @@ import { memo } from 'react'
 import { ConfigureRenderer } from './field'
 import { useCurrentField, useSetField } from './state'
 
-export default function Configure() {
+export default function Configure({ applicationId }: { applicationId: string }) {
   const field = useCurrentField()
   const setField = useSetField()
 
@@ -33,7 +33,11 @@ export default function Configure() {
 
       <StateConfigure />
 
-      <ConfigureRenderer field={field} setField={value => setField(field.id, value)} />
+      <ConfigureRenderer
+        applicationId={applicationId}
+        field={field}
+        setField={value => setField(field.id, value)}
+      />
     </_Configure>
   )
 }

@@ -13,11 +13,11 @@
 // limitations under the License.
 
 import { Rate as _Rate } from 'antd'
-import { FieldProps } from '.'
+import { FieldProps, InitialFieldProps } from '.'
 
 export interface RateProps extends FieldProps {}
 
-export const initialRateProps: Omit<RateProps, 'id' | 'type'> = {
+export const initialRateProps: InitialFieldProps<RateProps> = {
   label: '评分',
 }
 
@@ -35,8 +35,8 @@ export function RateConfigure({
   field: _field,
   setField: _setField,
 }: {
-  field: RateProps
-  setField: (field: Partial<RateProps>) => void
+  field: InitialFieldProps<RateProps>
+  setField: (field: Partial<InitialFieldProps<RateProps>>) => void
 }) {
   return <></>
 }

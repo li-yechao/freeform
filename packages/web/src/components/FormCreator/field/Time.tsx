@@ -17,7 +17,7 @@ import { Box } from '@mui/system'
 import { Input, Select, Typography } from 'antd'
 import dayjs from 'dayjs'
 import { useEffect, useRef, useState } from 'react'
-import { FieldProps } from '.'
+import { FieldProps, InitialFieldProps } from '.'
 import DatePicker from '../../DatePicker'
 
 export type TimeType = 'date' | 'year' | 'month' | 'datetime'
@@ -29,7 +29,7 @@ export interface TimeProps extends FieldProps {
   }
 }
 
-export const initialTimeProps: Omit<TimeProps, 'id' | 'type'> = {
+export const initialTimeProps: InitialFieldProps<TimeProps> = {
   label: '时间',
 }
 
@@ -108,8 +108,8 @@ export function TimeConfigure({
   field,
   setField,
 }: {
-  field: TimeProps
-  setField: (field: Partial<TimeProps>) => void
+  field: InitialFieldProps<TimeProps>
+  setField: (field: Partial<InitialFieldProps<TimeProps>>) => void
 }) {
   return (
     <>

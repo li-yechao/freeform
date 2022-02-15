@@ -33,6 +33,8 @@ export default function RecordCreator({
 
   const formProps = useMemo<FormRendererProps>(() => {
     return {
+      applicationId: application.id,
+      formId: application.form.id,
       fields:
         application.form.fields?.reduce<FormRendererProps['fields']>(
           (res, field) => Object.assign(res, { [field.id]: field }),

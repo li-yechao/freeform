@@ -14,7 +14,7 @@
 
 import { Box } from '@mui/system'
 import { Input, InputNumber, Space, Switch, Typography } from 'antd'
-import { FieldProps } from '.'
+import { FieldProps, InitialFieldProps } from '.'
 
 export interface TextProps extends FieldProps {
   meta?: {
@@ -24,7 +24,7 @@ export interface TextProps extends FieldProps {
   }
 }
 
-export const initialTextProps: Omit<TextProps, 'id' | 'type'> = {
+export const initialTextProps: InitialFieldProps<TextProps> = {
   label: '文本',
 }
 
@@ -58,8 +58,8 @@ export function TextConfigure({
   field,
   setField,
 }: {
-  field: TextProps
-  setField: (field: Partial<TextProps>) => void
+  field: InitialFieldProps<TextProps>
+  setField: (field: Partial<InitialFieldProps<TextProps>>) => void
 }) {
   return (
     <>

@@ -24,6 +24,8 @@ import Form from './Form'
 import { Schema, useSchema, useSetSchema } from './state'
 
 export interface FormCreatorProps {
+  applicationId: string
+  formId: string
   value?: Schema
   onChange?: (value: Schema) => void
 }
@@ -64,11 +66,11 @@ const _FormCreator = (props: FormCreatorProps) => {
       </aside>
       <main>
         <Box sx={{ backgroundColor: 'white' }}>
-          <Form />
+          <Form applicationId={props.applicationId} formId={props.formId} />
         </Box>
       </main>
       <aside>
-        <Configure />
+        <Configure applicationId={props.applicationId} />
       </aside>
     </_Container>
   )

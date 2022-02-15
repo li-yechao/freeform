@@ -30,7 +30,7 @@ import {
   useSetCurrentField,
 } from './state'
 
-export default function Form() {
+export default function Form({ applicationId, formId }: { applicationId: string; formId: string }) {
   const form = useRef<HTMLDivElement>(null)
 
   const { layout, fields, current: currentFieldId } = useSchema()
@@ -80,7 +80,12 @@ export default function Form() {
         <Row key={index}>
           {row.map(id => (
             <Col key={id} xs={Math.max(3, 24 / row.length)}>
-              <FormField {...fields[id]!} selected={currentFieldId === id} />
+              <FormField
+                applicationId={applicationId}
+                formId={formId}
+                {...fields[id]!}
+                selected={currentFieldId === id}
+              />
             </Col>
           ))}
         </Row>
@@ -89,52 +94,57 @@ export default function Form() {
   )
 }
 
-const FormField = memo(({ selected, ...field }: Field & { selected?: boolean }) => {
-  const setCurrentField = useSetCurrentField()
-  const deleteField = useDeleteField()
+const FormField = memo(
+  ({
+    selected,
+    ...field
+  }: Field & { applicationId: string; formId: string; selected?: boolean }) => {
+    const setCurrentField = useSetCurrentField()
+    const deleteField = useDeleteField()
 
-  const [isDragging, drag] = useDrag(
-    () => ({
-      type: 'field',
-      item: { id: field.id, type: field.type },
-      options: { dropEffect: 'move' },
-      collect: monitor => monitor.isDragging(),
-    }),
-    [field.id, field.type]
-  )
+    const [isDragging, drag] = useDrag(
+      () => ({
+        type: 'field',
+        item: { id: field.id, type: field.type },
+        options: { dropEffect: 'move' },
+        collect: monitor => monitor.isDragging(),
+      }),
+      [field.id, field.type]
+    )
 
-  return (
-    <_FormField
-      ref={drag}
-      className={cx(selected && 'selected')}
-      id={`field-${field.id}`}
-      sx={{ opacity: isDragging ? 0 : 1 }}
-      tabIndex={0}
-      onFocus={() => setCurrentField(field.id)}
-    >
-      <_DropTargets>
-        <DropTarget id={field.id} placement="left" />
-        <div>
-          <DropTarget id={field.id} placement="top" />
-          <DropTarget id={field.id} placement="bottom" />
-        </div>
-        <DropTarget id={field.id} placement="right" />
-      </_DropTargets>
+    return (
+      <_FormField
+        ref={drag}
+        className={cx(selected && 'selected')}
+        id={`field-${field.id}`}
+        sx={{ opacity: isDragging ? 0 : 1 }}
+        tabIndex={0}
+        onFocus={() => setCurrentField(field.id)}
+      >
+        <_DropTargets>
+          <DropTarget id={field.id} placement="left" />
+          <div>
+            <DropTarget id={field.id} placement="top" />
+            <DropTarget id={field.id} placement="bottom" />
+          </div>
+          <DropTarget id={field.id} placement="right" />
+        </_DropTargets>
 
-      <_Label>{field.label}</_Label>
+        <_Label>{field.label}</_Label>
 
-      <FieldRenderer {...field} tabIndex={-1} />
+        <FieldRenderer {...field} tabIndex={-1} />
 
-      {selected && (
-        <_FormFieldFloatActions>
-          <Button size="small" type="text" tabIndex={-1} onClick={() => deleteField(field.id)}>
-            <DeleteOutlined color="primary" />
-          </Button>
-        </_FormFieldFloatActions>
-      )}
-    </_FormField>
-  )
-})
+        {selected && (
+          <_FormFieldFloatActions>
+            <Button size="small" type="text" tabIndex={-1} onClick={() => deleteField(field.id)}>
+              <DeleteOutlined color="primary" />
+            </Button>
+          </_FormFieldFloatActions>
+        )}
+      </_FormField>
+    )
+  }
+)
 
 const _Form = styled.div`
   position: relative;
