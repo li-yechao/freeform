@@ -65,6 +65,10 @@ export default function NodeConfigureRenderer({ applicationId }: { applicationId
     handleClose()
   }
 
+  const children = C && draft && (
+    <C nodes={nodes} ids={ids} applicationId={applicationId} node={draft} onChange={handleChange} />
+  )
+
   return (
     <div
       onKeyDown={e => {
@@ -75,52 +79,40 @@ export default function NodeConfigureRenderer({ applicationId }: { applicationId
         }
       }}
     >
-      <_Drawer
-        visible={Boolean(node) && node?.type !== 'script_js'}
-        width=""
-        onClose={handleClose}
-        title={node && <Title node={node} />}
-        footer={
-          <Space>
-            <Button type="primary" onClick={handleSave}>
-              保存
-            </Button>
-            <Button type="default" onClick={handleClose}>
-              取消
-            </Button>
-          </Space>
-        }
-      >
-        {C && draft && (
-          <C
-            nodes={nodes}
-            ids={ids}
-            applicationId={applicationId}
-            node={draft}
-            onChange={handleChange}
-          />
-        )}
-      </_Drawer>
-
-      <_Modal
-        visible={node?.type === 'script_js'}
-        title={node && <Title node={node} />}
-        closable={false}
-        maskClosable={false}
-        width="90%"
-        onCancel={handleClose}
-        onOk={handleSave}
-      >
-        {C && draft && (
-          <C
-            nodes={nodes}
-            ids={ids}
-            applicationId={applicationId}
-            node={draft}
-            onChange={handleChange}
-          />
-        )}
-      </_Modal>
+      {node?.type === 'script_js' ? (
+        <_Modal
+          visible={node?.type === 'script_js'}
+          title={node && <Title node={node} />}
+          closable={false}
+          maskClosable={false}
+          width=""
+          onCancel={handleClose}
+          onOk={handleSave}
+        >
+          {children}
+        </_Modal>
+      ) : (
+        <_Drawer
+          visible={Boolean(node)}
+          title={node && <Title node={node} />}
+          closable={false}
+          maskClosable={false}
+          width=""
+          onClose={handleClose}
+          footer={
+            <Space>
+              <Button type="primary" onClick={handleSave}>
+                保存
+              </Button>
+              <Button type="default" onClick={handleClose}>
+                取消
+              </Button>
+            </Space>
+          }
+        >
+          {children}
+        </_Drawer>
+      )}
     </div>
   )
 }
@@ -150,6 +142,7 @@ const _Drawer = styled(Drawer)`
 
 const _Modal = styled(Modal)`
   height: 90%;
+  width: 90%;
   position: absolute;
   top: 0;
   bottom: 0;
