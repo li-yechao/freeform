@@ -17,7 +17,7 @@ import { mongo } from 'mongoose'
 import { Workflow } from '../schemas/workflow.schema'
 
 const xmlFormatter = require('xml-formatter')
-const camundaModdle = require('camunda-bpmn-moddle/resources/camunda')
+const zeebeModdle = require('zeebe-bpmn-moddle/resources/zeebe')
 
 export default async function workflowToBpmn(
   workflow: Pick<Workflow, 'id' | 'trigger' | 'children'>
@@ -25,7 +25,7 @@ export default async function workflowToBpmn(
   if (!workflow.trigger || !workflow.children?.length) {
     throw new Error(`Invalid workflow`)
   }
-  const moddle = new BPMNModdle({ camunda: camundaModdle })
+  const moddle = new BPMNModdle({ zeebe: zeebeModdle })
 
   const model = moddle.create('bpmn:Definitions', {
     targetNamespace: 'http://bpmn.io/schema/bpmn',
@@ -46,7 +46,7 @@ export default async function workflowToBpmn(
 
   let current: BPMNModdle.FlowNode = startEvent
 
-  for (const node of [workflow.trigger, ...workflow.children]) {
+  for (const node of workflow.children) {
     const createTask = (
       process: BPMNModdle.Process,
       prevTask: BPMNModdle.FlowNode,
@@ -72,22 +72,18 @@ export default async function workflowToBpmn(
     }
 
     switch (node.type) {
-      case 'form_trigger': {
-        current = createTask(process, current)
-        break
-      }
       case 'script_js': {
-        const task = createTask(process, current, 'bpmn:ServiceTask', {
-          'camunda:type': 'external',
-          'camunda:topic': 'script_js',
-        })
+        const task = createTask(process, current, 'bpmn:ServiceTask', {})
         task.extensionElements = moddle.create('bpmn:ExtensionElements', {
           values: [
-            moddle.create('camunda:InputOutput', {
-              inputParameters: [
-                moddle.create('camunda:InputParameter', {
-                  name: `${task.id}_script`,
-                  value: node.script && Buffer.from(node.script).toString('base64'),
+            moddle.create('zeebe:TaskDefinition', {
+              type: 'script_js',
+            }),
+            moddle.create('zeebe:TaskHeaders', {
+              values: [
+                moddle.create('zeebe:Header', {
+                  key: 'script',
+                  value: Buffer.from(node.script || '').toString('base64'),
                 }),
               ],
             }),

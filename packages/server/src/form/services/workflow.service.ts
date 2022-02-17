@@ -1,29 +1,20 @@
 import { Injectable } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import CamundaAPI from '../camunda/CamundaAPI'
 import workflowToBpmn from '../camunda/workflowToBpmn'
 import { CreateWorkflowInput, UpdateWorkflowInput } from '../inputs/workflow.input'
 import { Record } from '../schemas/record.schema'
 import { Workflow } from '../schemas/workflow.schema'
 import { ApplicationService } from './application.service'
+import { CamundaService } from './camunda.service'
 
 @Injectable()
 export class WorkflowService {
   constructor(
     @InjectModel(Workflow.name) private readonly workflowModel: Model<Workflow>,
     private readonly applicationService: ApplicationService,
-    configService: ConfigService
-  ) {
-    const baseUrl = configService.get<string>('CAMUNDA_URI')
-    if (!baseUrl) {
-      throw new Error(`Required env CAMUNDA_URI is missing`)
-    }
-    this.camundaAPI = new CamundaAPI({ baseUrl })
-  }
-
-  private readonly camundaAPI: CamundaAPI
+    private readonly camundaService: CamundaService
+  ) {}
 
   async selectWorkflows(viewerId: string, applicationId: string): Promise<Workflow[]> {
     await this.checkApplication(viewerId, applicationId)
@@ -112,9 +103,9 @@ export class WorkflowService {
 
   private async deployBpmnToCamunda(workflow: Workflow) {
     if (workflow.trigger && workflow.children.length) {
-      await this.camundaAPI.deploymentCreate({
-        deploymentName: workflow.id,
-        xml: await workflowToBpmn(workflow),
+      await this.camundaService.deployProcess({
+        name: workflow.id,
+        definition: await workflowToBpmn(workflow),
       })
     }
   }
@@ -133,13 +124,13 @@ export class WorkflowService {
       'trigger.actions.type': 'create',
     })
     for (const workflow of workflows) {
-      this.camundaAPI.processDefinitionStart({
-        key: `Process_${workflow.id}`,
+      this.camundaService.createProcessInstance({
+        workflowId: workflow.id,
         variables: {
-          form_trigger_viewer_id: { value: viewerId },
-          form_trigger_application_id: { value: applicationId },
-          form_trigger_form_id: { value: formId },
-          form_trigger_record: { value: JSON.stringify(record) },
+          form_trigger_viewer_id: viewerId,
+          form_trigger_application_id: applicationId,
+          form_trigger_form_id: formId,
+          form_trigger_record: record,
         },
       })
     }
@@ -159,13 +150,13 @@ export class WorkflowService {
       'trigger.actions.type': 'update',
     })
     for (const workflow of workflows) {
-      this.camundaAPI.processDefinitionStart({
-        key: `Process_${workflow.id}`,
+      this.camundaService.createProcessInstance({
+        workflowId: workflow.id,
         variables: {
-          form_trigger_viewer_id: { value: viewerId },
-          form_trigger_application_id: { value: applicationId },
-          form_trigger_form_id: { value: formId },
-          form_trigger_record: { value: JSON.stringify(record) },
+          form_trigger_viewer_id: viewerId,
+          form_trigger_application_id: applicationId,
+          form_trigger_form_id: formId,
+          form_trigger_record: record,
         },
       })
     }
@@ -185,13 +176,13 @@ export class WorkflowService {
       'trigger.actions.type': 'delete',
     })
     for (const workflow of workflows) {
-      this.camundaAPI.processDefinitionStart({
-        key: `Process_${workflow.id}`,
+      this.camundaService.createProcessInstance({
+        workflowId: workflow.id,
         variables: {
-          form_trigger_viewer_id: { value: viewerId },
-          form_trigger_application_id: { value: applicationId },
-          form_trigger_form_id: { value: formId },
-          form_trigger_record: { value: JSON.stringify(record) },
+          form_trigger_viewer_id: viewerId,
+          form_trigger_application_id: applicationId,
+          form_trigger_form_id: formId,
+          form_trigger_record: record,
         },
       })
     }
