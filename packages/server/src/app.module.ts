@@ -17,13 +17,9 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { GraphQLModule } from '@nestjs/graphql'
 import { MongooseModule } from '@nestjs/mongoose'
-import { ApplicationModule } from './application/application.module'
 import { AuthModule } from './auth/auth.module'
-import { CamundaModule } from './camunda/camunda.module'
 import { FormModule } from './form/form.module'
-import { RecordModule } from './record/record.module'
 import { UserModule } from './user/user.module'
-import { WorkflowModule } from './workflow/workflow.module'
 
 @Module({
   imports: [
@@ -40,13 +36,9 @@ import { WorkflowModule } from './workflow/workflow.module'
       autoSchemaFile: true,
       context: ({ req }: any) => ({ headers: req.headers }),
     }),
-    FormModule,
     AuthModule,
-    ApplicationModule,
-    RecordModule,
-    WorkflowModule,
-    CamundaModule,
     UserModule,
+    FormModule,
   ],
   controllers: [],
   providers: [],

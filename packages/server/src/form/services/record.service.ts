@@ -15,10 +15,10 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { FilterQuery, Model } from 'mongoose'
-import { FormService } from '../form/form.service'
-import { WorkflowService } from '../workflow/workflow.service'
-import { CreateRecordInput, UpdateRecordInput } from './record.input'
-import { Record } from './record.schema'
+import { CreateRecordInput, UpdateRecordInput } from '../inputs/record.input'
+import { Record } from '../schemas/record.schema'
+import { FormService } from './form.service'
+import { WorkflowService } from './workflow.service'
 
 @Injectable()
 export class RecordService {

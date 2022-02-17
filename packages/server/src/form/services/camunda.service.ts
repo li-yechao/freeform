@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as camunda from 'camunda-external-task-client-js'
 import { VM } from 'vm2'
-import { RecordService } from '../record/record.service'
+import { RecordService } from './record.service'
 
 @Injectable()
 export class CamundaService {
@@ -12,6 +12,8 @@ export class CamundaService {
       throw new Error('Required env CAMUNDA_URI is not present')
     }
     this.client = new camunda.Client({ baseUrl: camundaUri, use: camunda.logger })
+
+    this.start()
   }
 
   private client: camunda.Client

@@ -14,12 +14,12 @@
 
 import { UseGuards } from '@nestjs/common'
 import { Args, Context, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql'
-import { Application } from '../application/application.schema'
-import { AuthGuard } from '../auth/auth.guard'
-import { Viewer } from '../auth/auth.schema'
-import { CreateFormInput, UpdateFormInput, ViewInput } from './form.input'
-import { Form, View } from './form.schema'
-import { FormService } from './form.service'
+import { AuthGuard } from '../../auth/auth.guard'
+import { Viewer } from '../../auth/auth.schema'
+import { CreateFormInput, UpdateFormInput, ViewInput } from '../inputs/form.input'
+import { Application } from '../schemas/application.schema'
+import { Form, View } from '../schemas/form.schema'
+import { FormService } from '../services/form.service'
 
 @Resolver(() => Application)
 @UseGuards(AuthGuard)

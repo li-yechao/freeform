@@ -24,12 +24,12 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql'
-import { AuthGuard } from '../auth/auth.guard'
-import { Viewer } from '../auth/auth.schema'
-import { Form } from '../form/form.schema'
-import { CreateRecordInput, UpdateRecordInput } from './record.input'
-import { Record } from './record.schema'
-import { RecordService } from './record.service'
+import { AuthGuard } from '../../auth/auth.guard'
+import { Viewer } from '../../auth/auth.schema'
+import { CreateRecordInput, UpdateRecordInput } from '../inputs/record.input'
+import { Form } from '../schemas/form.schema'
+import { Record } from '../schemas/record.schema'
+import { RecordService } from '../services/record.service'
 
 @Resolver(() => Form)
 @UseGuards(AuthGuard)

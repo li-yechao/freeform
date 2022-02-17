@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import { ApplicationService } from '../application/application.service'
 import CamundaAPI from '../camunda/CamundaAPI'
 import workflowToBpmn from '../camunda/workflowToBpmn'
-import { Record } from '../record/record.schema'
-import { CreateWorkflowInput, UpdateWorkflowInput } from './workflow.input'
-import { Workflow } from './workflow.schema'
+import { CreateWorkflowInput, UpdateWorkflowInput } from '../inputs/workflow.input'
+import { Record } from '../schemas/record.schema'
+import { Workflow } from '../schemas/workflow.schema'
+import { ApplicationService } from './application.service'
 
 @Injectable()
 export class WorkflowService {

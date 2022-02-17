@@ -14,7 +14,7 @@
 
 import * as BPMNModdle from 'bpmn-moddle'
 import { mongo } from 'mongoose'
-import { Workflow } from '../workflow/workflow.schema'
+import { Workflow } from '../schemas/workflow.schema'
 
 const xmlFormatter = require('xml-formatter')
 const camundaModdle = require('camunda-bpmn-moddle/resources/camunda')

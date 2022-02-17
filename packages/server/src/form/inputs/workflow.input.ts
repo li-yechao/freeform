@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Test, TestingModule } from '@nestjs/testing'
-import { FormResolver } from './form.resolver'
+import { InputType, Field, PickType, PartialType } from '@nestjs/graphql'
+import { GraphQLJSONObject } from 'graphql-type-json'
+import { Node, Trigger } from '../schemas/workflow.schema'
 
-describe('FormResolver', () => {
-  let resolver: FormResolver
+@InputType()
+export class CreateWorkflowInput {
+  @Field({ nullable: true })
+  name?: string
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [FormResolver],
-    }).compile()
+  @Field(() => GraphQLJSONObject)
+  trigger!: Trigger
 
-    resolver = module.get<FormResolver>(FormResolver)
-  })
+  @Field(() => [GraphQLJSONObject])
+  children!: Node[]
+}
 
-  it('should be defined', () => {
-    expect(resolver).toBeDefined()
-  })
-})
+@InputType()
+export class UpdateWorkflowInput extends PartialType(
+  PickType(CreateWorkflowInput, ['name', 'trigger', 'children'] as const)
+) {}

@@ -14,11 +14,11 @@
 
 import { UseGuards } from '@nestjs/common'
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql'
-import { AuthGuard } from '../auth/auth.guard'
-import { Viewer } from '../auth/auth.schema'
-import { CreateApplicationInput, UpdateApplicationInput } from './application.input'
-import { Application } from './application.schema'
-import { ApplicationService } from './application.service'
+import { AuthGuard } from '../../auth/auth.guard'
+import { Viewer } from '../../auth/auth.schema'
+import { CreateApplicationInput, UpdateApplicationInput } from '../inputs/application.input'
+import { Application } from '../schemas/application.schema'
+import { ApplicationService } from '../services/application.service'
 
 @Resolver(() => Application)
 export class ApplicationResolver {

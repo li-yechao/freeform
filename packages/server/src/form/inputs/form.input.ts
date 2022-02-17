@@ -14,7 +14,7 @@
 
 import { InputType, Field, PickType, PartialType } from '@nestjs/graphql'
 import { GraphQLJSONObject } from 'graphql-type-json'
-import { FieldState } from './form.schema'
+import { FieldState } from '../schemas/form.schema'
 
 @InputType()
 export class FieldInput {

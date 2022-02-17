@@ -15,8 +15,8 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import { CreateApplicationInput, UpdateApplicationInput } from './application.input'
-import { Application } from './application.schema'
+import { CreateApplicationInput, UpdateApplicationInput } from '../inputs/application.input'
+import { Application } from '../schemas/application.schema'
 
 @Injectable()
 export class ApplicationService {

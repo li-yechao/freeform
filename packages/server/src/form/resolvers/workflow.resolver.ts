@@ -1,11 +1,11 @@
 import { UseGuards } from '@nestjs/common'
 import { Args, Context, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql'
-import { Application } from '../application/application.schema'
-import { AuthGuard } from '../auth/auth.guard'
-import { Viewer } from '../auth/auth.schema'
-import { CreateWorkflowInput, UpdateWorkflowInput } from './workflow.input'
-import { Workflow } from './workflow.schema'
-import { WorkflowService } from './workflow.service'
+import { AuthGuard } from '../../auth/auth.guard'
+import { Viewer } from '../../auth/auth.schema'
+import { CreateWorkflowInput, UpdateWorkflowInput } from '../inputs/workflow.input'
+import { Application } from '../schemas/application.schema'
+import { Workflow } from '../schemas/workflow.schema'
+import { WorkflowService } from '../services/workflow.service'
 
 @Resolver(() => Application)
 @UseGuards(AuthGuard)
