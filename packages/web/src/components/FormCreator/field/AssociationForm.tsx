@@ -191,33 +191,34 @@ export function AssociationFormCell(props: AssociationFormProps) {
     `
   )
 
-  const options = useAsync(() => {
-    const fetchOptions = () => {
-      const { mainFieldId, associationFormId } = props.meta || {}
-
-      if (!mainFieldId || !associationFormId) {
-        throw new Error(`Required props mainFieldId or associationFormId is missing`)
-      }
-
-      return queryRecords({
-        variables: {
-          applicationId: props.applicationId,
-          formId: associationFormId,
-          sourceFormId: props.formId,
-          sourceFieldId: props.id,
-          page: 0,
-          limit: 10,
-          recordIds: props.value,
-        },
-      }).then(
-        res =>
-          res.data?.application.form.records.nodes.map(i => ({
-            value: i.id,
-            label: i.data?.[mainFieldId]?.value?.toString(),
-          })) ?? []
-      )
+  const options = useAsync(async () => {
+    if (!props.value?.length) {
+      return []
     }
-    return fetchOptions()
+
+    const { mainFieldId, associationFormId } = props.meta || {}
+
+    if (!mainFieldId || !associationFormId) {
+      throw new Error(`Required props mainFieldId or associationFormId is missing`)
+    }
+
+    return queryRecords({
+      variables: {
+        applicationId: props.applicationId,
+        formId: associationFormId,
+        sourceFormId: props.formId,
+        sourceFieldId: props.id,
+        page: 0,
+        limit: 10,
+        recordIds: props.value,
+      },
+    }).then(
+      res =>
+        res.data?.application.form.records.nodes.map(i => ({
+          value: i.id,
+          label: i.data?.[mainFieldId]?.value?.toString(),
+        })) ?? []
+    )
   }, [props.applicationId, props.formId, props.meta])
 
   return (
