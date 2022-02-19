@@ -27,9 +27,9 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly userService: UserService
   ) {
-    const accessTokenSecret = this.configService.get<string>('ACCESS_TOKEN_SECRET')
-    if (!accessTokenSecret) {
-      throw new Error('Required env ACCESS_TOKEN_SECRET is missing')
+    const accessTokenPrivateKey = this.configService.get<string>('ACCESS_TOKEN_PRIVATE_KEY')
+    if (!accessTokenPrivateKey) {
+      throw new Error('Required env ACCESS_TOKEN_PRIVATE_KEY is missing')
     }
     const accessTokenExpiresIn = parseInt(
       this.configService.get<string>('ACCESS_TOKEN_EXPIRES_IN')!
@@ -38,9 +38,9 @@ export class AuthService {
       throw new Error('Required env ACCESS_TOKEN_EXPIRES_IN is invalid')
     }
 
-    const refreshTokenSecret = this.configService.get<string>('REFRESH_TOKEN_SECRET')
-    if (!refreshTokenSecret) {
-      throw new Error('Required env REFRESH_TOKEN_SECRET is missing')
+    const refreshTokenPrivateKey = this.configService.get<string>('REFRESH_TOKEN_PRIVATE_KEY')
+    if (!refreshTokenPrivateKey) {
+      throw new Error('Required env REFRESH_TOKEN_PRIVATE_KEY is missing')
     }
     const refreshTokenExpiresIn = parseInt(
       this.configService.get<string>('REFRESH_TOKEN_EXPIRES_IN')!
@@ -56,15 +56,15 @@ export class AuthService {
     }
 
     this.config = {
-      accessToken: { secret: accessTokenSecret, expiresIn: accessTokenExpiresIn },
-      refreshToken: { secret: refreshTokenSecret, expiresIn: refreshTokenExpiresIn },
+      accessToken: { privateKey: accessTokenPrivateKey, expiresIn: accessTokenExpiresIn },
+      refreshToken: { privateKey: refreshTokenPrivateKey, expiresIn: refreshTokenExpiresIn },
       dingtalk: { clientId: dingtalkClientId, clientSecret: dingtalkClientSecret },
     }
   }
 
   private config: {
-    accessToken: { secret: string; expiresIn: number }
-    refreshToken: { secret: string; expiresIn: number }
+    accessToken: { privateKey: string; expiresIn: number }
+    refreshToken: { privateKey: string; expiresIn: number }
     dingtalk: { clientId: string; clientSecret: string }
   }
 
@@ -116,7 +116,7 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string): Promise<AuthResult> {
-    const payload = verify(refreshToken, this.config.refreshToken.secret)
+    const payload = verify(refreshToken, this.config.refreshToken.privateKey)
     if (typeof payload.sub !== 'string' || !payload.sub) {
       throw new Error(`Invalid jwt token`)
     }
@@ -131,11 +131,13 @@ export class AuthService {
 
   private createToken(userId: string): AuthResult {
     return {
-      accessToken: sign({}, this.config.accessToken.secret, {
+      accessToken: sign({}, this.config.accessToken.privateKey, {
+        algorithm: 'RS256',
         subject: userId,
         expiresIn: this.config.accessToken.expiresIn,
       }),
-      refreshToken: sign({}, this.config.refreshToken.secret, {
+      refreshToken: sign({}, this.config.refreshToken.privateKey, {
+        algorithm: 'RS256',
         subject: userId,
         expiresIn: this.config.refreshToken.expiresIn,
       }),

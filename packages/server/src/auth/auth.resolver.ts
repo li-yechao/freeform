@@ -13,18 +13,18 @@
 // limitations under the License.
 
 import { UseGuards } from '@nestjs/common'
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql'
-import { AuthGuard } from './auth.guard'
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 import { AuthResult, Viewer } from './auth.schema'
 import { AuthService } from './auth.service'
+import { CurrentUser, GqlAuthGuard } from './gql-auth.guard'
 
 @Resolver()
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
   @Query(() => Viewer)
-  @UseGuards(AuthGuard)
-  async viewer(@Context('viewer') viewer: Viewer): Promise<Viewer> {
+  @UseGuards(GqlAuthGuard)
+  async viewer(@CurrentUser() viewer: Viewer): Promise<Viewer> {
     return viewer
   }
 

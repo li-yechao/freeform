@@ -13,30 +13,27 @@
 // limitations under the License.
 
 import { UseGuards } from '@nestjs/common'
-import { Args, Context, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql'
-import { AuthGuard } from '../../auth/auth.guard'
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql'
 import { Viewer } from '../../auth/auth.schema'
+import { CurrentUser, GqlAuthGuard } from '../../auth/gql-auth.guard'
 import { CreateFormInput, UpdateFormInput, ViewInput } from '../inputs/form.input'
 import { Application } from '../schemas/application.schema'
 import { Form, View } from '../schemas/form.schema'
 import { FormService } from '../services/form.service'
 
 @Resolver(() => Application)
-@UseGuards(AuthGuard)
+@UseGuards(GqlAuthGuard)
 export class FormResolver {
   constructor(private readonly formService: FormService) {}
 
   @ResolveField(() => [Form])
-  async forms(
-    @Context('viewer') viewer: Viewer,
-    @Parent() application: Application
-  ): Promise<Form[]> {
+  async forms(@CurrentUser() viewer: Viewer, @Parent() application: Application): Promise<Form[]> {
     return this.formService.selectForms(viewer.id, application.id)
   }
 
   @ResolveField(() => Form)
   async form(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Parent() application: Application,
     @Args('formId') formId: string
   ): Promise<Form> {
@@ -49,7 +46,7 @@ export class FormResolver {
 
   @Mutation(() => Form)
   async createForm(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('input') input: CreateFormInput
   ): Promise<Form> {
@@ -58,7 +55,7 @@ export class FormResolver {
 
   @Mutation(() => Form)
   async updateForm(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('input') input: UpdateFormInput
@@ -72,7 +69,7 @@ export class FormResolver {
 
   @Mutation(() => Boolean)
   async deleteForm(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('formId') formId: string
   ) {
@@ -85,7 +82,7 @@ export class FormResolver {
 
   @Mutation(() => View)
   async createView(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('input') input: ViewInput
@@ -95,7 +92,7 @@ export class FormResolver {
 
   @Mutation(() => View)
   async updateView(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('viewId') viewId: string,
@@ -110,7 +107,7 @@ export class FormResolver {
 
   @Mutation(() => Boolean)
   async deleteView(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('viewId') viewId: string

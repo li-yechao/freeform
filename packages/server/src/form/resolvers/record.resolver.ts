@@ -15,7 +15,6 @@
 import { UseGuards } from '@nestjs/common'
 import {
   Args,
-  Context,
   Field,
   Int,
   Mutation,
@@ -24,21 +23,21 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql'
-import { AuthGuard } from '../../auth/auth.guard'
 import { Viewer } from '../../auth/auth.schema'
+import { CurrentUser, GqlAuthGuard } from '../../auth/gql-auth.guard'
 import { CreateRecordInput, UpdateRecordInput } from '../inputs/record.input'
 import { Form } from '../schemas/form.schema'
 import { Record } from '../schemas/record.schema'
 import { RecordService } from '../services/record.service'
 
 @Resolver(() => Form)
-@UseGuards(AuthGuard)
+@UseGuards(GqlAuthGuard)
 export class RecordResolver {
   constructor(private readonly recordService: RecordService) {}
 
   @ResolveField(() => RecordConnection)
   async records(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Parent() form: Form,
     @Args('viewId') viewId: string,
     @Args({ type: () => Int, name: 'page' }) page: number,
@@ -57,7 +56,7 @@ export class RecordResolver {
 
   @ResolveField(() => RecordConnectionByAssociationFormFieldSearch)
   async recordsByAssociationFormFieldSearch(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Parent() form: Form,
     @Args('sourceFormId') sourceFormId: string,
     @Args('sourceFieldId') sourceFieldId: string,
@@ -79,7 +78,7 @@ export class RecordResolver {
 
   @ResolveField(() => Record)
   async record(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Parent() form: Form,
     @Args('viewId') viewId: string,
     @Args('recordId') recordId: string
@@ -99,7 +98,7 @@ export class RecordResolver {
 
   @Mutation(() => Record)
   async createRecord(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('input') input: CreateRecordInput
@@ -114,7 +113,7 @@ export class RecordResolver {
 
   @Mutation(() => Record)
   async updateRecord(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('recordId') recordId: string,
@@ -135,7 +134,7 @@ export class RecordResolver {
 
   @Mutation(() => Boolean)
   async deleteRecord(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('formId') formId: string,
     @Args('recordId') recordId: string

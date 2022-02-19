@@ -13,27 +13,26 @@
 // limitations under the License.
 
 import { UseGuards } from '@nestjs/common'
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql'
-import { AuthGuard } from '../../auth/auth.guard'
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 import { Viewer } from '../../auth/auth.schema'
+import { CurrentUser, GqlAuthGuard } from '../../auth/gql-auth.guard'
 import { CreateApplicationInput, UpdateApplicationInput } from '../inputs/application.input'
 import { Application } from '../schemas/application.schema'
 import { ApplicationService } from '../services/application.service'
 
 @Resolver(() => Application)
+@UseGuards(GqlAuthGuard)
 export class ApplicationResolver {
   constructor(private readonly applicationService: ApplicationService) {}
 
   @Query(() => [Application])
-  @UseGuards(AuthGuard)
-  async applications(@Context('viewer') viewer: Viewer): Promise<Application[]> {
+  async applications(@CurrentUser() viewer: Viewer): Promise<Application[]> {
     return this.applicationService.selectApplications(viewer.id)
   }
 
   @Query(() => Application)
-  @UseGuards(AuthGuard)
   async application(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string
   ): Promise<Application> {
     const application = await this.applicationService.selectApplication(viewer.id, applicationId)
@@ -44,18 +43,16 @@ export class ApplicationResolver {
   }
 
   @Mutation(() => Application)
-  @UseGuards(AuthGuard)
   async createApplication(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('input') input: CreateApplicationInput
   ): Promise<Application> {
     return this.applicationService.createApplication(viewer.id, input)
   }
 
   @Mutation(() => Application)
-  @UseGuards(AuthGuard)
   async updateApplication(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('input') input: UpdateApplicationInput
   ): Promise<Application> {
@@ -71,9 +68,8 @@ export class ApplicationResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseGuards(AuthGuard)
   async deleteApplication(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string
   ): Promise<boolean> {
     const application = await this.applicationService.deleteApplication(viewer.id, applicationId)

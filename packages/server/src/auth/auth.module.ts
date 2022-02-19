@@ -15,15 +15,21 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
+import { PassportModule } from '@nestjs/passport'
 import { User, UserSchema } from '../user/user.schema'
 import { UserService } from '../user/user.service'
 import { AuthController } from './auth.controller'
 import { AuthResolver } from './auth.resolver'
 import { AuthService } from './auth.service'
+import { LocalStrategy } from './jwt.strategy'
 
 @Module({
-  imports: [ConfigModule, MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])],
-  providers: [UserService, AuthResolver, AuthService],
+  imports: [
+    PassportModule,
+    ConfigModule,
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+  ],
+  providers: [LocalStrategy, UserService, AuthResolver, AuthService],
   controllers: [AuthController],
 })
 export class AuthModule {}

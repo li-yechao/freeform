@@ -1,20 +1,20 @@
 import { UseGuards } from '@nestjs/common'
-import { Args, Context, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql'
-import { AuthGuard } from '../../auth/auth.guard'
+import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql'
 import { Viewer } from '../../auth/auth.schema'
+import { CurrentUser, GqlAuthGuard } from '../../auth/gql-auth.guard'
 import { CreateWorkflowInput, UpdateWorkflowInput } from '../inputs/workflow.input'
 import { Application } from '../schemas/application.schema'
 import { Workflow } from '../schemas/workflow.schema'
 import { WorkflowService } from '../services/workflow.service'
 
 @Resolver(() => Application)
-@UseGuards(AuthGuard)
+@UseGuards(GqlAuthGuard)
 export class WorkflowResolver {
   constructor(private readonly workflowService: WorkflowService) {}
 
   @ResolveField(() => [Workflow])
   async workflows(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Parent() application: Application
   ): Promise<Workflow[]> {
     return this.workflowService.selectWorkflows(viewer.id, application.id)
@@ -22,7 +22,7 @@ export class WorkflowResolver {
 
   @ResolveField(() => Workflow)
   async workflow(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Parent() application: Application,
     @Args('workflowId') workflowId: string
   ): Promise<Workflow> {
@@ -39,7 +39,7 @@ export class WorkflowResolver {
 
   @Mutation(() => Workflow)
   async createWorkflow(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('input') input: CreateWorkflowInput
   ): Promise<Workflow> {
@@ -48,7 +48,7 @@ export class WorkflowResolver {
 
   @Mutation(() => Workflow)
   async updateWorkflow(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('workflowId') workflowId: string,
     @Args('input') input: UpdateWorkflowInput
@@ -67,7 +67,7 @@ export class WorkflowResolver {
 
   @Mutation(() => Boolean)
   async deleteWorkflow(
-    @Context('viewer') viewer: Viewer,
+    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('workflowId') workflowId: string
   ): Promise<boolean> {
