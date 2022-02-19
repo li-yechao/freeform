@@ -13,63 +13,20 @@
 // limitations under the License.
 
 import { contact_1_0, oauth2_1_0 } from '@alicloud/dingtalk'
-import { Config } from '@alicloud/openapi-client'
+import { Config as OpenapiConfig } from '@alicloud/openapi-client'
 import { RuntimeOptions } from '@alicloud/tea-util'
 import { Injectable } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { sign, verify } from 'jsonwebtoken'
+import { Config } from '../config'
 import { UserService } from '../user/user.service'
 import { AuthResult } from './auth.schema'
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly userService: UserService
-  ) {
-    const accessTokenPrivateKey = this.configService.get<string>('ACCESS_TOKEN_PRIVATE_KEY')
-    if (!accessTokenPrivateKey) {
-      throw new Error('Required env ACCESS_TOKEN_PRIVATE_KEY is missing')
-    }
-    const accessTokenExpiresIn = parseInt(
-      this.configService.get<string>('ACCESS_TOKEN_EXPIRES_IN')!
-    )
-    if (!accessTokenExpiresIn) {
-      throw new Error('Required env ACCESS_TOKEN_EXPIRES_IN is invalid')
-    }
-
-    const refreshTokenPrivateKey = this.configService.get<string>('REFRESH_TOKEN_PRIVATE_KEY')
-    if (!refreshTokenPrivateKey) {
-      throw new Error('Required env REFRESH_TOKEN_PRIVATE_KEY is missing')
-    }
-    const refreshTokenExpiresIn = parseInt(
-      this.configService.get<string>('REFRESH_TOKEN_EXPIRES_IN')!
-    )
-    if (!refreshTokenExpiresIn) {
-      throw new Error('Required env REFRESH_TOKEN_EXPIRES_IN is invalid')
-    }
-
-    const dingtalkClientId = this.configService.get<string>('DING_TALK_CLIENT_ID')
-    const dingtalkClientSecret = this.configService.get<string>('DING_TALK_CLIENT_SECRET')
-    if (!dingtalkClientId || !dingtalkClientSecret) {
-      throw new Error('Required env DING_TALK_CLIENT_ID or DING_TALK_CLIENT_SECRET is missing')
-    }
-
-    this.config = {
-      accessToken: { privateKey: accessTokenPrivateKey, expiresIn: accessTokenExpiresIn },
-      refreshToken: { privateKey: refreshTokenPrivateKey, expiresIn: refreshTokenExpiresIn },
-      dingtalk: { clientId: dingtalkClientId, clientSecret: dingtalkClientSecret },
-    }
-  }
-
-  private config: {
-    accessToken: { privateKey: string; expiresIn: number }
-    refreshToken: { privateKey: string; expiresIn: number }
-    dingtalk: { clientId: string; clientSecret: string }
-  }
+  constructor(private readonly userService: UserService, private readonly config: Config) {}
 
   async authDingtalk(code: string): Promise<AuthResult> {
-    const config = new Config()
+    const config = new OpenapiConfig()
     config.protocol = 'https'
     config.regionId = 'central'
 
@@ -116,7 +73,7 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string): Promise<AuthResult> {
-    const payload = verify(refreshToken, this.config.refreshToken.privateKey)
+    const payload = verify(refreshToken, this.config.refreshToken.publicKey)
     if (typeof payload.sub !== 'string' || !payload.sub) {
       throw new Error(`Invalid jwt token`)
     }

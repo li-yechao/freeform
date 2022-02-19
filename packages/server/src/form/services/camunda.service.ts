@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { VM } from 'vm2'
 import { ZBClient } from 'zeebe-node'
+import { Config } from '../../config'
 import { Record } from '../schemas/record.schema'
 import { RecordService } from './record.service'
 
@@ -30,16 +30,11 @@ interface FormTriggerInputVariables {
 @Injectable()
 export class CamundaService {
   constructor(
-    configService: ConfigService,
+    config: Config,
     @Inject(forwardRef(() => RecordService))
     private readonly recordService: RecordService
   ) {
-    const zbGatewayAddress = configService.get<string>('ZB_GATEWAY_ADDRESS')
-    if (!zbGatewayAddress) {
-      throw new Error('Required env ZB_GATEWAY_ADDRESS is not present')
-    }
-
-    this.zbClient = new ZBClient(zbGatewayAddress)
+    this.zbClient = new ZBClient(config.zeebe.gateway.address)
 
     this.start()
   }

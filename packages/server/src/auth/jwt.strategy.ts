@@ -13,23 +13,17 @@
 // limitations under the License.
 
 import { Injectable } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { PassportStrategy } from '@nestjs/passport'
-import { createPublicKey } from 'crypto'
 import { ExtractJwt, Strategy } from 'passport-jwt'
+import { Config } from '../config'
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) {
-    const privateKey = configService.get<string>('ACCESS_TOKEN_PRIVATE_KEY')
-    if (!privateKey) {
-      throw new Error('Required config ACCESS_TOKEN_PRIVATE_KEY is missing')
-    }
-
+  constructor(config: Config) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: createPublicKey(privateKey).export({ format: 'pem', type: 'spki' }),
+      secretOrKey: config.accessToken.publicKey,
     })
   }
 

@@ -13,8 +13,9 @@
 // limitations under the License.
 
 import { Module } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { ConfigModule } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
+import { Config } from '../config'
 import { ApplicationResolver } from './resolvers/application.resolver'
 import { FormResolver } from './resolvers/form.resolver'
 import { RecordResolver } from './resolvers/record.resolver'
@@ -31,6 +32,7 @@ import { WorkflowService } from './services/workflow.service'
 
 @Module({
   imports: [
+    ConfigModule,
     MongooseModule.forFeature([
       { name: Application.name, schema: ApplicationSchema },
       { name: Form.name, schema: FormSchema },
@@ -40,7 +42,7 @@ import { WorkflowService } from './services/workflow.service'
   ],
   providers: [
     // Services
-    ConfigService,
+    Config,
     CamundaService,
     ApplicationService,
     FormService,
