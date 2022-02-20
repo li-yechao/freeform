@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Controller, Post, Query } from '@nestjs/common'
+import { Controller, Get, Post, Query } from '@nestjs/common'
+import { Config } from '../config'
 import { AuthResult } from './auth.schema'
 import { AuthService } from './auth.service'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, private readonly config: Config) {}
 
   @Post('dingtalk')
   async auth(@Query('code') code: string): Promise<AuthResult> {
@@ -28,5 +29,12 @@ export class AuthController {
   @Post('refreshToken')
   async refreshToken(@Query('refreshToken') refreshToken: string): Promise<AuthResult> {
     return this.authService.refreshToken(refreshToken)
+  }
+
+  @Get('/camunda/tasklist/.well-known/jwks.json')
+  async jwks() {
+    return {
+      keys: [await this.config.zeebe.tasklist.accessToken.jwk],
+    }
   }
 }

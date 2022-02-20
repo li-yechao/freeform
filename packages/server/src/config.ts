@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { createHash, createPublicKey } from 'crypto'
+import { exportJWK, importSPKI } from 'jose'
 import { Algorithm, sign, SignOptions, verify } from 'jsonwebtoken'
 
 @Injectable()
@@ -150,6 +151,49 @@ export class Config {
       gateway: {
         get address() {
           return config.getString('zeebe.gateway.address')
+        },
+      },
+      tasklist: {
+        accessToken: {
+          get id() {
+            return createHash('md5').update(this.privateKey).digest('base64')
+          },
+          get issuer() {
+            return config.get('zeebe.tasklist.accessToken.issuer')
+          },
+          get audience() {
+            return config.get('zeebe.tasklist.accessToken.audience')
+          },
+          get algorithm(): Algorithm {
+            const alg = config.get('zeebe.tasklist.accessToken.algorithm')
+            if (!isAlgorithm(alg)) {
+              throw new Error('Invalid accessToken algorithm')
+            }
+            return alg
+          },
+          get privateKey() {
+            return config.getString('zeebe.tasklist.accessToken.privateKey')
+          },
+          get publicKey() {
+            return createPublicKey(this.privateKey)
+              .export({ format: 'pem', type: 'spki' })
+              .toString()
+          },
+          get expiresIn() {
+            return config.getNumber('zeebe.tasklist.accessToken.expiresIn')
+          },
+          get jwk() {
+            return importSPKI(this.publicKey, this.algorithm)
+              .then(exportJWK)
+              .then(jwk => ({
+                kid: this.id,
+                use: 'sig',
+                alg: this.algorithm,
+                kty: jwk.kty!,
+                n: jwk.n!,
+                e: jwk.e!,
+              }))
+          },
         },
       },
     }
