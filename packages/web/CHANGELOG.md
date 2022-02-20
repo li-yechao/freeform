@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.3](https://github.com/li-yechao/freeform/compare/@freeform/web@0.1.0-alpha.2...@freeform/web@0.1.0-alpha.3) (2022-02-21)
+
+### Bug Fixes
+
+- dont query association form when value is null or empty array ([58b2b66](https://github.com/li-yechao/freeform/commit/58b2b66ce1e199fef5fb9ed30dd6b6028d892fd4))
+
 # [0.1.0-alpha.2](https://github.com/li-yechao/freeform/compare/@freeform/web@0.1.0-alpha.1...@freeform/web@0.1.0-alpha.2) (2022-02-16)
 
 ### Bug Fixes

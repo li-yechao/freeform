@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.5](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.4...@freeform/server@0.1.0-alpha.5) (2022-02-21)
+
+### Features
+
+- add tasklist accessToken config ([f0fc5a3](https://github.com/li-yechao/freeform/commit/f0fc5a3f3cdabc6e4ace86ea5a6f716b905be3e2))
+
 # [0.1.0-alpha.4](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.3...@freeform/server@0.1.0-alpha.4) (2022-02-16)
 
 ### Bug Fixes
