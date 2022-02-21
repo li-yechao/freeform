@@ -24,6 +24,9 @@ export class AuthResult {
 
   @Field()
   expiresIn!: number
+
+  @Field()
+  tokenType!: 'Bearer'
 }
 
 @ObjectType({ description: 'viewer' })

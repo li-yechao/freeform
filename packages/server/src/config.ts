@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { createPublicKey } from 'crypto'
+import { createHash, createPublicKey } from 'crypto'
+import { Algorithm, sign, SignOptions, verify } from 'jsonwebtoken'
 
 @Injectable()
 export class Config {
@@ -19,7 +20,7 @@ export class Config {
 
     return {
       get uri() {
-        return config.get('mongo.uri')
+        return config.getString('mongo.uri')
       },
     }
   }
@@ -28,14 +29,50 @@ export class Config {
     const config = this
 
     return {
+      get id() {
+        return createHash('md5').update(this.privateKey).digest('base64')
+      },
+      get issuer() {
+        return config.get('accessToken.issuer')
+      },
+      get audience() {
+        return config.get('accessToken.audience')
+      },
+      get algorithm(): Algorithm {
+        const alg = config.get('accessToken.algorithm')
+        if (!isAlgorithm(alg)) {
+          throw new Error('Invalid accessToken algorithm')
+        }
+        return alg
+      },
       get privateKey() {
-        return config.get('accessToken.privateKey')
+        return config.getString('accessToken.privateKey')
       },
       get publicKey() {
-        return createPublicKey(this.privateKey).export({ format: 'pem', type: 'spki' })
+        return createPublicKey(this.privateKey).export({ format: 'pem', type: 'spki' }).toString()
       },
       get expiresIn() {
         return config.getNumber('accessToken.expiresIn')
+      },
+      sign(
+        payload: string | Buffer | object,
+        options?: Omit<SignOptions, 'algorithm' | 'expiresIn' | 'issuer' | 'audience' | 'keyid'>
+      ) {
+        return sign(payload, this.privateKey, {
+          ...options,
+          algorithm: this.algorithm,
+          expiresIn: this.expiresIn,
+          issuer: this.issuer,
+          audience: this.audience,
+          keyid: this.id,
+        })
+      },
+      verify(token: string) {
+        return verify(token, this.publicKey, {
+          algorithms: [this.algorithm],
+          issuer: this.issuer,
+          audience: this.audience,
+        })
       },
     }
   }
@@ -44,14 +81,51 @@ export class Config {
     const config = this
 
     return {
+      get id() {
+        return createHash('md5').update(this.privateKey).digest('base64')
+      },
+      get issuer() {
+        return config.get('refreshToken.issuer')
+      },
+      get audience() {
+        return config.get('refreshToken.audience')
+      },
+      get algorithm(): Algorithm {
+        const alg = config.get('refreshToken.algorithm')
+        if (!isAlgorithm(alg)) {
+          throw new Error('Invalid refreshToken algorithm')
+        }
+        return alg
+      },
+
       get privateKey() {
-        return config.get('refreshToken.privateKey')
+        return config.getString('refreshToken.privateKey')
       },
       get publicKey() {
-        return createPublicKey(this.privateKey).export({ format: 'pem', type: 'spki' })
+        return createPublicKey(this.privateKey).export({ format: 'pem', type: 'spki' }).toString()
       },
       get expiresIn() {
         return config.getNumber('refreshToken.expiresIn')
+      },
+      sign(
+        payload: string | Buffer | object,
+        options?: Omit<SignOptions, 'algorithm' | 'expiresIn' | 'issuer' | 'audience' | 'keyid'>
+      ) {
+        return sign(payload, this.privateKey, {
+          ...options,
+          algorithm: this.algorithm,
+          expiresIn: this.expiresIn,
+          issuer: this.issuer,
+          audience: this.audience,
+          keyid: this.id,
+        })
+      },
+      verify(token: string) {
+        return verify(token, this.publicKey, {
+          algorithms: [this.algorithm],
+          issuer: this.issuer,
+          audience: this.audience,
+        })
       },
     }
   }
@@ -61,10 +135,10 @@ export class Config {
 
     return {
       get clientId() {
-        return config.get('dingtalk.clientId')
+        return config.getString('dingtalk.clientId')
       },
       get clientSecret() {
-        return config.get('dingtalk.clientSecret')
+        return config.getString('dingtalk.clientSecret')
       },
     }
   }
@@ -75,14 +149,18 @@ export class Config {
     return {
       gateway: {
         get address() {
-          return config.get('zeebe.gateway.address')
+          return config.getString('zeebe.gateway.address')
         },
       },
     }
   }
 
-  private get(key: string): string {
-    const v = this.configService.get<string>(key)
+  private get(key: string): string | undefined {
+    return this.configService.get<string>(key) || undefined
+  }
+
+  private getString(key: string): string {
+    const v = this.get(key)
     if (!v) {
       throw new Error(`Required config ${key} is missing`)
     }
@@ -90,11 +168,15 @@ export class Config {
   }
 
   private getNumber(key: string): number {
-    const v = this.get(key)
+    const v = this.getString(key)
     return Number(v)
   }
 
   private getBoolean(key: string): boolean {
-    return this.get(key) === 'true'
+    return this.getString(key) === 'true'
   }
+}
+
+function isAlgorithm(v: any): v is Algorithm {
+  return ['RS256', 'RS384', 'RS512'].includes(v)
 }

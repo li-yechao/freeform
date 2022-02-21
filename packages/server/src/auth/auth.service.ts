@@ -16,7 +16,6 @@ import { contact_1_0, oauth2_1_0 } from '@alicloud/dingtalk'
 import { Config as OpenapiConfig } from '@alicloud/openapi-client'
 import { RuntimeOptions } from '@alicloud/tea-util'
 import { Injectable } from '@nestjs/common'
-import { sign, verify } from 'jsonwebtoken'
 import { Config } from '../config'
 import { UserService } from '../user/user.service'
 import { AuthResult } from './auth.schema'
@@ -73,7 +72,7 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string): Promise<AuthResult> {
-    const payload = verify(refreshToken, this.config.refreshToken.publicKey)
+    const payload = this.config.refreshToken.verify(refreshToken)
     if (typeof payload.sub !== 'string' || !payload.sub) {
       throw new Error(`Invalid jwt token`)
     }
@@ -88,17 +87,10 @@ export class AuthService {
 
   private createToken(userId: string): AuthResult {
     return {
-      accessToken: sign({}, this.config.accessToken.privateKey, {
-        algorithm: 'RS256',
-        subject: userId,
-        expiresIn: this.config.accessToken.expiresIn,
-      }),
-      refreshToken: sign({}, this.config.refreshToken.privateKey, {
-        algorithm: 'RS256',
-        subject: userId,
-        expiresIn: this.config.refreshToken.expiresIn,
-      }),
+      accessToken: this.config.accessToken.sign({}, { subject: userId }),
+      refreshToken: this.config.refreshToken.sign({}, { subject: userId }),
       expiresIn: this.config.accessToken.expiresIn,
+      tokenType: 'Bearer',
     }
   }
 }

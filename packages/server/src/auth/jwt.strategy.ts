@@ -22,8 +22,10 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(config: Config) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
       secretOrKey: config.accessToken.publicKey,
+      issuer: config.accessToken.issuer,
+      audience: config.accessToken.audience,
+      algorithms: [config.accessToken.algorithm],
     })
   }
 
