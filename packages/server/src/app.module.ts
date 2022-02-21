@@ -21,6 +21,7 @@ import { AuthModule } from './auth/auth.module'
 import { FormModule } from './form/form.module'
 import { UserModule } from './user/user.module'
 import { Config } from './config'
+import { TaskModule } from './task/task.module'
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { Config } from './config'
     AuthModule,
     UserModule,
     FormModule,
+    TaskModule,
   ],
   controllers: [],
   providers: [Config],

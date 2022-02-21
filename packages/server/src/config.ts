@@ -182,6 +182,18 @@ export class Config {
           get expiresIn() {
             return config.getNumber('zeebe.tasklist.accessToken.expiresIn')
           },
+          get scope() {
+            return config.get('zeebe.tasklist.accessToken.scope')
+          },
+          sign() {
+            return sign({ scope: this.scope }, this.privateKey, {
+              algorithm: this.algorithm,
+              expiresIn: this.expiresIn,
+              issuer: this.issuer,
+              audience: this.audience,
+              keyid: this.id,
+            })
+          },
           get jwk() {
             return importSPKI(this.publicKey, this.algorithm)
               .then(exportJWK)
