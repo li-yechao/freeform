@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.6](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.5...@freeform/server@0.1.0-alpha.6) (2022-02-22)
+
+### Features
+
+- support custom third authorization ([52ae8b4](https://github.com/li-yechao/freeform/commit/52ae8b4195d77753e1f785f9c942cdebc405ee63))
+
 # [0.1.0-alpha.5](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.4...@freeform/server@0.1.0-alpha.5) (2022-02-21)
 
 ### Features
