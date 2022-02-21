@@ -145,19 +145,6 @@ export class Config {
     }
   }
 
-  get dingtalk() {
-    const config = this
-
-    return {
-      get clientId() {
-        return config.getString('dingtalk.clientId')
-      },
-      get clientSecret() {
-        return config.getString('dingtalk.clientSecret')
-      },
-    }
-  }
-
   get zeebe() {
     const config = this
 

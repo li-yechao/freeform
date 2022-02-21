@@ -14,6 +14,7 @@
 
 import { UseGuards } from '@nestjs/common'
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
+import { GraphQLJSONObject } from 'graphql-type-json'
 import { AuthResult, Viewer } from './auth.schema'
 import { AuthService } from './auth.service'
 import { CurrentUser, GqlAuthGuard } from './gql-auth.guard'
@@ -29,7 +30,10 @@ export class AuthResolver {
   }
 
   @Mutation(() => AuthResult)
-  async authDingtalk(@Args('code') code: string): Promise<AuthResult> {
-    return this.authService.authDingtalk(code)
+  async auth(
+    @Args('type') type: string,
+    @Args('input', { type: () => GraphQLJSONObject }) input: any
+  ): Promise<AuthResult> {
+    return this.authService.authCustom(type, input)
   }
 }

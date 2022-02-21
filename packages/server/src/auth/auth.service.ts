@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { contact_1_0, oauth2_1_0 } from '@alicloud/dingtalk'
-import { Config as OpenapiConfig } from '@alicloud/openapi-client'
-import { RuntimeOptions } from '@alicloud/tea-util'
 import { Injectable } from '@nestjs/common'
+import fetch from 'cross-fetch'
+import { existsSync } from 'fs'
+import * as path from 'path'
+import { NodeVM } from 'vm2'
 import { Config } from '../config'
 import { UserService } from '../user/user.service'
 import { AuthResult } from './auth.schema'
@@ -23,53 +24,6 @@ import { AuthResult } from './auth.schema'
 @Injectable()
 export class AuthService {
   constructor(private readonly userService: UserService, private readonly config: Config) {}
-
-  async authDingtalk(code: string): Promise<AuthResult> {
-    const config = new OpenapiConfig()
-    config.protocol = 'https'
-    config.regionId = 'central'
-
-    const oauth2Client = new oauth2_1_0.default(config)
-
-    const {
-      body: { accessToken },
-    } = await oauth2Client.getUserToken(
-      new oauth2_1_0.GetUserTokenRequest({
-        grantType: 'authorization_code',
-        clientId: this.config.dingtalk.clientId,
-        clientSecret: this.config.dingtalk.clientSecret,
-        code,
-      })
-    )
-
-    const contactClient = new contact_1_0.default(config)
-
-    const headers = new contact_1_0.GetUserHeaders()
-    headers.commonHeaders = { 'x-acs-dingtalk-access-token': accessToken! }
-
-    const { body: dingtalkUser } = await contactClient.getUserWithOptions(
-      'me',
-      headers,
-      new RuntimeOptions()
-    )
-
-    if (!dingtalkUser.unionId) {
-      throw new Error(`Missing required property unionId in dingtalk user`)
-    }
-
-    const user =
-      (await this.userService.selectUserByDingtalkUnionId({
-        clientId: this.config.dingtalk.clientId,
-        unionId: dingtalkUser.unionId,
-      })) ||
-      (await this.userService.createDingtalkUser({
-        ...dingtalkUser,
-        clientId: this.config.dingtalk.clientId,
-        unionId: dingtalkUser.unionId,
-      }))
-
-    return this.createToken(user.id)
-  }
 
   async refreshToken(refreshToken: string): Promise<AuthResult> {
     const payload = this.config.refreshToken.verify(refreshToken)
@@ -82,6 +36,34 @@ export class AuthService {
       throw new Error(`User ${payload.sub} not found`)
     }
 
+    return this.createToken(user.id)
+  }
+
+  async authCustom(type: string, query: { [key: string]: string }): Promise<AuthResult> {
+    const file = path.join(process.cwd(), 'config', `third_${type}.js`)
+    if (!existsSync(file)) {
+      throw new Error(`Unsupported auth type ${type}`)
+    }
+
+    const vm = new NodeVM({
+      sandbox: {
+        fetch,
+      },
+      env: Object.entries(process.env)
+        .filter(([key]) => key.startsWith(type))
+        .reduce((res, [key, value]) => Object.assign(res, { [key]: value }), {}),
+    })
+
+    const m = vm.runFile(file)
+
+    const { id: thirdId, user: thirdUser } = await m.getThirdUser(query)
+    if (typeof thirdId !== 'string' || !thirdId) {
+      throw new Error('Invalid thirdId')
+    }
+
+    const user =
+      (await this.userService.selectThirdUser({ type, thirdId })) ||
+      (await this.userService.createThirdUser({ type, thirdId, thirdUser }))
     return this.createToken(user.id)
   }
 

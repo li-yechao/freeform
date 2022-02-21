@@ -2,80 +2,6 @@
 # yarn lockfile v1
 
 
-"@alicloud/credentials@^2":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@alicloud/credentials/-/credentials-2.2.0.tgz#1ec909221e49984240c3b42ef049b079daf4426c"
-  integrity sha512-zMNRFgQW5HKEgUt3evZYUWFQrH47+9sOwBWVGclWsUSPynlGi/RvTxM8DqqOovOiOf5yemNjRA1hckCda/cOWg==
-  dependencies:
-    "@alicloud/tea-typescript" "^1.5.3"
-    httpx "^2.2.0"
-    ini "^1.3.5"
-    kitx "^2.0.0"
-
-"@alicloud/dingtalk@^1.2.37":
-  version "1.2.37"
-  resolved "https://registry.yarnpkg.com/@alicloud/dingtalk/-/dingtalk-1.2.37.tgz#dcad42233453613100e7624ae8dff198389facd5"
-  integrity sha512-MgTamrGTzt3THnqY9f7zSPXqLqMXAWAqmvAmKEqOUcJqeOeu9PMxcu0nwx6WKiP45VQVjV5mDkL/guMT2zwi6Q==
-  dependencies:
-    "@alicloud/endpoint-util" "^0.0.1"
-    "@alicloud/openapi-client" "^0.4.1"
-    "@alicloud/openapi-util" "^0.2.7"
-    "@alicloud/tea-typescript" "^1.7.1"
-    "@alicloud/tea-util" "^1.4.0"
-
-"@alicloud/endpoint-util@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@alicloud/endpoint-util/-/endpoint-util-0.0.1.tgz#b237f5e04e373abb54c42119377b30bd6afb1a7c"
-  integrity sha512-+pH7/KEXup84cHzIL6UJAaPqETvln4yXlD9JzlrqioyCSaWxbug5FUobsiI6fuUOpw5WwoB3fWAtGbFnJ1K3Yg==
-  dependencies:
-    "@alicloud/tea-typescript" "^1.5.1"
-    kitx "^2.0.0"
-
-"@alicloud/gateway-spi@^0.0.8":
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/@alicloud/gateway-spi/-/gateway-spi-0.0.8.tgz#1d251986ed40d8b98690dcac8128fec0c56f0f53"
-  integrity sha512-KM7fu5asjxZPmrz9sJGHJeSU+cNQNOxW+SFmgmAIrITui5hXL2LB+KNRuzWmlwPjnuA2X3/keq9h6++S9jcV5g==
-  dependencies:
-    "@alicloud/credentials" "^2"
-    "@alicloud/tea-typescript" "^1.7.1"
-
-"@alicloud/openapi-client@^0.4.1":
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/@alicloud/openapi-client/-/openapi-client-0.4.1.tgz#8e55a3bdfee17a00c2ec3d10feaf7bfd0eff7502"
-  integrity sha512-FNGQ9kmGi0AuNFX9yj7DDbMn8CB4TvihIIQ3ONNhLZF8Hj2asau7NiqVoftJX3F/JFq9qzJWeVbvboSM9Zq5kA==
-  dependencies:
-    "@alicloud/credentials" "^2"
-    "@alicloud/gateway-spi" "^0.0.8"
-    "@alicloud/openapi-util" "^0.2.7"
-    "@alicloud/tea-typescript" "^1.7.1"
-    "@alicloud/tea-util" "^1.4.0"
-
-"@alicloud/openapi-util@^0.2.7":
-  version "0.2.8"
-  resolved "https://registry.yarnpkg.com/@alicloud/openapi-util/-/openapi-util-0.2.8.tgz#b404cff825c1b00967e0b3929a48856e6a42bbd1"
-  integrity sha512-63UWzteiJrSBGyMATHsuREhLKt6amRalwwumG9ufvMEVSx52x+DdxY8WrM8wwHL8BWEmmBllWCMPZ3TVrwBI7A==
-  dependencies:
-    "@alicloud/tea-typescript" "^1.7.1"
-    "@alicloud/tea-util" "^1.3.0"
-    kitx "^2.1.0"
-    sm3 "^1.0.3"
-
-"@alicloud/tea-typescript@^1.5.1", "@alicloud/tea-typescript@^1.5.3", "@alicloud/tea-typescript@^1.7.1":
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/@alicloud/tea-typescript/-/tea-typescript-1.7.2.tgz#1f9baf1093ff9f865f2b6091c2ba166aafd106cc"
-  integrity sha512-vDOU6qUp9ZAGlHSLC7lqVLgxUbmkcDXTEXyiIipvPWcq7dqwDDO6SeLlU7nBYI+yYWpbfOazEGkMTlHMhvA5Tw==
-  dependencies:
-    "@types/node" "^12.0.2"
-    httpx "^2.2.6"
-
-"@alicloud/tea-util@^1.3.0", "@alicloud/tea-util@^1.4.0":
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/@alicloud/tea-util/-/tea-util-1.4.2.tgz#72e81cefd634d81272c269364c194de70511405c"
-  integrity sha512-k04Znin2uj2Ym36G4IRxUGbRk4+2ZK5fDM2EbQRDxcVCl5eMQLQ+AQ3+gNRzpJhm6ccFdPuw5p9Mww1IHisP0A==
-  dependencies:
-    "@alicloud/tea-typescript" "^1.5.1"
-    kitx "^2.0.0"
-
 "@angular-devkit/core@13.0.2":
   version "13.0.2"
   resolved "https://registry.yarnpkg.com/@angular-devkit/core/-/core-13.0.2.tgz#1ef92388464ca86d22b21c6ebcb9fc3b6a16c374"
@@ -2594,16 +2520,6 @@
   version "10.17.60"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.17.60.tgz#35f3d6213daed95da7f0f73e75bcc6980e90597b"
   integrity sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==
-
-"@types/node@^12.0.2":
-  version "12.20.42"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.20.42.tgz#2f021733232c2130c26f9eabbdd3bfd881774733"
-  integrity sha512-aI3/oo5DzyiI5R/xAhxxRzfZlWlsbbqdgxfTPkqu/Zt+23GXiJvMCyPJT4+xKSXOnLqoL8jJYMLTwvK2M3a5hw==
-
-"@types/node@^14":
-  version "14.18.7"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.7.tgz#bf973dbd8e156dbf860504a8811033cbd26967d1"
-  integrity sha512-UpLEO1iBG7esNPusSAjoZhWFK5Mfd8QfwWhHRrg5io13POn/stsBgTCba9suQaFflNA4tc0+6AFM3R6BZNng6A==
 
 "@types/node@^16.0.0":
   version "16.11.20"
@@ -5882,14 +5798,6 @@ https-proxy-agent@^5.0.0:
     agent-base "6"
     debug "4"
 
-httpx@^2.2.0, httpx@^2.2.6:
-  version "2.2.7"
-  resolved "https://registry.yarnpkg.com/httpx/-/httpx-2.2.7.tgz#1e34198146e32ca3305a66c11209559e1cbeba09"
-  integrity sha512-Wjh2JOAah0pdczfqL8NC5378G7jMt0Zcpn8U+yyxAiejjlagzSTQgJHuVvka2VNPQlKfoGehYRc79WKq9E4gDw==
-  dependencies:
-    "@types/node" "^14"
-    debug "^4.1.1"
-
 human-signals@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/human-signals/-/human-signals-1.1.1.tgz#c5b1cd14f50aeae09ab6c59fe63ba3395fe4dfa3"
@@ -6002,7 +5910,7 @@ inherits@2, inherits@2.0.4, inherits@^2.0.1, inherits@^2.0.3, inherits@^2.0.4, i
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.4.tgz#0fa2c64f932917c3433a0ded55363aae37416b7c"
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
 
-ini@^1.3.2, ini@^1.3.4, ini@^1.3.5:
+ini@^1.3.2, ini@^1.3.4:
   version "1.3.8"
   resolved "https://registry.yarnpkg.com/ini/-/ini-1.3.8.tgz#a29da425b48806f34767a4efce397269af28432c"
   integrity sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==
@@ -6995,13 +6903,6 @@ kind-of@^6.0.2, kind-of@^6.0.3:
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-6.0.3.tgz#07c05034a6c349fa06e24fa35aa76db4580ce4dd"
   integrity sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==
-
-kitx@^2.0.0, kitx@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/kitx/-/kitx-2.1.0.tgz#fc7fbf78eb6ed7a5a3fd2d7afb3011e29d0e44c8"
-  integrity sha512-C/5v9MtIX7aHGOjwn5BmrrbNkJSf7i0R5mRzmh13GSAdRqQ7bYQo/Su2pTYNylFicqKNTVX3HML9k1u8k51+pQ==
-  dependencies:
-    "@types/node" "^12.0.2"
 
 kleur@^3.0.3:
   version "3.0.3"
@@ -9796,11 +9697,6 @@ slide@^1.1.6:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/slide/-/slide-1.1.6.tgz#56eb027d65b4d2dce6cb2e2d32c4d4afc9e1d707"
   integrity sha1-VusCfWW00tzmyy4tMsTUr8nh1wc=
-
-sm3@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/sm3/-/sm3-1.0.3.tgz#0051f0cc948c983944843136e7baa244eec5cd49"
-  integrity sha512-KyFkIfr8QBlFG3uc3NaljaXdYcsbRy1KrSfc4tsQV8jW68jAktGeOcifu530Vx/5LC+PULHT0Rv8LiI8Gw+c1g==
 
 smart-buffer@^4.1.0:
   version "4.2.0"

@@ -21,7 +21,6 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@alicloud/dingtalk": "^1.2.37",
     "@nestjs/apollo": "^10.0.2",
     "@nestjs/common": "^8.3.0",
     "@nestjs/config": "^1.2.0",

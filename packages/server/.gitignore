@@ -1,0 +1,4 @@
+config/third_*
+
+!config/third_example.js
+!config/third_dingtalk.js

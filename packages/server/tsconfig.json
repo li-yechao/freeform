@@ -30,5 +30,6 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "skipLibCheck": true
-  }
+  },
+  "include": ["src"]
 }

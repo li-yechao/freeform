@@ -67,4 +67,34 @@ export class UserService {
       },
     })
   }
+
+  async selectThirdUser({
+    type,
+    thirdId,
+  }: {
+    type: string
+    thirdId: string
+  }): Promise<User | null> {
+    return this.userModel.findOne({ [`third.${type}.__id`]: thirdId })
+  }
+
+  async createThirdUser({
+    type,
+    thirdId,
+    thirdUser,
+  }: {
+    type: string
+    thirdId: string
+    thirdUser: { [key: string]: any }
+  }): Promise<User> {
+    return this.userModel.create({
+      createdAt: Date.now(),
+      third: {
+        [type]: {
+          __id: thirdId,
+          ...thirdUser,
+        },
+      },
+    })
+  }
 }
