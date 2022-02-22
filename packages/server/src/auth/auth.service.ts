@@ -13,17 +13,18 @@
 // limitations under the License.
 
 import { Injectable } from '@nestjs/common'
-import fetch from 'cross-fetch'
-import { existsSync } from 'fs'
-import * as path from 'path'
-import { NodeVM } from 'vm2'
 import { Config } from '../config'
+import { ThirdUserService } from '../user/third-user.service'
 import { UserService } from '../user/user.service'
 import { AuthResult } from './auth.schema'
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UserService, private readonly config: Config) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly thirdUserService: ThirdUserService,
+    private readonly config: Config
+  ) {}
 
   async refreshToken(refreshToken: string): Promise<AuthResult> {
     const payload = this.config.refreshToken.verify(refreshToken)
@@ -40,30 +41,12 @@ export class AuthService {
   }
 
   async authCustom(type: string, query: { [key: string]: string }): Promise<AuthResult> {
-    const file = path.join(process.cwd(), 'config', `third_${type}.js`)
-    if (!existsSync(file)) {
-      throw new Error(`Unsupported auth type ${type}`)
-    }
-
-    const vm = new NodeVM({
-      sandbox: {
-        fetch,
-      },
-      env: Object.entries(process.env)
-        .filter(([key]) => key.startsWith(type))
-        .reduce((res, [key, value]) => Object.assign(res, { [key]: value }), {}),
-    })
-
-    const m = vm.runFile(file)
-
-    const { id: thirdId, user: thirdUser } = await m.getThirdUser(query)
-    if (typeof thirdId !== 'string' || !thirdId) {
-      throw new Error('Invalid thirdId')
-    }
+    const { id: thirdId, user: thirdUser } = await this.thirdUserService.getViewer(type, query)
 
     const user =
       (await this.userService.selectThirdUser({ type, thirdId })) ||
       (await this.userService.createThirdUser({ type, thirdId, thirdUser }))
+
     return this.createToken(user.id)
   }
 

@@ -17,6 +17,7 @@ import { ConfigModule } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
 import { PassportModule } from '@nestjs/passport'
 import { Config } from '../config'
+import { ThirdUserService } from '../user/third-user.service'
 import { User, UserSchema } from '../user/user.schema'
 import { UserService } from '../user/user.service'
 import { AuthController } from './auth.controller'
@@ -30,7 +31,7 @@ import { LocalStrategy } from './jwt.strategy'
     PassportModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
-  providers: [Config, LocalStrategy, UserService, AuthResolver, AuthService],
+  providers: [Config, LocalStrategy, UserService, ThirdUserService, AuthResolver, AuthService],
   controllers: [AuthController],
 })
 export class AuthModule {}

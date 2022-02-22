@@ -23,10 +23,10 @@ if (!clientSecret) {
 }
 
 /**
- * Get third user
+ * Get current user
  * @param {{code?: string} | undefined} query
  */
-module.exports.getThirdUser = async function ({ code } = {}) {
+module.exports.getViewer = async function ({ code } = {}) {
   if (!code) {
     throw new Error(`Invalid dingtalk code ${code}`)
   }

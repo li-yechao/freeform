@@ -19,10 +19,10 @@ if (!getCurrentUserUri) {
 }
 
 /**
- * Get third user
+ * Get current user
  * @param {{accessToken?: string} | undefined} query
  */
-module.exports.getThirdUser = async function ({ accessToken } = {}) {
+module.exports.getViewer = async function ({ accessToken } = {}) {
   if (!accessToken) {
     throw new Error(`Invalid example accessToken ${accessToken}`)
   }
