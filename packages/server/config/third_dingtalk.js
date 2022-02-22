@@ -45,7 +45,6 @@ module.exports.getThirdUser = async function ({ code } = {}) {
   }).then(res => res.json())
 
   if (!token?.accessToken) {
-    console.log(token)
     throw new Error(`Failed to call dingtalk api oauth2/userAccessToken`)
   }
 
