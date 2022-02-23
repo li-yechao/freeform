@@ -18,29 +18,18 @@ import { existsSync } from 'fs'
 import { join } from 'path'
 import { NodeVM } from 'vm2'
 
+export interface ThirdUserModule {
+  getViewer(query: { [key: string]: any }): Promise<{ id: string; user: { [key: string]: any } }>
+}
+
 @Injectable()
 export class ThirdUserService {
   async getViewer(
     type: string,
     query: { [key: string]: string }
   ): Promise<{ id: string; user: { [key: string]: any } }> {
-    const file = join(process.cwd(), 'config', `third_${type}.js`)
-    if (!existsSync(file)) {
-      throw new Error(`Unsupported auth type ${type}`)
-    }
-
-    const vm = new NodeVM({
-      sandbox: {
-        fetch,
-      },
-      env: Object.entries(process.env)
-        .filter(([key]) => key.startsWith(type))
-        .reduce((res, [key, value]) => Object.assign(res, { [key]: value }), {}),
-    })
-
-    const m = vm.runFile(file)
-
-    const thirdUser = await m.getViewer(query)
+    const mod = this.getModule(type)
+    const thirdUser = await mod.getViewer(query)
     if (
       !thirdUser ||
       typeof thirdUser.id !== 'string' ||
@@ -54,5 +43,29 @@ export class ThirdUserService {
       id: thirdUser.id,
       user: thirdUser.user,
     }
+  }
+
+  private moduleMap = new Map<string, ThirdUserModule>()
+
+  private getModule(type: string) {
+    let m = this.moduleMap.get(type)
+    if (!m) {
+      const file = join(process.cwd(), 'config', `third_${type}.js`)
+      if (!existsSync(file)) {
+        throw new Error(`Unsupported auth type ${type}`)
+      }
+
+      const vm = new NodeVM({
+        sandbox: {
+          fetch,
+        },
+        env: Object.entries(process.env)
+          .filter(([key]) => key.startsWith(type))
+          .reduce((res, [key, value]) => Object.assign(res, { [key]: value }), {}),
+      })
+      m = vm.runFile(file) as ThirdUserModule
+      this.moduleMap.set(type, m)
+    }
+    return m
   }
 }
