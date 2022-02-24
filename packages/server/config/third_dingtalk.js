@@ -23,40 +23,44 @@ if (!clientSecret) {
 }
 
 /**
- * Get current user
- * @param {{code?: string} | undefined} query
+ * @type {import('../src/user/third-user.service').ThirdUserModule}
  */
-module.exports.getViewer = async function ({ code } = {}) {
-  if (!code) {
-    throw new Error(`Invalid dingtalk code ${code}`)
-  }
+const mod = {
+  async getViewer(_, query) {
+    const code = query?.['code']
+    if (!code) {
+      throw new Error(`Invalid dingtalk code ${code}`)
+    }
 
-  const token = await fetch('https://api.dingtalk.com/v1.0/oauth2/userAccessToken', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      clientId,
-      clientSecret,
-      code,
-      grantType: 'authorization_code',
-    }),
-  }).then(res => res.json())
+    const token = await fetch('https://api.dingtalk.com/v1.0/oauth2/userAccessToken', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        clientId,
+        clientSecret,
+        code,
+        grantType: 'authorization_code',
+      }),
+    }).then(res => res.json())
 
-  if (!token?.accessToken) {
-    throw new Error(`Failed to call dingtalk api oauth2/userAccessToken`)
-  }
+    if (!token?.accessToken) {
+      throw new Error(`Failed to call dingtalk api oauth2/userAccessToken`)
+    }
 
-  const user = await fetch('https://api.dingtalk.com/v1.0/contact/users/me', {
-    method: 'GET',
-    headers: {
-      'x-acs-dingtalk-access-token': token.accessToken,
-    },
-  }).then(res => res.json())
+    const user = await fetch('https://api.dingtalk.com/v1.0/contact/users/me', {
+      method: 'GET',
+      headers: {
+        'x-acs-dingtalk-access-token': token.accessToken,
+      },
+    }).then(res => res.json())
 
-  return {
-    id: `${user.unionId}@${clientId}`,
-    user,
-  }
+    return {
+      id: `${user.unionId}@${clientId}`,
+      user,
+    }
+  },
 }
+
+module.exports = mod

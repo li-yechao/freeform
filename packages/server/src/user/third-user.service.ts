@@ -19,7 +19,15 @@ import { join } from 'path'
 import { NodeVM } from 'vm2'
 
 export interface ThirdUserModule {
-  getViewer(query: { [key: string]: any }): Promise<{ id: string; user: { [key: string]: any } }>
+  getViewer(
+    ctx: ThirdUserModuleContext,
+    query?: { [key: string]: string | undefined }
+  ): Promise<{ id: string; user: { [key: string]: any } }>
+}
+
+export interface ThirdUserModuleContext {
+  get<K, T>(key: K): T | undefined
+  set<K, T>(key: K, value: T): void
 }
 
 @Injectable()
@@ -29,7 +37,11 @@ export class ThirdUserService {
     query: { [key: string]: string }
   ): Promise<{ id: string; user: { [key: string]: any } }> {
     const mod = this.getModule(type)
-    const thirdUser = await mod.getViewer(query)
+
+    const ctx = this.newContext()
+
+    const thirdUser = await mod.getViewer(ctx, query)
+
     if (
       !thirdUser ||
       typeof thirdUser.id !== 'string' ||
@@ -38,6 +50,8 @@ export class ThirdUserService {
     ) {
       throw new Error('Invalid third viewer')
     }
+
+    this.setContext(this.contextKey(type, thirdUser.id), ctx)
 
     return {
       id: thirdUser.id,
@@ -67,5 +81,19 @@ export class ThirdUserService {
       this.moduleMap.set(type, m)
     }
     return m
+  }
+
+  private contextMap = new Map<string, ThirdUserModuleContext>()
+
+  private newContext(): ThirdUserModuleContext {
+    return new Map()
+  }
+
+  private contextKey(type: string, id: string) {
+    return `${id}@${type}`
+  }
+
+  private setContext(key: string, ctx: ThirdUserModuleContext) {
+    this.contextMap.set(key, ctx)
   }
 }

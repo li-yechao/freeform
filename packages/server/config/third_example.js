@@ -12,32 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const getCurrentUserUri = process.env['example.getCurrentUserUri']
-
-if (!getCurrentUserUri) {
-  throw new Error('Required env example.getCurrentUserUri is missing')
-}
-
 /**
- * Get current user
- * @param {{accessToken?: string} | undefined} query
+ * @type {import('../src/user/third-user.service').ThirdUserModule}
  */
-module.exports.getViewer = async function ({ accessToken } = {}) {
-  if (!accessToken) {
-    throw new Error(`Invalid example accessToken ${accessToken}`)
-  }
+const mod = {
+  async getViewer(ctx, query) {
+    const accessToken = query?.['accessToken']
+    if (!accessToken) {
+      throw new Error(`Invalid example accessToken ${accessToken}`)
+    }
 
-  return fetch(getCurrentUserUri, {
-    headers: { authorization: `Bearer ${accessToken}` },
-  })
-    .then(res => res.json())
-    .then(res => {
-      if (!res?.userId) {
-        throw new Error(`Invalid example user response ${res}`)
-      }
-      return {
-        id: res.userId,
-        user: res,
-      }
+    const user = await fetch('https://api.example.com/viewer', {
+      headers: { authorization: `Bearer ${accessToken}` },
     })
+      .then(res => res.json())
+      .then(res => {
+        if (!res?.userId) {
+          throw new Error(`Invalid example user response ${res}`)
+        }
+        return {
+          id: res.userId,
+          user: res,
+        }
+      })
+
+    ctx.set('accessToken', accessToken)
+
+    return user
+  },
 }
+
+module.exports = mod
