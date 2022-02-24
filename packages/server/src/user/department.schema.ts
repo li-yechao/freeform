@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Module } from '@nestjs/common'
-import { MongooseModule } from '@nestjs/mongoose'
-import { ThirdUserService } from './third-user.service'
-import { User, UserSchema } from './user.schema'
-import { UserService } from './user.service'
-import { DepartmentResolver } from './department.resolver'
+import { Field, ID, ObjectType } from '@nestjs/graphql'
 
-@Module({
-  imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])],
-  providers: [UserService, ThirdUserService, DepartmentResolver],
-})
-export class UserModule {}
+@ObjectType()
+export class Department {
+  @Field(() => ID)
+  id!: string
+
+  @Field()
+  name!: string
+}

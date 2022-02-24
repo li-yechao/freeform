@@ -23,6 +23,16 @@ export interface ThirdUserModule {
     ctx: ThirdUserModuleContext,
     query?: { [key: string]: string | undefined }
   ): Promise<{ id: string; user: { [key: string]: any } }>
+
+  getDepartments(
+    ctx: ThirdUserModuleContext,
+    query?: { departmentId?: string }
+  ): Promise<{ id: string; name: string }[]>
+
+  getDepartment(
+    ctx: ThirdUserModuleContext,
+    query: { departmentId: string }
+  ): Promise<{ id: string; name: string }>
 }
 
 export interface ThirdUserModuleContext {
@@ -36,9 +46,9 @@ export class ThirdUserService {
     type: string,
     query: { [key: string]: string }
   ): Promise<{ id: string; user: { [key: string]: any } }> {
-    const mod = this.getModule(type)
+    const mod = ThirdUserService.getModule(type)
 
-    const ctx = this.newContext()
+    const ctx = ThirdUserService.newContext()
 
     const thirdUser = await mod.getViewer(ctx, query)
 
@@ -51,7 +61,7 @@ export class ThirdUserService {
       throw new Error('Invalid third viewer')
     }
 
-    this.setContext(this.contextKey(type, thirdUser.id), ctx)
+    ThirdUserService.setContext(ThirdUserService.contextKey(type, thirdUser.id), ctx)
 
     return {
       id: thirdUser.id,
@@ -59,14 +69,36 @@ export class ThirdUserService {
     }
   }
 
-  private moduleMap = new Map<string, ThirdUserModule>()
+  async getDepartments(
+    type: string,
+    thirdId: string,
+    query?: { departmentId?: string }
+  ): Promise<{ id: string; name: string }[]> {
+    return ThirdUserService.getModule(type).getDepartments(
+      ThirdUserService.getContext(ThirdUserService.contextKey(type, thirdId)),
+      query
+    )
+  }
 
-  private getModule(type: string) {
+  async getDepartment(
+    type: string,
+    thirdId: string,
+    query: { departmentId: string }
+  ): Promise<{ id: string; name: string }> {
+    return ThirdUserService.getModule(type).getDepartment(
+      ThirdUserService.getContext(ThirdUserService.contextKey(type, thirdId)),
+      query
+    )
+  }
+
+  private static moduleMap = new Map<string, ThirdUserModule>()
+
+  private static getModule(type: string) {
     let m = this.moduleMap.get(type)
     if (!m) {
       const file = join(process.cwd(), 'config', `third_${type}.js`)
       if (!existsSync(file)) {
-        throw new Error(`Unsupported auth type ${type}`)
+        throw new Error(`Unsupported third type ${type}`)
       }
 
       const vm = new NodeVM({
@@ -83,17 +115,26 @@ export class ThirdUserService {
     return m
   }
 
-  private contextMap = new Map<string, ThirdUserModuleContext>()
+  private static contextMap = new Map<string, ThirdUserModuleContext>()
 
-  private newContext(): ThirdUserModuleContext {
+  private static newContext(): ThirdUserModuleContext {
     return new Map()
   }
 
-  private contextKey(type: string, id: string) {
+  private static contextKey(type: string, id: string) {
     return `${id}@${type}`
   }
 
-  private setContext(key: string, ctx: ThirdUserModuleContext) {
+  private static getContext(key: string) {
+    let c = this.contextMap.get(key)
+    if (!c) {
+      c = this.newContext()
+      this.contextMap.set(key, c)
+    }
+    return c
+  }
+
+  private static setContext(key: string, ctx: ThirdUserModuleContext) {
     this.contextMap.set(key, ctx)
   }
 }
