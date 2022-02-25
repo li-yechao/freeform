@@ -2,24 +2,24 @@ import { UseGuards } from '@nestjs/common'
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
 import { Viewer } from '../auth/auth.schema'
 import { CurrentUser, GqlAuthGuard } from '../auth/gql-auth.guard'
-import { Department } from './department.schema'
+import { ThirdDepartment } from './third-user.schema'
 import { ThirdUserService } from './third-user.service'
 import { User } from './user.schema'
 import { UserService } from './user.service'
 
-@Resolver(() => Department)
+@Resolver(() => ThirdDepartment)
 @UseGuards(GqlAuthGuard)
-export class DepartmentResolver {
+export class ThirdUserResolver {
   constructor(
     private readonly userService: UserService,
     private readonly thirdUserService: ThirdUserService
   ) {}
 
-  @Query(() => [Department])
+  @Query(() => [ThirdDepartment])
   async departments(
     @CurrentUser() viewer: Viewer,
     @Args('departmentId', { nullable: true }) departmentId?: string
-  ): Promise<Department[]> {
+  ): Promise<ThirdDepartment[]> {
     const user = await this.userService.selectUserById({ userId: viewer.id })
     if (!user) {
       throw new Error(`Viewer is not found`)
@@ -30,11 +30,11 @@ export class DepartmentResolver {
     })
   }
 
-  @Query(() => Department)
+  @Query(() => ThirdDepartment)
   async department(
     @CurrentUser() viewer: Viewer,
     @Args('departmentId') departmentId: string
-  ): Promise<Department> {
+  ): Promise<ThirdDepartment> {
     const user = await this.userService.selectUserById({ userId: viewer.id })
     if (!user) {
       throw new Error(`Viewer is not found`)
@@ -45,11 +45,11 @@ export class DepartmentResolver {
     })
   }
 
-  @ResolveField(() => [Department])
+  @ResolveField(() => [ThirdDepartment])
   async children(
     @CurrentUser() viewer: Viewer,
-    @Parent() department: Department
-  ): Promise<Department[]> {
+    @Parent() department: ThirdDepartment
+  ): Promise<ThirdDepartment[]> {
     const user = await this.userService.selectUserById({ userId: viewer.id })
     if (!user) {
       throw new Error(`Viewer is not found`)
