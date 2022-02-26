@@ -49,7 +49,11 @@ const mod = {
     throw new Error('Unimplements')
   },
 
-  getDepartmentUsers() {
+  getUsers() {
+    throw new Error('Unimplements')
+  },
+
+  getUser() {
     throw new Error('Unimplements')
   },
 }

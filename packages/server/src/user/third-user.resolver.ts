@@ -119,6 +119,38 @@ export class ThirdDepartmentResolver {
     })
   }
 
+  @Query(() => [ThirdUser], { name: 'users' })
+  async queryUsers(
+    @CurrentUser() viewer: Viewer,
+    @Args('departmentId', { nullable: true }) departmentId?: string,
+    @Args('userIds', { type: () => [String], nullable: true }) userIds?: string[]
+  ): Promise<ThirdUser[]> {
+    const user = await this.userService.selectUserById({ userId: viewer.id })
+    if (!user) {
+      throw new Error(`Viewer is not found`)
+    }
+
+    return this.thirdUserService.getUsers(thirdType(user), thirdId(user), {
+      departmentId,
+      userIds,
+    })
+  }
+
+  @Query(() => ThirdUser, { name: 'user' })
+  async queryUser(
+    @CurrentUser() viewer: Viewer,
+    @Args('userId') userId: string
+  ): Promise<ThirdUser> {
+    const user = await this.userService.selectUserById({ userId: viewer.id })
+    if (!user) {
+      throw new Error(`Viewer is not found`)
+    }
+
+    return this.thirdUserService.getUser(thirdType(user), thirdId(user), {
+      userId,
+    })
+  }
+
   @ResolveField(() => [ThirdUser])
   async users(
     @CurrentUser() viewer: Viewer,
@@ -129,7 +161,7 @@ export class ThirdDepartmentResolver {
       throw new Error(`Viewer is not found`)
     }
 
-    return this.thirdUserService.getDepartmentUsers(thirdType(user), thirdId(user), {
+    return this.thirdUserService.getUsers(thirdType(user), thirdId(user), {
       departmentId: department.id,
     })
   }
