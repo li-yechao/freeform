@@ -21,6 +21,7 @@ import {
   LinkOutlined,
   NumberOutlined,
   StarOutlined,
+  UsergroupAddOutlined,
 } from '@ant-design/icons'
 import styled from '@emotion/styled'
 import { Button } from 'antd'
@@ -39,6 +40,7 @@ export default function Fields() {
       { type: 'time', icon: <CalendarOutlined />, title: '时间' },
       { type: 'associationForm', icon: <LinkOutlined />, title: '关联表' },
       { type: 'department', icon: <ApartmentOutlined />, title: '部门' },
+      { type: 'user', icon: <UsergroupAddOutlined />, title: '人员' },
     ],
     []
   )

@@ -30,6 +30,7 @@ import Radio, { initialRadioProps, RadioConfigure } from './Radio'
 import Rate, { initialRateProps, RateConfigure } from './Rate'
 import Text, { initialTextProps, TextConfigure } from './Text'
 import Time, { initialTimeProps, TimeCell, TimeConfigure } from './Time'
+import User, { initialUserProps, UserCell, UserConfigure } from './User'
 
 export interface FieldProps extends Field {
   applicationId: string
@@ -62,6 +63,7 @@ const FIELDS = {
   time: Time,
   associationForm: AssociationForm,
   department: Department,
+  user: User,
 }
 
 export function defaultProps(type: string) {
@@ -83,6 +85,7 @@ const DEFAULT_PROPS: {
   time: initialTimeProps,
   associationForm: initialAssociationFormProps,
   department: initialDepartmentProps,
+  user: initialUserProps,
 }
 
 export function ConfigureRenderer({
@@ -117,6 +120,7 @@ const CONFIGURES: {
   time: TimeConfigure,
   associationForm: AssociationFormConfigure,
   department: DepartmentConfigure,
+  user: UserConfigure,
 }
 
 export function CellRenderer(props: FieldProps) {
@@ -134,4 +138,5 @@ const CELLS: {
   time: TimeCell,
   associationForm: AssociationFormCell,
   department: DepartmentCell,
+  user: UserCell,
 }
