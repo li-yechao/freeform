@@ -56,7 +56,8 @@ export class ThirdDepartmentResolver {
   @Query(() => [ThirdDepartment])
   async departments(
     @CurrentUser() viewer: Viewer,
-    @Args('departmentId', { nullable: true }) departmentId?: string
+    @Args('departmentId', { nullable: true }) departmentId?: string,
+    @Args('departmentIds', { type: () => [String], nullable: true }) departmentIds?: string[]
   ): Promise<ThirdDepartment[]> {
     const user = await this.userService.selectUserById({ userId: viewer.id })
     if (!user) {
@@ -65,6 +66,7 @@ export class ThirdDepartmentResolver {
 
     return this.thirdUserService.getDepartments(thirdType(user), thirdId(user), {
       departmentId,
+      departmentIds,
     })
   }
 
@@ -80,6 +82,25 @@ export class ThirdDepartmentResolver {
 
     return this.thirdUserService.getDepartment(thirdType(user), thirdId(user), {
       departmentId,
+    })
+  }
+
+  @ResolveField(() => ThirdDepartment, { nullable: true })
+  async parent(
+    @CurrentUser() viewer: Viewer,
+    @Parent() department: ThirdDepartment
+  ): Promise<ThirdDepartment | null> {
+    const user = await this.userService.selectUserById({ userId: viewer.id })
+    if (!user) {
+      throw new Error(`Viewer is not found`)
+    }
+
+    if (!department.parentId) {
+      return null
+    }
+
+    return this.thirdUserService.getDepartment(thirdType(user), thirdId(user), {
+      departmentId: department.parentId,
     })
   }
 

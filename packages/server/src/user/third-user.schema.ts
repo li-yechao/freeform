@@ -19,6 +19,9 @@ export class ThirdDepartment {
   @Field(() => ID)
   id!: string
 
+  @Field({ nullable: true })
+  parentId?: string
+
   @Field()
   name!: string
 }
