@@ -2,14 +2,38 @@ import { UseGuards } from '@nestjs/common'
 import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql'
 import { Viewer } from '../auth/auth.schema'
 import { CurrentUser, GqlAuthGuard } from '../auth/gql-auth.guard'
-import { ThirdDepartment } from './third-user.schema'
+import { ThirdDepartment, ThirdUser } from './third-user.schema'
 import { ThirdUserService } from './third-user.service'
 import { User } from './user.schema'
 import { UserService } from './user.service'
 
-@Resolver(() => ThirdDepartment)
+@Resolver(() => ThirdUser)
 @UseGuards(GqlAuthGuard)
 export class ThirdUserResolver {
+  constructor(
+    private readonly userService: UserService,
+    private readonly thirdUserService: ThirdUserService
+  ) {}
+
+  @ResolveField(() => ThirdDepartment)
+  async department(
+    @CurrentUser() viewer: Viewer,
+    @Parent() user: ThirdUser
+  ): Promise<ThirdDepartment> {
+    const currentUser = await this.userService.selectUserById({ userId: viewer.id })
+    if (!currentUser) {
+      throw new Error(`Viewer is not found`)
+    }
+
+    return this.thirdUserService.getDepartment(thirdType(currentUser), thirdId(currentUser), {
+      departmentId: user.departmentId,
+    })
+  }
+}
+
+@Resolver(() => ThirdDepartment)
+@UseGuards(GqlAuthGuard)
+export class ThirdDepartmentResolver {
   constructor(
     private readonly userService: UserService,
     private readonly thirdUserService: ThirdUserService
@@ -56,6 +80,21 @@ export class ThirdUserResolver {
     }
 
     return this.thirdUserService.getDepartments(thirdType(user), thirdId(user), {
+      departmentId: department.id,
+    })
+  }
+
+  @ResolveField(() => [ThirdUser])
+  async users(
+    @CurrentUser() viewer: Viewer,
+    @Parent() department: ThirdDepartment
+  ): Promise<ThirdUser[]> {
+    const user = await this.userService.selectUserById({ userId: viewer.id })
+    if (!user) {
+      throw new Error(`Viewer is not found`)
+    }
+
+    return this.thirdUserService.getDepartmentUsers(thirdType(user), thirdId(user), {
       departmentId: department.id,
     })
   }

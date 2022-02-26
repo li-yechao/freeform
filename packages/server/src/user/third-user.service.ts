@@ -33,6 +33,11 @@ export interface ThirdUserModule {
     ctx: ThirdUserModuleContext,
     query: { departmentId: string }
   ): Promise<{ id: string; name: string }>
+
+  getDepartmentUsers(
+    ctx: ThirdUserModuleContext,
+    query: { departmentId: string }
+  ): Promise<{ id: string; name: string; departmentId: string }[]>
 }
 
 export interface ThirdUserModuleContext {
@@ -86,6 +91,17 @@ export class ThirdUserService {
     query: { departmentId: string }
   ): Promise<{ id: string; name: string }> {
     return ThirdUserService.getModule(type).getDepartment(
+      ThirdUserService.getContext(ThirdUserService.contextKey(type, thirdId)),
+      query
+    )
+  }
+
+  async getDepartmentUsers(
+    type: string,
+    thirdId: string,
+    query: { departmentId: string }
+  ): Promise<{ id: string; name: string; departmentId: string }[]> {
+    return ThirdUserService.getModule(type).getDepartmentUsers(
       ThirdUserService.getContext(ThirdUserService.contextKey(type, thirdId)),
       query
     )

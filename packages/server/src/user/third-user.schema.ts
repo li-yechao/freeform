@@ -22,3 +22,15 @@ export class ThirdDepartment {
   @Field()
   name!: string
 }
+
+@ObjectType()
+export class ThirdUser {
+  @Field(() => ID)
+  id!: string
+
+  @Field()
+  name!: string
+
+  @Field()
+  departmentId!: string
+}

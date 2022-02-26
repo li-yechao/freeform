@@ -48,6 +48,10 @@ const mod = {
   getDepartment() {
     throw new Error('Unimplements')
   },
+
+  getDepartmentUsers() {
+    throw new Error('Unimplements')
+  },
 }
 
 module.exports = mod
