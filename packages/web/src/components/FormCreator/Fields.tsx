@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import {
+  ApartmentOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
   CheckSquareOutlined,
@@ -37,6 +38,7 @@ export default function Fields() {
       { type: 'rate', icon: <StarOutlined />, title: '评分' },
       { type: 'time', icon: <CalendarOutlined />, title: '时间' },
       { type: 'associationForm', icon: <LinkOutlined />, title: '关联表' },
+      { type: 'department', icon: <ApartmentOutlined />, title: '部门' },
     ],
     []
   )

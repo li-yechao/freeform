@@ -20,6 +20,11 @@ import AssociationForm, {
   initialAssociationFormProps,
 } from './AssociationForm'
 import Checkbox, { CheckboxConfigure, initialCheckboxProps } from './Checkbox'
+import Department, {
+  DepartmentCell,
+  DepartmentConfigure,
+  initialDepartmentProps,
+} from './Department'
 import Number, { initialNumberProps, NumberConfigure } from './Number'
 import Radio, { initialRadioProps, RadioConfigure } from './Radio'
 import Rate, { initialRateProps, RateConfigure } from './Rate'
@@ -56,6 +61,7 @@ const FIELDS = {
   rate: Rate,
   time: Time,
   associationForm: AssociationForm,
+  department: Department,
 }
 
 export function defaultProps(type: string) {
@@ -76,6 +82,7 @@ const DEFAULT_PROPS: {
   rate: initialRateProps,
   time: initialTimeProps,
   associationForm: initialAssociationFormProps,
+  department: initialDepartmentProps,
 }
 
 export function ConfigureRenderer({
@@ -109,6 +116,7 @@ const CONFIGURES: {
   rate: RateConfigure,
   time: TimeConfigure,
   associationForm: AssociationFormConfigure,
+  department: DepartmentConfigure,
 }
 
 export function CellRenderer(props: FieldProps) {
@@ -125,4 +133,5 @@ const CELLS: {
 } = {
   time: TimeCell,
   associationForm: AssociationFormCell,
+  department: DepartmentCell,
 }
