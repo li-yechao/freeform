@@ -147,5 +147,38 @@ export class CamundaService {
         return job.complete()
       },
     })
+
+    this.zbClient.createWorker<
+      FormTriggerInputVariables,
+      { script: string; inputCollection: string }
+    >({
+      taskType: 'approval_approvals_script_js',
+      taskHandler: async job => {
+        let script: string
+        try {
+          script = Buffer.from(job.customHeaders.script, 'base64').toString()
+        } catch {
+          throw new Error(`Invalid script header`)
+        }
+
+        const approvals: string[] = []
+
+        const vm = new VM({
+          sandbox: {
+            outputs: {
+              approvals: {
+                add(...list: { userId: string }[]) {
+                  approvals.push(...list.map(i => i.userId))
+                },
+              },
+            },
+          },
+        })
+
+        await vm.run(script)
+
+        return job.complete({ [job.customHeaders.inputCollection]: approvals })
+      },
+    })
   }
 }

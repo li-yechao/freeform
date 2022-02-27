@@ -42,38 +42,51 @@ export default async function workflowToBpmn(
   const startEvent = moddle.create('bpmn:StartEvent', {
     id: `StartEvent_${new mongo.ObjectId().toHexString()}`,
   })
-  process.flowElements.push(startEvent)
 
-  let current: BPMNModdle.FlowNode = startEvent
+  const endEvent = moddle.create('bpmn:EndEvent', {
+    id: `EndEvent_${new mongo.ObjectId().toHexString()}`,
+  })
+
+  const startFlow = moddle.create('bpmn:SequenceFlow', {
+    id: `Flow_${new mongo.ObjectId().toHexString()}`,
+  })
+
+  startEvent.outgoing = [startFlow]
+  startFlow.sourceRef = startEvent
+
+  process.flowElements.push(startEvent, endEvent, startFlow)
+
+  let current: BPMNModdle.SequenceFlow = startFlow
 
   for (const node of workflow.children) {
     const createTask = (
       process: BPMNModdle.Process,
-      prevTask: BPMNModdle.FlowNode,
+      incoming: BPMNModdle.SequenceFlow,
       descriptor: keyof Pick<
         BPMNModdle.ElementTypes,
-        'bpmn:Task' | 'bpmn:ServiceTask'
+        'bpmn:Task' | 'bpmn:ServiceTask' | 'bpmn:UserTask'
       > = 'bpmn:Task',
       attrs?: { [key: string]: any }
     ) => {
-      const flow = moddle.create('bpmn:SequenceFlow', {
-        id: `Flow_${new mongo.ObjectId().toHexString()}`,
-      })
       const task = moddle.create(descriptor, {
         id: `Activity_${new mongo.ObjectId().toHexString()}`,
         ...attrs,
       })
-      flow.sourceRef = prevTask
-      flow.targetRef = task
-      task.incoming = [flow]
-      prevTask.outgoing = [flow]
+      const flow = moddle.create('bpmn:SequenceFlow', {
+        id: `Flow_${new mongo.ObjectId().toHexString()}`,
+      })
+
+      incoming.targetRef = task
+      task.incoming = [incoming]
+      task.outgoing = [flow]
+      flow.sourceRef = task
       process.flowElements.push(flow, task)
-      return task
+      return [task, flow] as const
     }
 
     switch (node.type) {
       case 'script_js': {
-        const task = createTask(process, current, 'bpmn:ServiceTask', {})
+        const [task, flow] = createTask(process, current, 'bpmn:ServiceTask', {})
         task.extensionElements = moddle.create('bpmn:ExtensionElements', {
           values: [
             moddle.create('zeebe:TaskDefinition', {
@@ -89,7 +102,105 @@ export default async function workflowToBpmn(
             }),
           ],
         })
-        current = task
+        current = flow
+        break
+      }
+      case 'approval': {
+        if (node.approvals?.type === 'script_js') {
+          const inputCollection = `inputCollection_${node.id}`
+          const outputCollection = `outputCollection_${node.id}`
+
+          {
+            const [task, flow] = createTask(process, current, 'bpmn:ServiceTask', {})
+            task.extensionElements = moddle.create('bpmn:ExtensionElements', {
+              values: [
+                moddle.create('zeebe:TaskDefinition', {
+                  type: 'approval_approvals_script_js',
+                }),
+                moddle.create('zeebe:TaskHeaders', {
+                  values: [
+                    moddle.create('zeebe:Header', {
+                      key: 'script',
+                      value: Buffer.from(node.approvals.script || '').toString('base64'),
+                    }),
+                    moddle.create('zeebe:Header', {
+                      key: 'inputCollection',
+                      value: inputCollection,
+                    }),
+                  ],
+                }),
+              ],
+            })
+            current = flow
+          }
+
+          {
+            const [task, flow] = createTask(process, current, 'bpmn:UserTask', {})
+            task.extensionElements = moddle.create('bpmn:ExtensionElements', {
+              values: [
+                moddle.create('zeebe:AssignmentDefinition', {
+                  assignee: '= assignee',
+                }),
+              ],
+            })
+
+            const loopCharacteristics = moddle.create('bpmn:MultiInstanceLoopCharacteristics')
+            loopCharacteristics.extensionElements = moddle.create('bpmn:ExtensionElements', {
+              values: [
+                moddle.create('zeebe:LoopCharacteristics', {
+                  inputCollection: `= ${inputCollection}`,
+                  inputElement: 'assignee',
+                  outputCollection: `${outputCollection}`,
+                  outputElement: '= result',
+                }),
+              ],
+            })
+            loopCharacteristics.completionCondition = moddle.create('bpmn:FormalExpression', {
+              body:
+                node.multipleConditionType === 'or'
+                  ? `= some x in ${outputCollection} satisfies x = "resolved" or x = "rejected"`
+                  : `= or([ some x in ${outputCollection} satisfies x = "rejected", every x in ${outputCollection} satisfies x = "resolved" ])`,
+            })
+
+            task.loopCharacteristics = loopCharacteristics
+
+            {
+              const gateway = moddle.create('bpmn:ExclusiveGateway', {
+                id: `Gateway_${new mongo.ObjectId().toHexString()}`,
+              })
+
+              flow.targetRef = gateway
+              gateway.incoming = [flow]
+
+              const endFlow = moddle.create('bpmn:SequenceFlow', {
+                id: `Flow_${new mongo.ObjectId().toHexString()}`,
+              })
+              const outFlow = moddle.create('bpmn:SequenceFlow', {
+                id: `Flow_${new mongo.ObjectId().toHexString()}`,
+              })
+
+              gateway.outgoing = [endFlow, outFlow]
+              gateway.default = endFlow
+
+              endFlow.sourceRef = gateway
+              endFlow.targetRef = endEvent
+
+              outFlow.sourceRef = gateway
+              outFlow.conditionExpression = moddle.create('bpmn:FormalExpression', {
+                body:
+                  node.multipleConditionType === 'or'
+                    ? `= and([ some x in ${outputCollection} satisfies x = "resolved", every x in ${outputCollection} satisfies x != "rejected" ])`
+                    : `= every x in ${outputCollection} satisfies x = "resolved"`,
+              })
+
+              process.flowElements.push(gateway, endFlow, outFlow)
+
+              current = outFlow
+            }
+          }
+        } else {
+          throw new Error(`Unsupported approvals type ${node.approvals?.type}`)
+        }
         break
       }
       default:
@@ -98,20 +209,8 @@ export default async function workflowToBpmn(
   }
 
   {
-    const flow = moddle.create('bpmn:SequenceFlow', {
-      id: `Flow_${new mongo.ObjectId().toHexString()}`,
-      sourceRef: current,
-    })
-
-    const endEvent = moddle.create('bpmn:EndEvent', {
-      id: `EndEvent_${new mongo.ObjectId().toHexString()}`,
-    })
-
-    current.outgoing = [flow]
-    flow.targetRef = endEvent
-    endEvent.incoming = [flow]
-
-    process.flowElements.push(flow, endEvent)
+    current.targetRef = endEvent
+    endEvent.incoming = [current]
   }
 
   return xmlFormatter((await (moddle as any).toXML(model)).xml)

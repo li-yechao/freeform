@@ -61,12 +61,20 @@ export interface FormTrigger {
 
 export type FormTriggerAction = { type: 'create' }
 
-export type Node = ScriptJsNode
+export type Node = ScriptJsNode | ApprovalNode
 
 export interface ScriptJsNode {
   id: string
   type: 'script_js'
   script?: string
+}
+
+export interface ApprovalNode {
+  id: string
+  type: 'approval'
+  target?: { nodeId: string }
+  approvals?: { type: 'script_js'; script?: string }
+  multipleConditionType?: 'all' | 'or'
 }
 
 export const WorkflowSchema = SchemaFactory.createForClass(Workflow)
