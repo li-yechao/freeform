@@ -115,7 +115,7 @@ export default async function workflowToBpmn(
             task.extensionElements = moddle.create('bpmn:ExtensionElements', {
               values: [
                 moddle.create('zeebe:TaskDefinition', {
-                  type: 'approval_approvals_script_js',
+                  type: 'script_js',
                 }),
                 moddle.create('zeebe:TaskHeaders', {
                   values: [
@@ -123,9 +123,13 @@ export default async function workflowToBpmn(
                       key: 'script',
                       value: Buffer.from(node.approvals.script || '').toString('base64'),
                     }),
-                    moddle.create('zeebe:Header', {
-                      key: 'inputCollection',
-                      value: inputCollection,
+                  ],
+                }),
+                moddle.create('zeebe:IoMapping', {
+                  outputParameters: [
+                    moddle.create('zeebe:Output', {
+                      source: '= approvals',
+                      target: inputCollection,
                     }),
                   ],
                 }),

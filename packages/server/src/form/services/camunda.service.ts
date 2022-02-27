@@ -60,116 +60,134 @@ export class CamundaService {
     this.zbClient.createWorker<FormTriggerInputVariables, { script: string }>({
       taskType: 'script_js',
       taskHandler: async job => {
-        const script = CamundaService.cacheScript(job)
+        try {
+          const script = CamundaService.cacheScript(job)
 
-        const formTrigger = {
-          get viewerId() {
-            const viewerId = job.variables.form_trigger_viewer_id
-            if (!viewerId) {
-              throw new Error(`Required variable form_trigger_viewer_id is missing`)
-            }
-            return viewerId
-          },
-          get formId() {
-            const formId = job.variables.form_trigger_form_id
-            if (!formId) {
-              throw new Error(`Required variable form_trigger_form_id is missing`)
-            }
-            return formId
-          },
-          get record() {
-            const record = job.variables.form_trigger_record
-            if (!record) {
-              throw new Error(`Required variable form_trigger_record is missing`)
-            }
-            return record
-          },
+          const sandbox = Object.freeze({
+            formTrigger: this.sandboxFormTrigger(job),
+            application: this.sandboxApplication(job),
+            outputs: this.sandboxOutputs(job),
+          })
+
+          const vm = new NodeVM({
+            sandbox,
+          })
+
+          await this.runDefaultExportedFunction(vm, script)
+
+          return job.complete(sandbox.outputs)
+        } catch (error: any) {
+          console.error(error)
+          return job.error(error.name, error.message)
         }
-
-        const vm = new NodeVM({
-          sandbox: {
-            formTrigger,
-            application: new Proxy(
-              {},
-              {
-                get: (_, p) => {
-                  const m = p.toString().match(/^form_(?<formId>\S+)$/)
-                  const formId = m?.groups?.['formId']
-                  if (formId) {
-                    return {
-                      id: formId,
-                      get fields() {
-                        return new Proxy({}, { get: (_, p) => ({ id: p.toString() }) })
-                      },
-                      selectRecord: ({ recordId }: { recordId: string }) => {
-                        return this.recordService.workflow_selectRecord({ formId, recordId })
-                      },
-                      createRecord: ({ data }: { data: { [key: string]: { value: any } } }) => {
-                        return this.recordService.workflow_createRecord({
-                          userId: formTrigger.viewerId,
-                          formId,
-                          data,
-                        })
-                      },
-                      updateRecord: ({
-                        recordId,
-                        data,
-                      }: {
-                        recordId: string
-                        data: { [key: string]: { value: any } }
-                      }) => {
-                        return this.recordService.workflow_updateRecord({
-                          formId,
-                          recordId,
-                          data,
-                        })
-                      },
-                      deleteRecord: ({ recordId }: { recordId: string }) => {
-                        return this.recordService.workflow_deleteRecord({
-                          formId,
-                          recordId,
-                        })
-                      },
-                    }
-                  }
-                  return undefined
-                },
-              }
-            ),
-          },
-        })
-
-        await this.runDefaultExportedFunction(vm, script)
-
-        return job.complete()
       },
     })
+  }
 
-    this.zbClient.createWorker<
-      FormTriggerInputVariables,
-      { script: string; inputCollection: string }
-    >({
-      taskType: 'approval_approvals_script_js',
-      taskHandler: async job => {
-        const script = CamundaService.cacheScript(job)
+  private sandboxOutputs(_job: ZeebeJob<FormTriggerInputVariables>) {
+    return new Proxy<{ [key: string | symbol]: any }>(
+      {},
+      {
+        get: (t, p) => {
+          return t[p]
+        },
+        set: (t, p, v) => {
+          t[p] = v
+          return true
+        },
+      }
+    )
+  }
 
-        const approvals: string[] = []
+  private sandboxFormTrigger(job: ZeebeJob<FormTriggerInputVariables>) {
+    return new Proxy<{ viewerId: string; formId: string; record: Record }>({} as any, {
+      get: (_, p) => {
+        switch (p) {
+          case 'viewerId':
+            return job.variables.form_trigger_viewer_id
+          case 'formId':
+            return job.variables.form_trigger_form_id
+          case 'record':
+            return job.variables.form_trigger_record
+        }
+        return undefined
+      },
+    })
+  }
 
-        const vm = new NodeVM({
-          sandbox: {
-            outputs: {
-              approvals: {
-                add(...list: { userId: string }[]) {
-                  approvals.push(...list.map(i => i.userId))
-                },
-              },
-            },
-          },
+  private sandboxApplication(job: ZeebeJob<FormTriggerInputVariables>) {
+    return new Proxy<{}>({} as any, {
+      get: (_, p) => {
+        const m = p.toString().match(/^form_(?<formId>\S+)$/)
+        const formId = m?.groups?.['formId']
+        if (!formId) {
+          return undefined
+        }
+        return this.sandboxForm({
+          viewerId: job.variables.form_trigger_viewer_id,
+          applicationId: job.variables.form_trigger_application_id,
+          formId,
         })
+      },
+    })
+  }
 
-        await this.runDefaultExportedFunction(vm, script)
+  private sandboxForm({
+    viewerId,
+    formId,
+  }: {
+    viewerId: string
+    applicationId: string
+    formId: string
+  }) {
+    return new Proxy({} as any, {
+      get: (_, p) => {
+        switch (p) {
+          case 'id':
+            return formId
 
-        return job.complete({ [job.customHeaders.inputCollection]: approvals })
+          case 'fields':
+            return new Proxy({}, { get: (_, p) => ({ id: p.toString() }) })
+
+          case 'selectRecord':
+            return ({ recordId }: { recordId: string }) => {
+              return this.recordService.workflow_selectRecord({ formId, recordId })
+            }
+
+          case 'createRecord':
+            return ({ data }: { data: { [key: string]: { value: any } } }) => {
+              return this.recordService.workflow_createRecord({
+                userId: viewerId,
+                formId,
+                data,
+              })
+            }
+
+          case 'updateRecord':
+            return ({
+              recordId,
+              data,
+            }: {
+              recordId: string
+              data: { [key: string]: { value: any } }
+            }) => {
+              return this.recordService.workflow_updateRecord({
+                formId,
+                recordId,
+                data,
+              })
+            }
+
+          case 'deleteRecord':
+            return ({ recordId }: { recordId: string }) => {
+              return this.recordService.workflow_deleteRecord({
+                formId,
+                recordId,
+              })
+            }
+        }
+
+        return undefined
       },
     })
   }
