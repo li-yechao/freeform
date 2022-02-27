@@ -1,7 +1,7 @@
 {
   "name": "@freeform/web",
   "description": "freeform web",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "author": "LiYechao <liyechao@yechao.xyz>",
   "private": true,
   "license": "Apache-2.0",
