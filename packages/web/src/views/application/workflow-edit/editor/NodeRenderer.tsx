@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CodeOutlined, FileTextOutlined } from '@ant-design/icons'
+import { CodeOutlined, FileTextOutlined, UserOutlined } from '@ant-design/icons'
 import { ReactNode, useMemo } from 'react'
 import NodeIcon from './components/NodeIcon'
 import NodeRender from './components/NodeRender'
@@ -20,11 +20,13 @@ import PlusContent from './components/PlusContent'
 import {
   FormTriggerAction,
   generateNodeId,
+  isTrigger,
   Node,
   Trigger,
   useCreateNode,
   useDeleteNode,
   useSetCurrentNode,
+  useWorkflow,
 } from './state'
 
 export default function NodeRenderer({
@@ -34,12 +36,18 @@ export default function NodeRenderer({
   node: Node | Trigger
   selected?: boolean
 }) {
+  const { nodes } = useWorkflow()
+
   const createNode = useCreateNode()
   const deleteNode = useDeleteNode()
   const setCurrentNode = useSetCurrentNode()
 
   const plusContent = useMemo(() => {
     const buttons = [
+      {
+        title: '人工',
+        children: [{ type: 'approval', icon: <UserOutlined />, title: '审批' }],
+      },
       {
         title: '开发者',
         children: [{ type: 'script_js', icon: <CodeOutlined />, title: 'JavaScript' }],
@@ -62,7 +70,7 @@ export default function NodeRenderer({
 
   let icon: ReactNode | undefined
   let name: string | undefined
-  let description: string | undefined
+  let description: ReactNode | undefined
 
   switch (node.type) {
     case 'form_trigger': {
@@ -83,6 +91,26 @@ export default function NodeRenderer({
       )
       name = 'JavaScript'
       description = node.script
+      break
+    }
+    case 'approval': {
+      icon = (
+        <NodeIcon>
+          <UserOutlined />
+        </NodeIcon>
+      )
+      name = '审批'
+      if (node.target) {
+        const targetName = isTrigger(nodes[node.target.nodeId]) ? '表单事件触发' : '未知的审批对象'
+        const approvalsName = node.approvals?.type === 'script_js' ? 'JavaScript' : '未知的审批人'
+        description = (
+          <span>
+            {targetName}
+            <br />
+            {approvalsName}
+          </span>
+        )
+      }
       break
     }
   }

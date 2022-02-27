@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CodeOutlined, FileTextOutlined } from '@ant-design/icons'
+import { CodeOutlined, FileTextOutlined, UserOutlined } from '@ant-design/icons'
 import styled from '@emotion/styled'
 import { Button, Drawer, Modal, Space } from 'antd'
 import produce from 'immer'
-import { format } from 'prettier/standalone'
-import parseTypescript from 'prettier/parser-typescript'
 import { ComponentType, ReactNode, useEffect, useState } from 'react'
 import NodeIcon from './components/NodeIcon'
 import FormTriggerConfigure from './nodes/FormTriggerConfigure'
@@ -30,6 +28,8 @@ import {
   useUpdateNode,
   useWorkflow,
 } from './state'
+import ApprovalConfigure from './nodes/ApprovalNodeConfigure'
+import { formatJs } from './prettier'
 
 export default function NodeConfigureRenderer({ applicationId }: { applicationId: string }) {
   const { nodes, ids } = useWorkflow()
@@ -43,9 +43,7 @@ export default function NodeConfigureRenderer({ applicationId }: { applicationId
 
   useEffect(() => {
     setDraft(
-      node?.type === 'script_js'
-        ? { ...node, script: node.script && prettierJs(node.script) }
-        : node
+      node?.type === 'script_js' ? { ...node, script: node.script && formatJs(node.script) } : node
     )
   }, [node])
 
@@ -59,7 +57,7 @@ export default function NodeConfigureRenderer({ applicationId }: { applicationId
     draft &&
       updateNode(
         draft?.type === 'script_js'
-          ? { ...draft, script: draft.script && prettierJs(draft.script) }
+          ? { ...draft, script: draft.script && formatJs(draft.script) }
           : draft
       )
     handleClose()
@@ -73,9 +71,11 @@ export default function NodeConfigureRenderer({ applicationId }: { applicationId
     <div
       onKeyDown={e => {
         if (e.metaKey && e.key === 's') {
-          e.preventDefault()
-          e.stopPropagation()
-          handleSave()
+          if (node) {
+            e.preventDefault()
+            e.stopPropagation()
+            handleSave()
+          }
         }
       }}
     >
@@ -128,6 +128,7 @@ const RENDERERS: {
 } = {
   form_trigger: FormTriggerConfigure,
   script_js: ScriptJsNodeConfigure,
+  approval: ApprovalConfigure,
 }
 
 const _Drawer = styled(Drawer)`
@@ -184,6 +185,15 @@ const Title = ({ node }: { node: Node | Trigger }) => {
       name = 'JavaScript'
       break
     }
+    case 'approval': {
+      icon = (
+        <NodeIcon>
+          <UserOutlined />
+        </NodeIcon>
+      )
+      name = '审批'
+      break
+    }
   }
 
   return (
@@ -192,16 +202,4 @@ const Title = ({ node }: { node: Node | Trigger }) => {
       <span>{name}</span>
     </Space>
   )
-}
-
-function prettierJs(script: string): string {
-  return format(script, {
-    parser: 'typescript',
-    plugins: [parseTypescript],
-    printWidth: 100,
-    semi: false,
-    singleQuote: true,
-    arrowParens: 'avoid',
-    trailingComma: 'es5',
-  })
 }

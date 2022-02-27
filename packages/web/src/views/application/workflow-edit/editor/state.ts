@@ -36,16 +36,28 @@ export interface FormTrigger {
 
 export type FormTriggerAction = { type: 'create' } | { type: 'update' } | { type: 'delete' }
 
-export type Node = ScriptJsNode
+export function isTrigger(n: any): n is Trigger {
+  return ['form_trigger'].includes(n?.type)
+}
+
+export type Node = ScriptJsNode | ApprovalNode
 
 export function isNode(n: any): n is Node {
-  return ['script_js'].includes(n?.type)
+  return ['script_js', 'approval'].includes(n?.type)
 }
 
 export interface ScriptJsNode {
   id: string
   type: 'script_js'
   script?: string
+}
+
+export interface ApprovalNode {
+  id: string
+  type: 'approval'
+  target?: { nodeId: string }
+  approvals?: { type: 'script_js'; script?: string }
+  multipleConditionType?: 'all' | 'or'
 }
 
 const workflowState = atom<State>({

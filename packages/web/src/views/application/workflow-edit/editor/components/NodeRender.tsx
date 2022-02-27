@@ -22,7 +22,7 @@ export interface NodeRenderProps
   extends Pick<NodeContainerProps, 'id' | 'plusContent' | 'onDelete' | 'selected' | 'onClick'> {
   icon?: ReactNode
   name?: string
-  description?: string
+  description?: ReactNode
 }
 
 export default function NodeRender({
