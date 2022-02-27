@@ -13,8 +13,9 @@
 // limitations under the License.
 
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
-import { VM } from 'vm2'
-import { ZBClient } from 'zeebe-node'
+import { ModuleKind, ScriptTarget, transpileModule } from 'typescript'
+import { NodeVM, VMScript } from 'vm2'
+import { ZBClient, ZeebeJob } from 'zeebe-node'
 import { Config } from '../../config'
 import { Record } from '../schemas/record.schema'
 import { RecordService } from './record.service'
@@ -59,12 +60,7 @@ export class CamundaService {
     this.zbClient.createWorker<FormTriggerInputVariables, { script: string }>({
       taskType: 'script_js',
       taskHandler: async job => {
-        let script: string
-        try {
-          script = Buffer.from(job.customHeaders.script, 'base64').toString()
-        } catch {
-          throw new Error(`Invalid script header`)
-        }
+        const script = CamundaService.cacheScript(job)
 
         const formTrigger = {
           get viewerId() {
@@ -90,7 +86,7 @@ export class CamundaService {
           },
         }
 
-        const vm = new VM({
+        const vm = new NodeVM({
           sandbox: {
             formTrigger,
             application: new Proxy(
@@ -142,7 +138,8 @@ export class CamundaService {
             ),
           },
         })
-        await vm.run(script)
+
+        await this.runDefaultExportedFunction(vm, script)
 
         return job.complete()
       },
@@ -154,16 +151,11 @@ export class CamundaService {
     >({
       taskType: 'approval_approvals_script_js',
       taskHandler: async job => {
-        let script: string
-        try {
-          script = Buffer.from(job.customHeaders.script, 'base64').toString()
-        } catch {
-          throw new Error(`Invalid script header`)
-        }
+        const script = CamundaService.cacheScript(job)
 
         const approvals: string[] = []
 
-        const vm = new VM({
+        const vm = new NodeVM({
           sandbox: {
             outputs: {
               approvals: {
@@ -175,10 +167,46 @@ export class CamundaService {
           },
         })
 
-        await vm.run(script)
+        await this.runDefaultExportedFunction(vm, script)
 
         return job.complete({ [job.customHeaders.inputCollection]: approvals })
       },
     })
+  }
+
+  private async runDefaultExportedFunction(vm: NodeVM, script: VMScript) {
+    const m = await vm.run(script)?.default
+    if (typeof m === 'function') {
+      return await m()
+    }
+    return m
+  }
+
+  private static scriptCache = new Map<string, VMScript>()
+
+  private static cacheScript(job: ZeebeJob<unknown, { script: string }>): VMScript {
+    const key = job.elementId
+
+    let script = this.scriptCache.get(key)
+    if (!script) {
+      let source: string
+      try {
+        source = Buffer.from(job.customHeaders.script, 'base64').toString()
+      } catch {
+        throw new Error(`Invalid script in job custom headers`)
+      }
+
+      script = new VMScript(
+        transpileModule(source, {
+          compilerOptions: {
+            module: ModuleKind.CommonJS,
+            target: ScriptTarget.ESNext,
+          },
+        }).outputText
+      )
+
+      this.scriptCache.set(key, script)
+    }
+    return script
   }
 }
