@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { gql, MutationHookOptions, QueryHookOptions, useMutation, useQuery } from '@apollo/client'
-import { FormTrigger, ScriptJsNode } from './editor/state'
+import { ApprovalNode, FormTrigger, ScriptJsNode } from './editor/state'
 
 export interface Application {
   id: string
@@ -35,7 +35,7 @@ export interface Workflow {
 
 export type Trigger = FormTrigger
 
-export type Node = ScriptJsNode
+export type Node = ScriptJsNode | ApprovalNode
 
 export interface CreateWorkflowInput {
   name?: string
