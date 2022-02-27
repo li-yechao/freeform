@@ -33,8 +33,7 @@ export function createClient() {
       if (!refreshToken) {
         return false
       }
-      const exception: any = error?.[0]?.extensions['exception']
-      return exception?.name === 'JsonWebTokenError' || exception?.name === 'TokenExpiredError'
+      return error?.[0]?.extensions['code'] === 'UNAUTHENTICATED'
     },
     refreshToken: async () => {
       const token = Storage.token?.refreshToken
