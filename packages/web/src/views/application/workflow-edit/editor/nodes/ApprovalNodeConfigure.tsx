@@ -175,7 +175,7 @@ declare interface Outputs {
           onOk={handleSave}
           onCancel={toggleVisible}
         >
-          <MonacoEditor value={script} extraLibs={defines} onChange={setScript} />
+          <MonacoEditor value={script || defaultScript} extraLibs={defines} onChange={setScript} />
         </_Modal>
       </div>
     </>
@@ -227,4 +227,11 @@ const _Modal = styled(Modal)`
       flex: 1;
     }
   }
+`
+
+const defaultScript = `\
+export default async function () {
+  // Set approvals
+  outputs.approvals = ['user id 1', 'user id 2']
+}
 `
