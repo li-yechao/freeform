@@ -23,11 +23,13 @@ import { WorkflowResolver } from './resolvers/workflow.resolver'
 import { Application, ApplicationSchema } from './schemas/application.schema'
 import { Form, FormSchema } from './schemas/form.schema'
 import { Record, RecordSchema } from './schemas/record.schema'
+import { WorkflowLog, WorkflowLogSchema } from './schemas/workflow-log.schema'
 import { Workflow, WorkflowSchema } from './schemas/workflow.schema'
 import { ApplicationService } from './services/application.service'
 import { CamundaService } from './services/camunda.service'
 import { FormService } from './services/form.service'
 import { RecordService } from './services/record.service'
+import { WorkflowLogService } from './services/workflow-log.service'
 import { WorkflowService } from './services/workflow.service'
 
 @Module({
@@ -38,6 +40,7 @@ import { WorkflowService } from './services/workflow.service'
       { name: Form.name, schema: FormSchema },
       { name: Record.name, schema: RecordSchema },
       { name: Workflow.name, schema: WorkflowSchema },
+      { name: WorkflowLog.name, schema: WorkflowLogSchema },
     ]),
   ],
   providers: [
@@ -48,6 +51,7 @@ import { WorkflowService } from './services/workflow.service'
     FormService,
     RecordService,
     WorkflowService,
+    WorkflowLogService,
 
     // Resolvers
     ApplicationResolver,

@@ -19,6 +19,7 @@ import { ZBClient, ZeebeJob } from 'zeebe-node'
 import { Config } from '../../config'
 import { Record } from '../schemas/record.schema'
 import { RecordService } from './record.service'
+import { WorkflowLogService } from './workflow-log.service'
 
 interface FormTriggerInputVariables {
   form_trigger_viewer_id: string
@@ -33,7 +34,9 @@ export class CamundaService {
   constructor(
     config: Config,
     @Inject(forwardRef(() => RecordService))
-    private readonly recordService: RecordService
+    private readonly recordService: RecordService,
+    @Inject(forwardRef(() => WorkflowLogService))
+    private readonly workflowLogService: WorkflowLogService
   ) {
     this.zbClient = new ZBClient(config.zeebe.gateway.address)
 
@@ -60,24 +63,42 @@ export class CamundaService {
     this.zbClient.createWorker<FormTriggerInputVariables, { script: string }>({
       taskType: 'script_js',
       taskHandler: async job => {
+        const workflowId = job.bpmnProcessId.replace(/^process_/i, '')
+
+        const sandbox = Object.freeze({
+          formTrigger: this.sandboxFormTrigger(job),
+          application: this.sandboxApplication(job),
+          outputs: this.sandboxOutputs(job),
+        })
+
         try {
           const script = CamundaService.cacheScript(job)
 
-          const sandbox = Object.freeze({
-            formTrigger: this.sandboxFormTrigger(job),
-            application: this.sandboxApplication(job),
-            outputs: this.sandboxOutputs(job),
+          const vm = new NodeVM({
+            console: 'redirect',
+            sandbox,
           })
 
-          const vm = new NodeVM({
-            sandbox,
+          vm.on('console.log', (...msg) => {
+            this.workflowLogService.createWorkflowLog({
+              userId: sandbox.formTrigger.viewerId,
+              workflowId,
+              type: 'console.log',
+              content: JSON.stringify(msg),
+            })
           })
 
           await this.runDefaultExportedFunction(vm, script)
 
           return job.complete(sandbox.outputs)
         } catch (error: any) {
-          console.error(error)
+          this.workflowLogService.createWorkflowLog({
+            userId: sandbox.formTrigger.viewerId,
+            workflowId,
+            type: 'error',
+            content: error.stack,
+          })
+
           return job.error(error.name, error.message)
         }
       },
