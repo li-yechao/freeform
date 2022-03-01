@@ -64,6 +64,47 @@ export const useApplication = (
   )
 }
 
+export const useApplicationScript = (
+  options?: QueryHookOptions<
+    { application: { id: string; thirdScript?: string } },
+    { applicationId: string }
+  >
+) => {
+  return useQuery(
+    gql`
+      query ApplicationForms($applicationId: String!) {
+        application(applicationId: $applicationId) {
+          id
+          thirdScript
+        }
+      }
+    `,
+    options
+  )
+}
+
+export const useUpdateApplicationScript = (
+  options?: MutationHookOptions<
+    { updateApplication: Application },
+    { applicationId: string; input: { thirdScript: string } }
+  >
+) => {
+  return useMutation(
+    gql`
+      mutation UpdateApplication($applicationId: String!, $input: UpdateApplicationInput!) {
+        updateApplication(applicationId: $applicationId, input: $input) {
+          id
+          createdAt
+          updatedAt
+          name
+          thirdScript
+        }
+      }
+    `,
+    options
+  )
+}
+
 export const useCreateForm = (
   options?: MutationHookOptions<
     { createForm: Form },

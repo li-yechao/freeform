@@ -18,6 +18,7 @@ import { Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import AsideLayout from '../../components/Layout/AsideLayout'
 import { HeaderAction, useHeaderActionsCtrl } from '../../state/header'
 import { FormLazyView } from '../form'
+import ApplicationScriptButton from './ApplicationScriptButton'
 import FormList from './FormList'
 import { useApplication } from './graphql'
 
@@ -31,13 +32,18 @@ export default function ApplicationView() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const workflowButton: HeaderAction<React.ComponentProps<typeof Button>> = {
+    const workflowButton: HeaderAction<React.ComponentProps<typeof Button.Group>> = {
       key: 'ApplicationView-WorkflowButton',
-      component: Button,
+      component: Button.Group,
       props: {
-        children: '工作流',
-        type: 'link',
-        onClick: () => navigate(`/application/${applicationId}/workflow`),
+        children: (
+          <>
+            <Button type="link" onClick={() => navigate(`/application/${applicationId}/workflow`)}>
+              工作流
+            </Button>
+            <ApplicationScriptButton applicationId={applicationId} />
+          </>
+        ),
       },
     }
     headerActionsCtrl.set(workflowButton)

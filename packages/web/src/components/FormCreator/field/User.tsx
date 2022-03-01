@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { gql, LazyQueryHookOptions, useLazyQuery } from '@apollo/client'
+import { gql, useApolloClient } from '@apollo/client'
 import styled from '@emotion/styled'
 import { Box } from '@mui/system'
 import { Input, Space, Switch, Tag, TreeSelect, Typography } from 'antd'
@@ -33,13 +33,15 @@ export const initialUserProps: InitialFieldProps<UserProps> = {
 }
 
 export default function User(props: UserProps & { tabIndex?: number }) {
-  const [, { fetchMore: queryDepartments }] = useQueryDepartments()
-  const [, { fetchMore: queryUsers }] = useQueryUsers()
+  const queryDepartments = useQueryDepartments()
+  const queryUsers = useQueryUsers()
 
   const { data, addData } = useTreeData()
 
   const loadData = async ({ id: parentId }: { id?: string } = {}) => {
-    const res = await queryDepartments({ variables: { departmentId: parentId } })
+    const res = await queryDepartments({
+      variables: { applicationId: props.applicationId, departmentId: parentId },
+    })
     const list = res.data?.departments ?? []
 
     addData(
@@ -73,7 +75,7 @@ export default function User(props: UserProps & { tabIndex?: number }) {
     if (!userIds?.length) {
       return
     }
-    queryUsers({ variables: { userIds } }).then(res => {
+    queryUsers({ variables: { applicationId: props.applicationId, userIds } }).then(res => {
       addData(
         (res.data?.users ?? []).map(user => ({
           id: user.id,
@@ -115,7 +117,7 @@ export function UserCell(props: UserProps) {
     return null
   }
 
-  const [_, { fetchMore: queryUsers }] = useQueryUsers()
+  const queryUsers = useQueryUsers()
 
   const options = useAsync(async () => {
     if (!props.value?.length) {
@@ -123,7 +125,10 @@ export function UserCell(props: UserProps) {
     }
 
     return queryUsers({
-      variables: { userIds: typeof props.value === 'string' ? [props.value] : props.value },
+      variables: {
+        applicationId: props.applicationId,
+        userIds: typeof props.value === 'string' ? [props.value] : props.value,
+      },
     }).then(res =>
       res.data?.users.map(i => ({
         value: i.id,
@@ -141,56 +146,67 @@ export function UserCell(props: UserProps) {
   )
 }
 
-const useQueryDepartments = (
-  options?: LazyQueryHookOptions<
-    {
-      departments: {
-        id: string
-        parentId?: string
-        name: string
-        users: { id: string; name: string }[]
-      }[]
-    },
-    { departmentId?: string; departmentIds?: string[] }
-  >
-) => {
-  return useLazyQuery(
-    gql`
-      query Departments($departmentId: String, $departmentIds: [String!]) {
-        departments(departmentId: $departmentId, departmentIds: $departmentIds) {
-          id
-          name
-          parentId
+const useQueryDepartments = () => {
+  const client = useApolloClient()
 
-          users {
-            id
-            name
+  return useCallback(
+    (options: {
+      variables: { applicationId: string; departmentId?: string; departmentIds?: string[] }
+    }) => {
+      return client.query<{
+        departments: {
+          id: string
+          parentId?: string
+          name: string
+          users: { id: string; name: string }[]
+        }[]
+      }>({
+        query: gql`
+          query Departments(
+            $applicationId: String!
+            $departmentId: String
+            $departmentIds: [String!]
+          ) {
+            departments(
+              applicationId: $applicationId
+              departmentId: $departmentId
+              departmentIds: $departmentIds
+            ) {
+              id
+              name
+              parentId
+
+              users {
+                id
+                name
+              }
+            }
           }
-        }
-      }
-    `,
-    options
+        `,
+        ...options,
+      })
+    },
+    []
   )
 }
 
-const useQueryUsers = (
-  options?: LazyQueryHookOptions<
-    { users: { id: string; name: string; departmentId: string }[] },
-    { userIds?: string[] }
-  >
-) => {
-  return useLazyQuery(
-    gql`
-      query Users($userIds: [String!]) {
-        users(userIds: $userIds) {
-          id
-          name
-          departmentId
+const useQueryUsers = () => {
+  const client = useApolloClient()
+
+  return useCallback((options?: { variables: { applicationId: string; userIds?: string[] } }) => {
+    return client.query<{ users: { id: string; name: string; departmentId: string }[] }>({
+      query: gql`
+        query Users($applicationId: String!, $userIds: [String!]) {
+          users(applicationId: $applicationId, userIds: $userIds) {
+            id
+            name
+            departmentId
+          }
         }
-      }
-    `,
-    options
-  )
+      `,
+      ...options,
+    })
+  }, [])
 }
 
 const useTreeData = () => {

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import styled from '@emotion/styled'
-import { editor, languages } from 'monaco-editor'
+import { editor, languages, Uri } from 'monaco-editor'
 import { useRef, useEffect } from 'react'
 import './monaco.vite'
 
@@ -53,7 +53,6 @@ export default function MonacoEditor(props: MonacoEditorProps) {
 
     monacoEditor.current = editor.create(container.current, {
       model: createModel(props.value),
-      language: 'typescript',
       automaticLayout: true,
       minimap: {
         enabled: true,
@@ -77,6 +76,7 @@ export default function MonacoEditor(props: MonacoEditorProps) {
 
     return () => {
       monacoEditor.current?.dispose()
+      model?.dispose()
     }
   }, [])
 
@@ -91,8 +91,8 @@ export default function MonacoEditor(props: MonacoEditorProps) {
 }
 
 function createModel(value?: string) {
-  const model = editor.createModel(value || '', 'typescript')
-  model.updateOptions({ tabSize: 2 })
+  const model = editor.createModel(value || '', 'typescript', Uri.file(`main.ts`))
+  model.updateOptions({ tabSize: 2, insertSpaces: true })
   return model
 }
 

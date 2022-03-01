@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { gql, LazyQueryHookOptions, useLazyQuery } from '@apollo/client'
+import { gql, useApolloClient } from '@apollo/client'
 import styled from '@emotion/styled'
 import { Box } from '@mui/system'
 import { Input, Space, Switch, Tag, TreeSelect, Typography } from 'antd'
@@ -33,12 +33,14 @@ export const initialDepartmentProps: InitialFieldProps<DepartmentProps> = {
 }
 
 export default function Department(props: DepartmentProps & { tabIndex?: number }) {
-  const [_, { fetchMore }] = useQueryDepartments()
+  const queryDepartments = useQueryDepartments()
 
   const { data, addData } = useTreeData()
 
   const loadData = async ({ id: parentId }: { id?: string } = {}) => {
-    const res = await fetchMore({ variables: { departmentId: parentId } })
+    const res = await queryDepartments({
+      variables: { applicationId: props.applicationId, departmentId: parentId },
+    })
     const list = res.data?.departments ?? []
 
     addData(
@@ -58,16 +60,18 @@ export default function Department(props: DepartmentProps & { tabIndex?: number 
     if (!departmentIds?.length) {
       return
     }
-    fetchMore({ variables: { departmentIds } }).then(res => {
-      addData(
-        (res.data?.departments ?? []).map(department => ({
-          id: department.id,
-          pId: department.parentId,
-          value: department.id,
-          title: department.name,
-        }))
-      )
-    })
+    queryDepartments({ variables: { applicationId: props.applicationId, departmentIds } }).then(
+      res => {
+        addData(
+          (res.data?.departments ?? []).map(department => ({
+            id: department.id,
+            pId: department.parentId,
+            value: department.id,
+            title: department.name,
+          }))
+        )
+      }
+    )
   }, [props.value, data])
 
   useEffect(() => {
@@ -98,15 +102,18 @@ export function DepartmentCell(props: DepartmentProps) {
     return null
   }
 
-  const [_, { fetchMore }] = useQueryDepartments()
+  const queryDepartments = useQueryDepartments()
 
   const options = useAsync(async () => {
     if (!props.value?.length) {
       return []
     }
 
-    return fetchMore({
-      variables: { departmentIds: typeof props.value === 'string' ? [props.value] : props.value },
+    return queryDepartments({
+      variables: {
+        applicationId: props.applicationId,
+        departmentIds: typeof props.value === 'string' ? [props.value] : props.value,
+      },
     }).then(res =>
       res.data?.departments.map(i => ({
         value: i.id,
@@ -124,23 +131,35 @@ export function DepartmentCell(props: DepartmentProps) {
   )
 }
 
-const useQueryDepartments = (
-  options?: LazyQueryHookOptions<
-    { departments: { id: string; parentId?: string; name: string }[] },
-    { departmentId?: string; departmentIds?: string[] }
-  >
-) => {
-  return useLazyQuery(
-    gql`
-      query Departments($departmentId: String, $departmentIds: [String!]) {
-        departments(departmentId: $departmentId, departmentIds: $departmentIds) {
-          id
-          name
-          parentId
-        }
-      }
-    `,
-    options
+const useQueryDepartments = () => {
+  const client = useApolloClient()
+
+  return useCallback(
+    (options: {
+      variables: { applicationId: string; departmentId?: string; departmentIds?: string[] }
+    }) => {
+      return client.query<{ departments: { id: string; parentId?: string; name: string }[] }>({
+        query: gql`
+          query Departments(
+            $applicationId: String!
+            $departmentId: String
+            $departmentIds: [String!]
+          ) {
+            departments(
+              applicationId: $applicationId
+              departmentId: $departmentId
+              departmentIds: $departmentIds
+            ) {
+              id
+              name
+              parentId
+            }
+          }
+        `,
+        ...options,
+      })
+    },
+    []
   )
 }
 
