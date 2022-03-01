@@ -18,9 +18,12 @@ import { InputType, Field, PartialType, PickType } from '@nestjs/graphql'
 export class CreateApplicationInput {
   @Field({ nullable: true })
   name?: string
+
+  @Field({ nullable: true })
+  thirdScript?: string
 }
 
 @InputType()
 export class UpdateApplicationInput extends PartialType(
-  PickType(CreateApplicationInput, ['name'] as const)
+  PickType(CreateApplicationInput, ['name', 'thirdScript'] as const)
 ) {}

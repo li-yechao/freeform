@@ -17,12 +17,18 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { CreateApplicationInput, UpdateApplicationInput } from '../inputs/application.input'
 import { Application } from '../schemas/application.schema'
+import { ThirdUserService } from './third-user.service'
 
 @Injectable()
 export class ApplicationService {
   constructor(
-    @InjectModel(Application.name) private readonly applicationModel: Model<Application>
+    @InjectModel(Application.name) private readonly applicationModel: Model<Application>,
+    private readonly thirdUserService: ThirdUserService
   ) {}
+
+  async selectApplicationById(applicationId: string): Promise<Application | null> {
+    return this.applicationModel.findOne({ _id: applicationId, deletedAt: null })
+  }
 
   async selectApplications(userId: string): Promise<Application[]> {
     return this.applicationModel.find({ userId, deletedAt: null })
@@ -36,6 +42,7 @@ export class ApplicationService {
     return this.applicationModel.create({
       userId,
       name: input.name,
+      thirdScript: input.thirdScript,
       createdAt: Date.now(),
     })
   }
@@ -45,11 +52,15 @@ export class ApplicationService {
     applicationId: string,
     input: UpdateApplicationInput
   ): Promise<Application | null> {
-    return this.applicationModel.findOneAndUpdate(
+    const application = await this.applicationModel.findOneAndUpdate(
       { _id: applicationId, userId, deletedAt: null },
-      { $set: { name: input.name, updatedAt: Date.now() } },
+      { $set: { name: input.name, thirdScript: input.thirdScript, updatedAt: Date.now() } },
       { new: true }
     )
+    if (typeof input.thirdScript === 'string') {
+      this.thirdUserService.markModuleChanged(applicationId)
+    }
+    return application
   }
 
   async deleteApplication(userId: string, applicationId: string): Promise<Application | null> {

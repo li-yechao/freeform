@@ -200,6 +200,19 @@ export class Config {
     }
   }
 
+  get dingtalk() {
+    const config = this
+
+    return {
+      get clientId() {
+        return config.getString('dingtalk.clientId')
+      },
+      get clientSecret() {
+        return config.getString('dingtalk.clientSecret')
+      },
+    }
+  }
+
   private get(key: string): string | undefined {
     return this.configService.get<string>(key) || undefined
   }

@@ -19,6 +19,8 @@ export class ThirdDepartment {
   @Field(() => ID)
   id!: string
 
+  applicationId!: string
+
   @Field({ nullable: true })
   parentId?: string
 
@@ -30,6 +32,8 @@ export class ThirdDepartment {
 export class ThirdUser {
   @Field(() => ID)
   id!: string
+
+  applicationId!: string
 
   @Field()
   name!: string

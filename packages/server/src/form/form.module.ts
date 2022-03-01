@@ -19,6 +19,7 @@ import { Config } from '../config'
 import { ApplicationResolver } from './resolvers/application.resolver'
 import { FormResolver } from './resolvers/form.resolver'
 import { RecordResolver } from './resolvers/record.resolver'
+import { ThirdDepartmentResolver, ThirdUserResolver } from './resolvers/third-user.resolver'
 import { WorkflowResolver } from './resolvers/workflow.resolver'
 import { Application, ApplicationSchema } from './schemas/application.schema'
 import { Form, FormSchema } from './schemas/form.schema'
@@ -29,6 +30,7 @@ import { ApplicationService } from './services/application.service'
 import { CamundaService } from './services/camunda.service'
 import { FormService } from './services/form.service'
 import { RecordService } from './services/record.service'
+import { ThirdUserService } from './services/third-user.service'
 import { WorkflowLogService } from './services/workflow-log.service'
 import { WorkflowService } from './services/workflow.service'
 
@@ -47,6 +49,7 @@ import { WorkflowService } from './services/workflow.service'
     // Services
     Config,
     CamundaService,
+    ThirdUserService,
     ApplicationService,
     FormService,
     RecordService,
@@ -54,6 +57,8 @@ import { WorkflowService } from './services/workflow.service'
     WorkflowLogService,
 
     // Resolvers
+    ThirdUserResolver,
+    ThirdDepartmentResolver,
     ApplicationResolver,
     FormResolver,
     RecordResolver,

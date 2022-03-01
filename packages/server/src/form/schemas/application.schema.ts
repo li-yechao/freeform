@@ -39,6 +39,10 @@ export class Application {
   @Field({ nullable: true })
   @Prop()
   name?: string
+
+  @Field({ nullable: true })
+  @Prop()
+  thirdScript?: string
 }
 
 export const ApplicationSchema = SchemaFactory.createForClass(Application)
