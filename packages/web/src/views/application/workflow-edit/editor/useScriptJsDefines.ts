@@ -69,6 +69,17 @@ export default function useApplicationDefines({
       return libs
     }
 
+    // globalThis.console
+    libs.push({
+      content: `
+declare interface Console {
+  log(message?: any, ...optionalParams: any[]): void
+}
+
+declare const console: Console
+`,
+    })
+
     // globalThis.formTrigger
     if (trigger?.formId) {
       libs.push({
