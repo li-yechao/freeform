@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.8](https://github.com/li-yechao/freeform/compare/@freeform/server@0.1.0-alpha.7...@freeform/server@0.1.0-alpha.8) (2022-03-02)
+
+### Features
+
+- save workflow log into db ([73b6d5c](https://github.com/li-yechao/freeform/commit/73b6d5c4f1f7911e4504dc7c9385cff5f26fbb7b))
+
 # 0.1.0-alpha.7 (2022-02-28)
 
 ### Bug Fixes

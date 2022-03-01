@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.5](https://github.com/li-yechao/freeform/compare/@freeform/web@0.1.0-alpha.4...@freeform/web@0.1.0-alpha.5) (2022-03-02)
+
+### Features
+
+- add console defines ([193343a](https://github.com/li-yechao/freeform/commit/193343a62f2fa4e7f6ec401e7f747c4f23b646a5))
+- allow config third user of application ([a5909aa](https://github.com/li-yechao/freeform/commit/a5909aa16c8c953acf861fc35a3299b6544fc9a5))
+
 # 0.1.0-alpha.4 (2022-02-28)
 
 ### Bug Fixes
