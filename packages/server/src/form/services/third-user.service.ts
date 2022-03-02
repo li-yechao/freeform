@@ -98,8 +98,7 @@ export class ThirdUserService {
     let m = ThirdUserService.moduleMap.get(applicationId)
     if (!m) {
       m = (async () => {
-        const script = (await this.applicationService.selectApplicationById(applicationId))
-          ?.thirdScript
+        const script = (await this.applicationService.findOne({ applicationId })).thirdScript
 
         if (!script) {
           throw new Error(`Application script is null`)

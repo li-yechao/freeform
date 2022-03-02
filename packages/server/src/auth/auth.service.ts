@@ -30,10 +30,7 @@ export class AuthService {
       throw new Error(`Invalid jwt token`)
     }
 
-    const user = await this.userService.selectUserById({ userId: payload.sub })
-    if (!user) {
-      throw new Error(`User ${payload.sub} not found`)
-    }
+    const user = await this.userService.findOne({ userId: payload.sub })
 
     return this.createToken(user.id)
   }
@@ -46,8 +43,8 @@ export class AuthService {
     const { id: thirdId, user: thirdUser } = await this.authDingtalk(query)
 
     const user =
-      (await this.userService.selectThirdUser({ type, thirdId })) ||
-      (await this.userService.createThirdUser({ type, thirdId, thirdUser }))
+      (await this.userService.findOptionalByThirdId({ type, thirdId })) ||
+      (await this.userService.createWithThirdUser({ type, thirdId, thirdUser }))
 
     return this.createToken(user.id)
   }

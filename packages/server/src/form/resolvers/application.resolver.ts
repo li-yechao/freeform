@@ -27,19 +27,12 @@ export class ApplicationResolver {
 
   @Query(() => [Application])
   async applications(@CurrentUser() viewer: Viewer): Promise<Application[]> {
-    return this.applicationService.selectApplications(viewer.id)
+    return this.applicationService.findAllByUserId({ userId: viewer.id })
   }
 
   @Query(() => Application)
-  async application(
-    @CurrentUser() viewer: Viewer,
-    @Args('applicationId') applicationId: string
-  ): Promise<Application> {
-    const application = await this.applicationService.selectApplication(viewer.id, applicationId)
-    if (!application) {
-      throw new Error('Not Found')
-    }
-    return application
+  async application(@Args('applicationId') applicationId: string): Promise<Application> {
+    return this.applicationService.findOne({ applicationId })
   }
 
   @Mutation(() => Application)
@@ -47,35 +40,20 @@ export class ApplicationResolver {
     @CurrentUser() viewer: Viewer,
     @Args('input') input: CreateApplicationInput
   ): Promise<Application> {
-    return this.applicationService.createApplication(viewer.id, input)
+    return this.applicationService.create({ userId: viewer.id }, input)
   }
 
   @Mutation(() => Application)
   async updateApplication(
-    @CurrentUser() viewer: Viewer,
     @Args('applicationId') applicationId: string,
     @Args('input') input: UpdateApplicationInput
   ): Promise<Application> {
-    const application = await this.applicationService.updateApplication(
-      viewer.id,
-      applicationId,
-      input
-    )
-    if (!application) {
-      throw new Error('Not Found')
-    }
-    return application
+    return this.applicationService.update({ applicationId }, input)
   }
 
   @Mutation(() => Boolean)
-  async deleteApplication(
-    @CurrentUser() viewer: Viewer,
-    @Args('applicationId') applicationId: string
-  ): Promise<boolean> {
-    const application = await this.applicationService.deleteApplication(viewer.id, applicationId)
-    if (!application) {
-      throw new Error('Not Found')
-    }
+  async deleteApplication(@Args('applicationId') applicationId: string): Promise<boolean> {
+    await this.applicationService.delete({ applicationId })
     return true
   }
 }

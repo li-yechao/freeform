@@ -19,44 +19,34 @@ import workflowToBpmn from '../camunda/workflowToBpmn'
 import { CreateWorkflowInput, UpdateWorkflowInput } from '../inputs/workflow.input'
 import { Record } from '../schemas/record.schema'
 import { Workflow } from '../schemas/workflow.schema'
-import { ApplicationService } from './application.service'
 import { CamundaService } from './camunda.service'
 
 @Injectable()
 export class WorkflowService {
   constructor(
     @InjectModel(Workflow.name) private readonly workflowModel: Model<Workflow>,
-    private readonly applicationService: ApplicationService,
     private readonly camundaService: CamundaService
   ) {}
 
-  async selectWorkflows(viewerId: string, applicationId: string): Promise<Workflow[]> {
-    await this.checkApplication(viewerId, applicationId)
+  async findOne({ workflowId }: { workflowId: string }): Promise<Workflow> {
+    const workflow = await this.workflowModel.findOne({
+      _id: workflowId,
+      deletedAt: null,
+    })
+    if (!workflow) {
+      throw new Error(`Workflow ${workflowId} not found`)
+    }
+    return workflow
+  }
 
+  async findAllByApplicationId({ applicationId }: { applicationId: string }): Promise<Workflow[]> {
     return this.workflowModel.find({ applicationId, deletedAt: null })
   }
 
-  async selectWorkflow(
-    viewerId: string,
-    applicationId: string,
-    workflowId: string
-  ): Promise<Workflow | null> {
-    await this.checkApplication(viewerId, applicationId)
-
-    return this.workflowModel.findOne({
-      _id: workflowId,
-      applicationId,
-      deletedAt: null,
-    })
-  }
-
-  async createWorkflow(
-    userId: string,
-    applicationId: string,
+  async create(
+    { applicationId }: { applicationId: string },
     input: CreateWorkflowInput
   ): Promise<Workflow> {
-    await this.checkApplication(userId, applicationId)
-
     const workflow = await this.workflowModel.create({
       applicationId,
       createdAt: Date.now(),
@@ -68,16 +58,12 @@ export class WorkflowService {
     return workflow
   }
 
-  async updateWorkflow(
-    userId: string,
-    applicationId: string,
-    workflowId: string,
+  async update(
+    { workflowId }: { workflowId: string },
     input: UpdateWorkflowInput
-  ): Promise<Workflow | null> {
-    await this.checkApplication(userId, applicationId)
-
+  ): Promise<Workflow> {
     const workflow = await this.workflowModel.findOneAndUpdate(
-      { _id: workflowId, applicationId, deletedAt: null },
+      { _id: workflowId, deletedAt: null },
       {
         $set: {
           updatedAt: Date.now(),
@@ -87,32 +73,26 @@ export class WorkflowService {
       { new: true }
     )
 
-    if (workflow) {
-      await this.deployBpmnToCamunda(workflow)
+    if (!workflow) {
+      throw new Error(`Workflow ${workflowId} not found`)
     }
+
+    await this.deployBpmnToCamunda(workflow)
 
     return workflow
   }
 
-  async deleteWorkflow(
-    userId: string,
-    applicationId: string,
-    workflowId: string
-  ): Promise<Workflow | null> {
-    await this.checkApplication(userId, applicationId)
-
-    return this.workflowModel.findOneAndUpdate(
-      { _id: workflowId, applicationId, deletedAt: null },
+  async delete({ workflowId }: { workflowId: string }): Promise<Workflow> {
+    const workflow = await this.workflowModel.findOneAndUpdate(
+      { _id: workflowId, deletedAt: null },
       { $set: { deletedAt: Date.now() } },
       { new: true }
     )
-  }
 
-  private async checkApplication(viewerId: string, applicationId: string) {
-    const app = await this.applicationService.selectApplication(viewerId, applicationId)
-    if (!app) {
-      throw new Error(`Application ${applicationId} is not found`)
+    if (!workflow) {
+      throw new Error(`Workflow ${workflowId} not found`)
     }
+    return workflow
   }
 
   private async deployBpmnToCamunda(workflow: Workflow) {

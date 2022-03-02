@@ -26,48 +26,64 @@ export class ApplicationService {
     private readonly thirdUserService: ThirdUserService
   ) {}
 
-  async selectApplicationById(applicationId: string): Promise<Application | null> {
-    return this.applicationModel.findOne({ _id: applicationId, deletedAt: null })
+  async findOne({ applicationId }: { applicationId: string }): Promise<Application> {
+    const application = await this.applicationModel.findOne({ _id: applicationId, deletedAt: null })
+    if (!application) {
+      throw new Error(`Application ${applicationId} not found`)
+    }
+    return application
   }
 
-  async selectApplications(userId: string): Promise<Application[]> {
+  async findAllByUserId({ userId }: { userId: string }): Promise<Application[]> {
     return this.applicationModel.find({ userId, deletedAt: null })
   }
 
-  async selectApplication(userId: string, applicationId: string): Promise<Application | null> {
-    return this.applicationModel.findOne({ _id: applicationId, userId, deletedAt: null })
-  }
-
-  async createApplication(userId: string, input: CreateApplicationInput): Promise<Application> {
+  async create(
+    { userId }: { userId: string },
+    input: CreateApplicationInput
+  ): Promise<Application> {
     return this.applicationModel.create({
       userId,
-      name: input.name,
-      thirdScript: input.thirdScript,
       createdAt: Date.now(),
+      ...input,
     })
   }
 
-  async updateApplication(
-    userId: string,
-    applicationId: string,
+  async update(
+    { applicationId }: { applicationId: string },
     input: UpdateApplicationInput
-  ): Promise<Application | null> {
+  ): Promise<Application> {
     const application = await this.applicationModel.findOneAndUpdate(
-      { _id: applicationId, userId, deletedAt: null },
-      { $set: { name: input.name, thirdScript: input.thirdScript, updatedAt: Date.now() } },
+      { _id: applicationId, deletedAt: null },
+      {
+        $set: {
+          updatedAt: Date.now(),
+          ...input,
+        },
+      },
       { new: true }
     )
+
+    if (!application) {
+      throw new Error(`Application ${applicationId} not foundd`)
+    }
+
     if (typeof input.thirdScript === 'string') {
       this.thirdUserService.markModuleChanged(applicationId)
     }
     return application
   }
 
-  async deleteApplication(userId: string, applicationId: string): Promise<Application | null> {
-    return this.applicationModel.findOneAndUpdate(
-      { _id: applicationId, userId, deletedAt: null },
+  async delete({ applicationId }: { applicationId: string }): Promise<Application> {
+    const application = await this.applicationModel.findOneAndUpdate(
+      { _id: applicationId, deletedAt: null },
       { $set: { deletedAt: Date.now() } },
       { new: true }
     )
+
+    if (!application) {
+      throw new Error(`Application ${applicationId} not foundd`)
+    }
+    return application
   }
 }

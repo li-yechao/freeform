@@ -21,11 +21,15 @@ import { User } from './user.schema'
 export class UserService {
   constructor(@InjectModel(User.name) private readonly userModel: Model<User>) {}
 
-  async selectUserById({ userId }: { userId: string }): Promise<User | null> {
-    return this.userModel.findById(userId)
+  async findOne({ userId }: { userId: string }): Promise<User> {
+    const user = await this.userModel.findById(userId)
+    if (!user) {
+      throw new Error(`User ${userId} not found`)
+    }
+    return user
   }
 
-  async selectThirdUser({
+  async findOptionalByThirdId({
     type,
     thirdId,
   }: {
@@ -35,7 +39,15 @@ export class UserService {
     return this.userModel.findOne({ [`third.${type}.__id`]: thirdId })
   }
 
-  async createThirdUser({
+  async findOneByThirdId({ type, thirdId }: { type: string; thirdId: string }): Promise<User> {
+    const user = await this.findOptionalByThirdId({ type, thirdId })
+    if (!user) {
+      throw new Error(`Third user ${thirdId} not found`)
+    }
+    return user
+  }
+
+  async createWithThirdUser({
     type,
     thirdId,
     thirdUser,

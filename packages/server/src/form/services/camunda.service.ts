@@ -80,7 +80,7 @@ export class CamundaService {
           })
 
           vm.on('console.log', (...msg) => {
-            this.workflowLogService.createWorkflowLog({
+            this.workflowLogService.create({
               userId: sandbox.formTrigger.viewerId,
               workflowId,
               type: 'console.log',
@@ -92,7 +92,7 @@ export class CamundaService {
 
           return job.complete(sandbox.outputs)
         } catch (error: any) {
-          this.workflowLogService.createWorkflowLog({
+          this.workflowLogService.create({
             userId: sandbox.formTrigger.viewerId,
             workflowId,
             type: 'error',
@@ -172,16 +172,12 @@ export class CamundaService {
 
           case 'selectRecord':
             return ({ recordId }: { recordId: string }) => {
-              return this.recordService.workflow_selectRecord({ formId, recordId })
+              return this.recordService.findOne({ formId, recordId })
             }
 
           case 'createRecord':
             return ({ data }: { data: { [key: string]: { value: any } } }) => {
-              return this.recordService.workflow_createRecord({
-                userId: viewerId,
-                formId,
-                data,
-              })
+              return this.recordService.create({ viewerId, formId }, { data })
             }
 
           case 'updateRecord':
@@ -192,19 +188,12 @@ export class CamundaService {
               recordId: string
               data: { [key: string]: { value: any } }
             }) => {
-              return this.recordService.workflow_updateRecord({
-                formId,
-                recordId,
-                data,
-              })
+              return this.recordService.update({ viewerId, formId, recordId }, { data })
             }
 
           case 'deleteRecord':
             return ({ recordId }: { recordId: string }) => {
-              return this.recordService.workflow_deleteRecord({
-                formId,
-                recordId,
-              })
+              return this.recordService.delete({ viewerId, formId, recordId })
             }
         }
 

@@ -28,54 +28,46 @@ export class RecordService {
     private readonly workflowService: WorkflowService
   ) {}
 
-  async selectRecord({
-    viewerId,
-    applicationId,
+  async findOne({
     formId,
     viewId,
     recordId,
   }: {
-    viewerId: string
-    applicationId: string
     formId: string
-    viewId: string
+    viewId?: string
     recordId: string
-  }): Promise<Record | null> {
-    const form = await this.formService.selectForm(viewerId, applicationId, formId)
-    if (!form) {
-      throw new Error(`Form ${formId} not found`)
-    }
-    const view = form.views?.find(i => i.id === viewId)
-    if (!view) {
+  }): Promise<Record> {
+    const form = await this.formService.findOne({ formId })
+
+    const view = viewId ? form.views?.find(i => i.id === viewId) : undefined
+    if (viewId && !view) {
       throw new Error(`View ${viewId} not found`)
     }
 
     const record = await this.recordModel.findOne({ _id: recordId, formId, deletedAt: null })
+
+    if (!record) {
+      throw new Error(`Record ${recordId} not found`)
+    }
 
     // TODO: remove fields that not exists in the view
 
     return record
   }
 
-  async selectRecords({
-    viewerId,
-    applicationId,
+  async find({
     formId,
     viewId,
     page,
     limit,
   }: {
-    viewerId: string
-    applicationId: string
     formId: string
     viewId: string
     page: number
     limit: number
   }): Promise<Record[]> {
-    const form = await this.formService.selectForm(viewerId, applicationId, formId)
-    if (!form) {
-      throw new Error(`Form ${formId} not found`)
-    }
+    const form = await this.formService.findOne({ formId })
+
     const view = form.views?.find(i => i.id === viewId)
     if (!view) {
       throw new Error(`View ${viewId} not found`)
@@ -92,32 +84,11 @@ export class RecordService {
     return records
   }
 
-  async selectRecordCount({
-    viewerId,
-    applicationId,
-    formId,
-    viewId,
-  }: {
-    viewerId: string
-    applicationId: string
-    formId: string
-    viewId: string
-  }): Promise<number> {
-    const form = await this.formService.selectForm(viewerId, applicationId, formId)
-    if (!form) {
-      throw new Error(`Form ${formId} not found`)
-    }
-    const view = form.views?.find(i => i.id === viewId)
-    if (!view) {
-      throw new Error(`View ${viewId} not found`)
-    }
-
+  async count({ formId }: { formId: string }): Promise<number> {
     return this.recordModel.countDocuments({ formId, deletedAt: null })
   }
 
-  async selectRecordsByAssociationFormFieldSearch({
-    viewerId,
-    applicationId,
+  async findByAssociationFormField({
     formId,
     sourceFormId,
     sourceFieldId,
@@ -125,8 +96,6 @@ export class RecordService {
     limit,
     recordIds,
   }: {
-    viewerId: string
-    applicationId: string
     formId: string
     sourceFormId: string
     sourceFieldId: string
@@ -134,11 +103,8 @@ export class RecordService {
     limit: number
     recordIds?: string[] | undefined
   }): Promise<Record[]> {
-    const form = await this.formService.selectForm(viewerId, applicationId, formId)
-    if (!form) {
-      throw new Error(`Form ${formId} not found`)
-    }
-    const sourceForm = await this.formService.selectForm(viewerId, applicationId, sourceFormId)
+    const form = await this.formService.findOne({ formId })
+    const sourceForm = await this.formService.findOne({ formId: sourceFormId })
     const sourceField = sourceForm?.fields?.find(i => i.id === sourceFieldId)
     if (!sourceField) {
       throw new Error(`Source field ${sourceFieldId} not found`)
@@ -178,214 +144,118 @@ export class RecordService {
     return records
   }
 
-  async selectRecordCountByAssociationFormFieldSearch({
-    viewerId,
-    applicationId,
-    formId,
-  }: {
-    viewerId: string
-    applicationId: string
-    formId: string
-  }): Promise<number> {
-    const form = await this.formService.selectForm(viewerId, applicationId, formId)
-    if (!form) {
-      throw new Error(`Form ${formId} not found`)
-    }
-
-    return this.recordModel.countDocuments({ formId, deletedAt: null })
-  }
-
-  async createRecord({
-    viewerId,
-    applicationId,
-    formId,
-    input,
-  }: {
-    viewerId: string
-    applicationId: string
-    formId: string
+  async create(
+    {
+      viewerId,
+      formId,
+      emitToWorkflow = false,
+    }: {
+      viewerId: string
+      formId: string
+      emitToWorkflow?: boolean
+    },
     input: CreateRecordInput
-  }): Promise<Record> {
-    const form = await this.formService.selectForm(viewerId, applicationId, formId)
-    if (!form) {
-      throw new Error(`Form ${formId} not found`)
-    }
+  ): Promise<Record> {
+    const form = await this.formService.findOne({ formId })
 
-    const record = await this._createRecord({
+    const record = await this.recordModel.create({
       userId: viewerId,
       formId,
+      createdAt: Date.now(),
       data: input.data,
     })
 
     // post create record event
-    {
-      this.workflowService.onCreateRecordSuccess(viewerId, applicationId, formId, record)
+    if (emitToWorkflow) {
+      this.workflowService.onCreateRecordSuccess(
+        viewerId,
+        form.applicationId.toHexString(),
+        formId,
+        record
+      )
     }
 
     return record
   }
 
-  async updateRecord({
-    viewerId,
-    applicationId,
-    formId,
-    recordId,
-    input,
-  }: {
-    viewerId: string
-    applicationId: string
-    formId: string
-    recordId: string
-    input: UpdateRecordInput
-  }): Promise<Record | null> {
-    const form = await this.formService.selectForm(viewerId, applicationId, formId)
-    if (!form) {
-      throw new Error(`Form ${formId} not found`)
-    }
-
-    const record = await this._updateRecord({ formId, recordId, data: input.data })
-
-    // post create record event
+  async update(
     {
-      record && this.workflowService.onUpdateRecordSuccess(viewerId, applicationId, formId, record)
-    }
-
-    return record
-  }
-
-  async deleteRecord({
-    viewerId,
-    applicationId,
-    formId,
-    recordId,
-  }: {
-    viewerId: string
-    applicationId: string
-    formId: string
-    recordId: string
-  }): Promise<Record | null> {
-    const form = await this.formService.selectForm(viewerId, applicationId, formId)
-    if (!form) {
-      throw new Error(`Form ${formId} not found`)
-    }
-
-    const record = await this._deleteRecord({ formId, recordId })
-
-    // post create record event
-    {
-      record && this.workflowService.onDeleteRecordSuccess(viewerId, applicationId, formId, record)
-    }
-
-    return record
-  }
-
-  async workflow_selectRecord({
-    formId,
-    recordId,
-  }: {
-    formId: string
-    recordId: string
-  }): Promise<Record | null> {
-    return this._selectRecord({ formId, recordId })
-  }
-
-  async workflow_createRecord({
-    userId,
-    formId,
-    data,
-  }: {
-    userId: string
-    formId: string
-    data: { [key: string]: { value: any } }
-  }): Promise<Record | null> {
-    return this._createRecord({ userId, formId, data })
-  }
-
-  async workflow_updateRecord({
-    formId,
-    recordId,
-    data,
-  }: {
-    formId: string
-    recordId: string
-    data: { [key: string]: { value: any } }
-  }): Promise<Record | null> {
-    return this._updateRecord({ formId, recordId, data })
-  }
-
-  async workflow_deleteRecord({
-    formId,
-    recordId,
-  }: {
-    formId: string
-    recordId: string
-  }): Promise<Record | null> {
-    return this._deleteRecord({ formId, recordId })
-  }
-
-  private async _selectRecord({
-    formId,
-    recordId,
-  }: {
-    formId: string
-    recordId: string
-  }): Promise<Record | null> {
-    return this.recordModel.findOne({ _id: recordId, formId, deletedAt: null })
-  }
-
-  private async _createRecord({
-    userId,
-    formId,
-    data,
-  }: {
-    userId: string
-    formId: string
-    data?: { [key: string]: { value: any } }
-  }): Promise<Record> {
-    // TODO: verify input data schema
-
-    return this.recordModel.create({
-      userId,
+      viewerId,
       formId,
-      createdAt: Date.now(),
-      data,
-    })
-  }
+      recordId,
+      emitToWorkflow = false,
+    }: {
+      viewerId: string
+      formId: string
+      recordId: string
+      emitToWorkflow?: boolean
+    },
+    input: UpdateRecordInput
+  ): Promise<Record> {
+    const form = await this.formService.findOne({ formId })
 
-  private async _updateRecord({
-    formId,
-    recordId,
-    data = {},
-  }: {
-    formId: string
-    recordId: string
-    data?: { [key: string]: { value: any } } | undefined
-  }): Promise<Record | null> {
     // TODO: verify input data schema
-
-    const update = Object.entries(data).reduce(
+    const update = Object.entries(input.data ?? {}).reduce(
       (res, [key, value]) => Object.assign(res, { [`data.${key}`]: value }),
       {}
     )
 
-    return this.recordModel.findOneAndUpdate(
+    const record = await this.recordModel.findOneAndUpdate(
       { _id: recordId, formId, deletedAt: null },
       { $set: { updatedAt: Date.now(), ...update } },
       { new: true }
     )
+
+    if (!record) {
+      throw new Error(`Record ${recordId} not found`)
+    }
+
+    // post update record event
+    if (emitToWorkflow) {
+      this.workflowService.onUpdateRecordSuccess(
+        viewerId,
+        form.applicationId.toHexString(),
+        formId,
+        record
+      )
+    }
+
+    return record
   }
 
-  private async _deleteRecord({
+  async delete({
+    viewerId,
     formId,
     recordId,
+    emitToWorkflow = false,
   }: {
+    viewerId: string
     formId: string
     recordId: string
-  }): Promise<Record | null> {
-    return this.recordModel.findOneAndUpdate(
+    emitToWorkflow?: boolean
+  }): Promise<Record> {
+    const form = await this.formService.findOne({ formId })
+
+    const record = await this.recordModel.findOneAndUpdate(
       { _id: recordId, formId, deletedAt: null },
       { $set: { deletedAt: Date.now() } },
       { new: true }
     )
+
+    if (!record) {
+      throw new Error(`Record ${recordId} not found`)
+    }
+
+    // post delete record event
+    if (emitToWorkflow) {
+      this.workflowService.onDeleteRecordSuccess(
+        viewerId,
+        form.applicationId.toHexString(),
+        formId,
+        record
+      )
+    }
+
+    return record
   }
 }

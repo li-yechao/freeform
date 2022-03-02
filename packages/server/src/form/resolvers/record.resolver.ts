@@ -37,21 +37,12 @@ export class RecordResolver {
 
   @ResolveField(() => RecordConnection)
   async records(
-    @CurrentUser() viewer: Viewer,
     @Parent() form: Form,
     @Args('viewId') viewId: string,
     @Args({ type: () => Int, name: 'page' }) page: number,
     @Args({ type: () => Int, name: 'limit' }) limit: number
   ): Promise<RecordConnection> {
-    return new RecordConnection(
-      this.recordService,
-      viewer,
-      form.applicationId.toHexString(),
-      form.id,
-      viewId,
-      page,
-      limit
-    )
+    return new RecordConnection(this.recordService, form.id, viewId, page, limit)
   }
 
   @ResolveField(() => RecordConnectionByAssociationFormFieldSearch)
@@ -78,76 +69,66 @@ export class RecordResolver {
 
   @ResolveField(() => Record)
   async record(
-    @CurrentUser() viewer: Viewer,
     @Parent() form: Form,
     @Args('viewId') viewId: string,
     @Args('recordId') recordId: string
   ): Promise<Record> {
-    const record = await this.recordService.selectRecord({
-      viewerId: viewer.id,
-      applicationId: form.applicationId.toHexString(),
+    return this.recordService.findOne({
       formId: form.id,
       viewId,
       recordId,
     })
-    if (!record) {
-      throw new Error('Not found')
-    }
-    return record
   }
 
   @Mutation(() => Record)
   async createRecord(
     @CurrentUser() viewer: Viewer,
-    @Args('applicationId') applicationId: string,
+    @Args('applicationId') _applicationId: string,
     @Args('formId') formId: string,
     @Args('input') input: CreateRecordInput
   ): Promise<Record> {
-    return await this.recordService.createRecord({
-      viewerId: viewer.id,
-      applicationId,
-      formId,
-      input,
-    })
+    return await this.recordService.create(
+      {
+        viewerId: viewer.id,
+        formId,
+        emitToWorkflow: true,
+      },
+      input
+    )
   }
 
   @Mutation(() => Record)
   async updateRecord(
     @CurrentUser() viewer: Viewer,
-    @Args('applicationId') applicationId: string,
+    @Args('applicationId') _applicationId: string,
     @Args('formId') formId: string,
     @Args('recordId') recordId: string,
     @Args('input') input: UpdateRecordInput
   ): Promise<Record> {
-    const record = await this.recordService.updateRecord({
-      viewerId: viewer.id,
-      applicationId,
-      formId,
-      recordId,
-      input,
-    })
-    if (!record) {
-      throw new Error(`Not found`)
-    }
-    return record
+    return this.recordService.update(
+      {
+        viewerId: viewer.id,
+        formId,
+        recordId,
+        emitToWorkflow: true,
+      },
+      input
+    )
   }
 
   @Mutation(() => Boolean)
   async deleteRecord(
     @CurrentUser() viewer: Viewer,
-    @Args('applicationId') applicationId: string,
+    @Args('applicationId') _applicationId: string,
     @Args('formId') formId: string,
     @Args('recordId') recordId: string
   ): Promise<boolean> {
-    const record = await this.recordService.deleteRecord({
+    await this.recordService.delete({
       viewerId: viewer.id,
-      applicationId,
       formId,
       recordId,
+      emitToWorkflow: true,
     })
-    if (!record) {
-      throw new Error(`Not found`)
-    }
     return true
   }
 }
@@ -156,8 +137,6 @@ export class RecordResolver {
 export class RecordConnection {
   constructor(
     private readonly recordService: RecordService,
-    private readonly viewer: Viewer,
-    private readonly applicationId: string,
     private readonly formId: string,
     private readonly viewId: string,
     private readonly page: number,
@@ -168,9 +147,7 @@ export class RecordConnection {
 
   private get list() {
     if (!this._list) {
-      this._list = this.recordService.selectRecords({
-        viewerId: this.viewer.id,
-        applicationId: this.applicationId,
+      this._list = this.recordService.find({
         formId: this.formId,
         viewId: this.viewId,
         page: this.page,
@@ -190,11 +167,8 @@ export class RecordConnection {
   private get _pageInfo() {
     if (!this.__pageInfo) {
       this.__pageInfo = new PageInfo(() =>
-        this.recordService.selectRecordCount({
-          viewerId: this.viewer.id,
-          applicationId: this.applicationId,
+        this.recordService.count({
           formId: this.formId,
-          viewId: this.viewId,
         })
       )
     }
@@ -241,9 +215,7 @@ export class RecordConnectionByAssociationFormFieldSearch {
 
   private get list() {
     if (!this._list) {
-      this._list = this.options.recordService.selectRecordsByAssociationFormFieldSearch({
-        viewerId: this.options.viewer.id,
-        applicationId: this.options.form.applicationId.toHexString(),
+      this._list = this.options.recordService.findByAssociationFormField({
         formId: this.options.form.id,
         sourceFormId: this.options.sourceFormId,
         sourceFieldId: this.options.sourceFieldId,
@@ -267,9 +239,7 @@ export class RecordConnectionByAssociationFormFieldSearch {
       this.__pageInfo = new PageInfo(() =>
         this.options.recordIds?.length
           ? this.list.then(res => res.length)
-          : this.options.recordService.selectRecordCountByAssociationFormFieldSearch({
-              viewerId: this.options.viewer.id,
-              applicationId: this.options.form.applicationId.toHexString(),
+          : this.options.recordService.count({
               formId: this.options.form.id,
             })
       )

@@ -23,7 +23,7 @@ export class WorkflowLogService {
     @InjectModel(WorkflowLog.name) private readonly workflowLogModel: Model<WorkflowLog>
   ) {}
 
-  async createWorkflowLog({
+  async create({
     userId,
     workflowId,
     type,
