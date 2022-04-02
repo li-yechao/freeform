@@ -14,7 +14,6 @@
 
 import { Controller, Get, Param, Post, Query } from '@nestjs/common'
 import { Config } from '../config'
-import { AuthResult } from './auth.schema'
 import { AuthService } from './auth.service'
 
 export interface AuthCustomContext {}
@@ -22,11 +21,6 @@ export interface AuthCustomContext {}
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService, private readonly config: Config) {}
-
-  @Post('refreshToken')
-  async refreshToken(@Query('refreshToken') refreshToken: string): Promise<AuthResult> {
-    return this.authService.refreshToken(refreshToken)
-  }
 
   @Post(':type')
   async authCustom(@Param('type') type: string, @Query() query: { [key: string]: string }) {

@@ -24,7 +24,7 @@ export class Workflow {
   id!: string
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
-  applicationId!: mongoose.Types.ObjectId
+  applicationId!: string
 
   @Prop({ required: true })
   @Field()
@@ -59,7 +59,7 @@ export interface FormTrigger {
   actions?: FormTriggerAction[]
 }
 
-export type FormTriggerAction = { type: 'create' }
+export type FormTriggerAction = { type: 'create' } | { type: 'update' } | { type: 'delete' }
 
 export type Node = ScriptJsNode | ApprovalNode
 

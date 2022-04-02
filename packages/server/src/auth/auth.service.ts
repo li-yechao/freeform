@@ -12,19 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Injectable } from '@nestjs/common'
-import fetch from 'cross-fetch'
+import { Inject, Injectable } from '@nestjs/common'
 import { Config } from '../config'
 import { UserService } from '../user/user.service'
 import { AuthResult } from './auth.schema'
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UserService, private readonly config: Config) {
-    config
+  constructor(
+    private readonly userService: UserService,
+    private readonly config: Config,
+    @Inject('FETCH') private readonly fetch: typeof globalThis.fetch
+  ) {}
+
+  async authCustom(thirdType: string, query: { [key: string]: string }): Promise<AuthResult> {
+    if (thirdType === 'refreshToken') {
+      const refreshToken = query['refreshToken']
+      if (!refreshToken) {
+        throw new Error(`Missing required parameter \`refreshToken\``)
+      }
+
+      return this.refreshToken(refreshToken)
+    }
+
+    if (thirdType !== 'dingtalk') {
+      throw new Error(`Unsupported auth type ${thirdType}`)
+    }
+
+    const { id: thirdId, user: thirdUser } = await this.authDingtalk(query)
+
+    const user = await this.userService.createOrUpdate({ thirdType, thirdId, thirdUser })
+
+    return this.createToken(user.id)
   }
 
-  async refreshToken(refreshToken: string): Promise<AuthResult> {
+  private async refreshToken(refreshToken: string): Promise<AuthResult> {
     const payload = this.config.refreshToken.verify(refreshToken)
     if (typeof payload.sub !== 'string' || !payload.sub) {
       throw new Error(`Invalid jwt token`)
@@ -35,31 +57,15 @@ export class AuthService {
     return this.createToken(user.id)
   }
 
-  async authCustom(type: string, query: { [key: string]: string }): Promise<AuthResult> {
-    if (type !== 'dingtalk') {
-      throw new Error(`Unsupported auth type ${type}`)
-    }
-
-    const { id: thirdId, user: thirdUser } = await this.authDingtalk(query)
-
-    const user =
-      (await this.userService.findOptionalByThirdId({ type, thirdId })) ||
-      (await this.userService.createWithThirdUser({ type, thirdId, thirdUser }))
-
-    return this.createToken(user.id)
-  }
-
   private async authDingtalk(query: { [key: string]: string }) {
     const code = query?.['code']
     if (!code) {
-      throw new Error(`Invalid dingtalk code ${code}`)
+      throw new Error(`Missing required parameter dingtalk \`code\``)
     }
 
-    const token = await fetch('https://api.dingtalk.com/v1.0/oauth2/userAccessToken', {
+    const token = await this.fetch('https://api.dingtalk.com/v1.0/oauth2/userAccessToken', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         clientId: this.config.dingtalk.clientId,
         clientSecret: this.config.dingtalk.clientSecret,
@@ -69,14 +75,14 @@ export class AuthService {
     }).then(res => res.json())
 
     if (!token?.accessToken) {
-      throw new Error(`Failed to call dingtalk api oauth2/userAccessToken`)
+      throw new Error(
+        `Missing required accessToken in response of dingtalk api oauth2/userAccessToken`
+      )
     }
 
-    const user = await fetch('https://api.dingtalk.com/v1.0/contact/users/me', {
+    const user = await this.fetch('https://api.dingtalk.com/v1.0/contact/users/me', {
       method: 'GET',
-      headers: {
-        'x-acs-dingtalk-access-token': token.accessToken,
-      },
+      headers: { 'x-acs-dingtalk-access-token': token.accessToken },
     }).then(res => res.json())
 
     return {

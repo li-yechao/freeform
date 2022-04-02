@@ -108,7 +108,7 @@ export default function ApplicationWorkflowView() {
           rowKey="id"
           size="small"
           columns={columns}
-          dataSource={workflows}
+          dataSource={workflows?.nodes}
           pagination={false}
         />
       </_Container>

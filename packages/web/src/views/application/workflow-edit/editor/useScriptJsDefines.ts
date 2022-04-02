@@ -144,16 +144,16 @@ declare interface Form_${form.id} {
       .join('\n')}
   }
 
-  selectRecord(args: { recordId: string }): Promise<Record_${form.id} | null>
+  findOne(args: { recordId: string }): Promise<Record_${form.id} | null>
 
-  createRecord(args: { data: Partial<Record_${form.id}['data']> }): Promise<Record_${form.id}>
+  create(args: { data: Partial<Record_${form.id}['data']> }): Promise<Record_${form.id}>
 
-  updateRecord(args: {
+  update(args: {
     recordId: string
     data: Partial<Record_${form.id}['data']>
   }): Promise<Record_${form.id} | null>
 
-  deleteRecord(args: { recordId: string }): Promise<Record_${form.id} | null>
+  delete(args: { recordId: string }): Promise<Record_${form.id} | null>
 }
 
 

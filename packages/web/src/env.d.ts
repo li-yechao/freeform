@@ -20,8 +20,6 @@ interface ImportMetaEnv extends Readonly<Record<string, string | boolean>> {
 
   VITE_DINGTALK_CLIENT_ID: string
 
-  VITE_AUTH_API: string
-
   VITE_GRAPHQL_URI: string
 }
 

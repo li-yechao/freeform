@@ -16,7 +16,9 @@ import * as BPMNModdle from 'bpmn-moddle'
 import { mongo } from 'mongoose'
 import { Workflow } from '../schemas/workflow.schema'
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const xmlFormatter = require('xml-formatter')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const zeebeModdle = require('zeebe-bpmn-moddle/resources/zeebe')
 
 export default async function workflowToBpmn(

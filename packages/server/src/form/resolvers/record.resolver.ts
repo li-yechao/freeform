@@ -23,9 +23,14 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql'
-import { Viewer } from '../../auth/auth.schema'
 import { CurrentUser, GqlAuthGuard } from '../../auth/gql-auth.guard'
-import { CreateRecordInput, UpdateRecordInput } from '../inputs/record.input'
+import { Connection, ConnectionOptions, PageInfo } from '../../utils/Connection'
+import {
+  CreateRecordInput,
+  RecordOrder,
+  RecordOrderField,
+  UpdateRecordInput,
+} from '../inputs/record.input'
 import { Form } from '../schemas/form.schema'
 import { Record } from '../schemas/record.schema'
 import { RecordService } from '../services/record.service'
@@ -38,217 +43,133 @@ export class RecordResolver {
   @ResolveField(() => RecordConnection)
   async records(
     @Parent() form: Form,
-    @Args('viewId') viewId: string,
-    @Args({ type: () => Int, name: 'page' }) page: number,
-    @Args({ type: () => Int, name: 'limit' }) limit: number
+    @Args('viewId') _viewId: string,
+    @Args('before', { nullable: true }) before?: string,
+    @Args('after', { nullable: true }) after?: string,
+    @Args('first', { type: () => Int, nullable: true }) first?: number,
+    @Args('last', { type: () => Int, nullable: true }) last?: number,
+    @Args('offset', { type: () => Int, nullable: true }) offset?: number,
+    @Args('orderBy', { type: () => RecordOrder, nullable: true }) orderBy?: RecordOrder
   ): Promise<RecordConnection> {
-    return new RecordConnection(this.recordService, form.id, viewId, page, limit)
-  }
-
-  @ResolveField(() => RecordConnectionByAssociationFormFieldSearch)
-  async recordsByAssociationFormFieldSearch(
-    @CurrentUser() viewer: Viewer,
-    @Parent() form: Form,
-    @Args('sourceFormId') sourceFormId: string,
-    @Args('sourceFieldId') sourceFieldId: string,
-    @Args({ type: () => Int, name: 'page' }) page: number,
-    @Args({ type: () => Int, name: 'limit' }) limit: number,
-    @Args({ type: () => [String], name: 'recordIds', nullable: true }) recordIds?: string[]
-  ): Promise<RecordConnectionByAssociationFormFieldSearch> {
-    return new RecordConnectionByAssociationFormFieldSearch({
-      recordService: this.recordService,
-      viewer,
-      form,
-      sourceFormId,
-      sourceFieldId,
-      page,
-      limit,
-      recordIds,
+    return new RecordConnection({
+      before,
+      after,
+      first,
+      last,
+      offset,
+      orderBy,
+      find: options => this.recordService.find({ formId: form.id, ...options }),
+      count: options => this.recordService.count({ formId: form.id, ...options }),
     })
   }
 
   @ResolveField(() => Record)
   async record(
     @Parent() form: Form,
-    @Args('viewId') viewId: string,
+    @Args('viewId') _viewId: string,
     @Args('recordId') recordId: string
   ): Promise<Record> {
     return this.recordService.findOne({
       formId: form.id,
-      viewId,
       recordId,
     })
   }
 
   @Mutation(() => Record)
   async createRecord(
-    @CurrentUser() viewer: Viewer,
+    @CurrentUser() user: CurrentUser,
     @Args('applicationId') _applicationId: string,
     @Args('formId') formId: string,
     @Args('input') input: CreateRecordInput
   ): Promise<Record> {
-    return await this.recordService.create(
-      {
-        viewerId: viewer.id,
-        formId,
-        emitToWorkflow: true,
-      },
-      input
-    )
+    return await this.recordService.create({
+      userId: user.id,
+      formId,
+      input,
+      startWorkflowInstance: true,
+    })
   }
 
   @Mutation(() => Record)
   async updateRecord(
-    @CurrentUser() viewer: Viewer,
+    @CurrentUser() user: CurrentUser,
     @Args('applicationId') _applicationId: string,
     @Args('formId') formId: string,
     @Args('recordId') recordId: string,
     @Args('input') input: UpdateRecordInput
   ): Promise<Record> {
-    return this.recordService.update(
-      {
-        viewerId: viewer.id,
-        formId,
-        recordId,
-        emitToWorkflow: true,
-      },
-      input
-    )
+    return this.recordService.update({
+      userId: user.id,
+      formId,
+      recordId,
+      input,
+      startWorkflowInstance: true,
+    })
   }
 
   @Mutation(() => Boolean)
   async deleteRecord(
-    @CurrentUser() viewer: Viewer,
+    @CurrentUser() user: CurrentUser,
     @Args('applicationId') _applicationId: string,
     @Args('formId') formId: string,
     @Args('recordId') recordId: string
   ): Promise<boolean> {
     await this.recordService.delete({
-      viewerId: viewer.id,
+      userId: user.id,
       formId,
       recordId,
-      emitToWorkflow: true,
+      startWorkflowInstance: true,
     })
     return true
   }
 }
 
 @ObjectType()
-export class RecordConnection {
-  constructor(
-    private readonly recordService: RecordService,
-    private readonly formId: string,
-    private readonly viewId: string,
-    private readonly page: number,
-    private readonly limit: number
-  ) {}
-
-  private _list?: Promise<Record[]>
-
-  private get list() {
-    if (!this._list) {
-      this._list = this.recordService.find({
-        formId: this.formId,
-        viewId: this.viewId,
-        page: this.page,
-        limit: this.limit,
-      })
-    }
-    return this._list
+export class RecordConnection extends Connection<Record> {
+  constructor({
+    orderBy,
+    ...options
+  }: Omit<ConnectionOptions<Record>, 'orderBy'> & { orderBy?: RecordOrder }) {
+    super({
+      ...options,
+      orderBy: orderBy && {
+        field: (
+          {
+            [RecordOrderField.CREATED_AT]: 'createdAt',
+            [RecordOrderField.UPDATED_AT]: 'updatedAt',
+          } as const
+        )[orderBy.field],
+        direction: orderBy.direction,
+      },
+    })
   }
 
   @Field(() => [Record])
-  get nodes() {
-    return this.list
+  override get nodes(): Promise<Record[]> {
+    return super.nodes
   }
 
-  private __pageInfo?: PageInfo
-
-  private get _pageInfo() {
-    if (!this.__pageInfo) {
-      this.__pageInfo = new PageInfo(() =>
-        this.recordService.count({
-          formId: this.formId,
-        })
-      )
-    }
-    return this.__pageInfo
+  @Field(() => [RecordEdge])
+  override get edges(): Promise<RecordEdge[]> {
+    return super.edges
   }
 
   @Field(() => PageInfo)
-  get pageInfo() {
-    return this._pageInfo
+  override get pageInfo(): PageInfo {
+    return super.pageInfo
   }
-}
-
-@ObjectType()
-class PageInfo {
-  constructor(private readonly __count: () => Promise<number>) {}
-
-  private _count?: Promise<number>
 
   @Field(() => Int)
-  get count(): Promise<number> {
-    if (!this._count) {
-      this._count = this.__count()
-    }
-    return this._count
+  override get totalCount(): Promise<number> {
+    return super.totalCount
   }
 }
 
 @ObjectType()
-export class RecordConnectionByAssociationFormFieldSearch {
-  constructor(
-    private readonly options: {
-      recordService: RecordService
-      viewer: Viewer
-      form: Form
-      sourceFormId: string
-      sourceFieldId: string
-      page: number
-      limit: number
-      recordIds?: string[] | undefined
-    }
-  ) {}
+export class RecordEdge {
+  @Field(() => String)
+  cursor!: string
 
-  private _list?: Promise<Record[]>
-
-  private get list() {
-    if (!this._list) {
-      this._list = this.options.recordService.findByAssociationFormField({
-        formId: this.options.form.id,
-        sourceFormId: this.options.sourceFormId,
-        sourceFieldId: this.options.sourceFieldId,
-        page: this.options.page,
-        limit: this.options.limit,
-        recordIds: this.options.recordIds,
-      })
-    }
-    return this._list
-  }
-
-  @Field(() => [Record])
-  get nodes() {
-    return this.list
-  }
-
-  private __pageInfo?: PageInfo
-
-  private get _pageInfo() {
-    if (!this.__pageInfo) {
-      this.__pageInfo = new PageInfo(() =>
-        this.options.recordIds?.length
-          ? this.list.then(res => res.length)
-          : this.options.recordService.count({
-              formId: this.options.form.id,
-            })
-      )
-    }
-    return this.__pageInfo
-  }
-
-  @Field(() => PageInfo)
-  get pageInfo() {
-    return this._pageInfo
-  }
+  @Field(() => Record)
+  node!: Record
 }

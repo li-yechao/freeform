@@ -20,7 +20,7 @@ export interface Application {
   updatedAt?: number
   name?: string
 
-  forms: Form[]
+  forms: { nodes: Form[] }
 }
 
 export interface Form {
@@ -50,12 +50,14 @@ export const useApplication = (
           updatedAt
           name
 
-          forms {
-            id
-            createdAt
-            updatedAt
-            name
-            description
+          forms(first: 100) {
+            nodes {
+              id
+              createdAt
+              updatedAt
+              name
+              description
+            }
           }
         }
       }
@@ -66,7 +68,7 @@ export const useApplication = (
 
 export const useApplicationScript = (
   options?: QueryHookOptions<
-    { application: { id: string; thirdScript?: string } },
+    { application: { id: string; script?: string } },
     { applicationId: string }
   >
 ) => {
@@ -75,7 +77,7 @@ export const useApplicationScript = (
       query ApplicationForms($applicationId: String!) {
         application(applicationId: $applicationId) {
           id
-          thirdScript
+          script
         }
       }
     `,
@@ -86,7 +88,7 @@ export const useApplicationScript = (
 export const useUpdateApplicationScript = (
   options?: MutationHookOptions<
     { updateApplication: Application },
-    { applicationId: string; input: { thirdScript: string } }
+    { applicationId: string; input: { script: string } }
   >
 ) => {
   return useMutation(
@@ -97,7 +99,7 @@ export const useUpdateApplicationScript = (
           createdAt
           updatedAt
           name
-          thirdScript
+          script
         }
       }
     `,

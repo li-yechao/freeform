@@ -15,11 +15,15 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
+import { ZBClient } from 'zeebe-node'
 import { Config } from '../config'
-import { ApplicationResolver } from './resolvers/application.resolver'
+import {
+  ApplicationDepartmentResolver,
+  ApplicationResolver,
+  ApplicationUserResolver,
+} from './resolvers/application.resolver'
 import { FormResolver } from './resolvers/form.resolver'
 import { RecordResolver } from './resolvers/record.resolver'
-import { ThirdDepartmentResolver, ThirdUserResolver } from './resolvers/third-user.resolver'
 import { WorkflowResolver } from './resolvers/workflow.resolver'
 import { Application, ApplicationSchema } from './schemas/application.schema'
 import { Form, FormSchema } from './schemas/form.schema'
@@ -27,10 +31,10 @@ import { Record, RecordSchema } from './schemas/record.schema'
 import { WorkflowLog, WorkflowLogSchema } from './schemas/workflow-log.schema'
 import { Workflow, WorkflowSchema } from './schemas/workflow.schema'
 import { ApplicationService } from './services/application.service'
+import { CamundaWorkerService } from './services/camunda-worker.service'
 import { CamundaService } from './services/camunda.service'
 import { FormService } from './services/form.service'
 import { RecordService } from './services/record.service'
-import { ThirdUserService } from './services/third-user.service'
 import { WorkflowLogService } from './services/workflow-log.service'
 import { WorkflowService } from './services/workflow.service'
 
@@ -46,10 +50,18 @@ import { WorkflowService } from './services/workflow.service'
     ]),
   ],
   providers: [
+    {
+      provide: ZBClient,
+      useFactory: (config: Config) => {
+        return new ZBClient(config.zeebe.gateway.address)
+      },
+      inject: [Config],
+    },
+
     // Services
     Config,
     CamundaService,
-    ThirdUserService,
+    CamundaWorkerService,
     ApplicationService,
     FormService,
     RecordService,
@@ -57,12 +69,18 @@ import { WorkflowService } from './services/workflow.service'
     WorkflowLogService,
 
     // Resolvers
-    ThirdUserResolver,
-    ThirdDepartmentResolver,
     ApplicationResolver,
+    ApplicationDepartmentResolver,
+    ApplicationUserResolver,
     FormResolver,
     RecordResolver,
     WorkflowResolver,
   ],
 })
-export class FormModule {}
+export class FormModule {
+  constructor(camundaWorkerService: CamundaWorkerService) {
+    if (process.env['NODE_ENV'] !== 'test') {
+      camundaWorkerService.start()
+    }
+  }
+}

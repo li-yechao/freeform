@@ -96,12 +96,12 @@ export const useRecords = (
 
           records: {
             nodes: Record[]
-            pageInfo: { count: number }
+            totalCount: number
           }
         }
       }
     },
-    { applicationId: string; formId: string; viewId: string; page: number; limit: number }
+    { applicationId: string; formId: string; viewId: string; offset: number; first: number }
   >
 ) => {
   return useQuery(
@@ -110,8 +110,8 @@ export const useRecords = (
         $applicationId: String!
         $formId: String!
         $viewId: String!
-        $page: Int!
-        $limit: Int!
+        $offset: Int
+        $first: Int
       ) {
         application(applicationId: $applicationId) {
           id
@@ -119,7 +119,7 @@ export const useRecords = (
           form(formId: $formId) {
             id
 
-            records(viewId: $viewId, page: $page, limit: $limit) {
+            records(viewId: $viewId, offset: $offset, first: $first) {
               nodes {
                 id
                 createdAt
@@ -127,9 +127,7 @@ export const useRecords = (
                 data
               }
 
-              pageInfo {
-                count
-              }
+              totalCount
             }
           }
         }

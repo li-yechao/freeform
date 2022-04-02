@@ -24,6 +24,10 @@ export class GqlAuthGuard extends AuthGuard('jwt') {
   }
 }
 
+export interface CurrentUser {
+  id: string
+}
+
 export const CurrentUser = createParamDecorator((_: void, context: ExecutionContext) => {
   const ctx = GqlExecutionContext.create(context)
   return ctx.getContext().req.user

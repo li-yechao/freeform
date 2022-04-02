@@ -12,32 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Field, ID, ObjectType } from '@nestjs/graphql'
+import { Page } from 'puppeteer'
 
-@ObjectType()
-export class ThirdDepartment {
-  @Field(() => ID)
-  id!: string
+describe('App', () => {
+  let page: Page
 
-  applicationId!: string
+  beforeEach(async () => {
+    const context = await browser.createIncognitoBrowserContext()
+    page = await context.newPage()
+    await page.goto('http://localhost:4444', { waitUntil: 'networkidle0' })
+  })
 
-  @Field({ nullable: true })
-  parentId?: string
-
-  @Field()
-  name!: string
-}
-
-@ObjectType()
-export class ThirdUser {
-  @Field(() => ID)
-  id!: string
-
-  applicationId!: string
-
-  @Field()
-  name!: string
-
-  @Field()
-  departmentId!: string
-}
+  it('should render app bar', async () => {
+    await expect(page).toMatch(/freeform/i)
+  })
+})

@@ -12,15 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ApolloClient, gql, HttpLink, InMemoryCache } from '@apollo/client'
+import { GRAPHQL_URI } from '../constants'
 import { Token } from '../Storage'
 
-export async function refreshToken(refreshToken: string): Promise<Token> {
-  return fetch(`${import.meta.env.VITE_AUTH_API}/auth/refreshToken?refreshToken=${refreshToken}`, {
-    method: 'POST',
-  }).then(res => {
-    if (res.status >= 200 && res.status < 300) {
-      return res.json()
-    }
-    throw new Error(res.statusText)
+export default async function auth({
+  type,
+  input,
+}:
+  | { type: 'refreshToken'; input: { refreshToken: string } }
+  | { type: 'dingtalk'; input: { code: string } }): Promise<Token> {
+  const client = createClient()
+
+  const res = await client.mutate<
+    { auth: { accessToken: string; refreshToken: string; expiresIn: number; tokenType: string } },
+    { type: string; input: any }
+  >({
+    mutation: gql`
+      mutation Auth($type: String!, $input: JSONObject!) {
+        auth(type: $type, input: $input) {
+          accessToken
+          refreshToken
+          expiresIn
+          tokenType
+        }
+      }
+    `,
+    variables: { type, input },
+  })
+
+  if (res.errors?.length) {
+    throw res.errors[0]
+  }
+
+  if (!res.data) {
+    throw new Error(`Invalid response data of refreshToken`)
+  }
+
+  return res.data.auth
+}
+
+function createClient() {
+  return new ApolloClient({
+    link: new HttpLink({
+      uri: GRAPHQL_URI,
+    }),
+    cache: new InMemoryCache(),
   })
 }

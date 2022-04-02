@@ -31,12 +31,6 @@ export default function Rate(props: RateProps & { tabIndex?: number }) {
   )
 }
 
-export function RateConfigure({
-  field: _field,
-  setField: _setField,
-}: {
-  field: InitialFieldProps<RateProps>
-  setField: (field: Partial<InitialFieldProps<RateProps>>) => void
-}) {
+export function RateConfigure() {
   return <></>
 }

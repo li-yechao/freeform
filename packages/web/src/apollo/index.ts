@@ -23,8 +23,9 @@ import {
 import { BatchHttpLink } from '@apollo/client/link/batch-http'
 import { ErrorLink } from '@apollo/client/link/error'
 import { GraphQLError } from 'graphql'
+import { GRAPHQL_URI } from '../constants'
 import Storage from '../Storage'
-import { refreshToken } from './auth'
+import auth from './auth'
 
 export function createClient() {
   const refreshTokenLink = new RefreshAccessTokenLink({
@@ -36,11 +37,11 @@ export function createClient() {
       return error?.[0]?.extensions['code'] === 'UNAUTHENTICATED'
     },
     refreshToken: async () => {
-      const token = Storage.token?.refreshToken
-      if (typeof token !== 'string') {
-        throw new Error('Invalid refresh_token')
+      const refreshToken = Storage.token?.refreshToken
+      if (typeof refreshToken !== 'string') {
+        throw new Error('Invalid refresh token')
       }
-      Storage.token = await refreshToken(token)
+      Storage.token = await auth({ type: 'refreshToken', input: { refreshToken } })
     },
     processOperation: operation => {
       const { token } = Storage
@@ -72,7 +73,7 @@ export function createClient() {
   })
 
   const httpLink = new BatchHttpLink({
-    uri: import.meta.env.VITE_GRAPHQL_URI,
+    uri: GRAPHQL_URI,
     batchMax: 5,
     batchInterval: 100,
   })
@@ -93,7 +94,7 @@ export interface RefreshAccessTokenLinkOptions {
 class RefreshAccessTokenLink extends ErrorLink {
   private options: RefreshAccessTokenLinkOptions
   private isRefreshing = false
-  private pendings: Function[] = []
+  private pendings: ((_: void) => void)[] = []
 
   constructor(options: RefreshAccessTokenLinkOptions) {
     super(e => this.handleError(e))

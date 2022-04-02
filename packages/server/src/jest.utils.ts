@@ -12,24 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Test, TestingModule } from '@nestjs/testing'
-import { INestApplication } from '@nestjs/common'
-import * as request from 'supertest'
-import { AppModule } from './../src/app.module'
+export type MockType<T> = { [key in keyof T]: jest.Mock<unknown> }
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication
-
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile()
-
-    app = moduleFixture.createNestApplication()
-    await app.init()
+export function createMock() {
+  return new Proxy(<{ [key: string | symbol]: jest.Mock<unknown> }>{}, {
+    get: (target, p) => {
+      if (p === 'then') {
+        return undefined
+      }
+      if (!target[p]) {
+        target[p] = jest.fn()
+      }
+      return target[p]
+    },
   })
-
-  it('/ (GET)', () => {
-    return request(app.getHttpServer()).get('/').expect(404)
-  })
-})
+}

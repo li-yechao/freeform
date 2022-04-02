@@ -12,78 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { useApolloClient } from '@apollo/client'
 import { useCallback } from 'react'
-import { atom, selector, useRecoilValue, useSetRecoilState } from 'recoil'
-import { Viewer } from '../apollo/viewer'
 import Storage, { Token } from '../Storage'
 
-export type AccountState = {
-  viewer: Viewer
-}
-
-const accountState = atom<AccountState | null>({
-  key: 'accountState',
-  default: null,
-  dangerouslyAllowMutability: true,
-})
-
-export function useAccountOrNull(): AccountState | null {
-  return useRecoilValue(accountState)
-}
-
-const accountSelector = selector<AccountState>({
-  key: 'accountSelector',
-  get: ({ get }) => {
-    const account = get(accountState)
-    if (!account) {
-      throw unauthorizedError('Unauthorized')
-    }
-    return account
-  },
-  dangerouslyAllowMutability: true,
-})
-
-export function useAccount() {
-  return useRecoilValue(accountSelector)
-}
-
-export function useSetAccount() {
-  const setAccount = useSetRecoilState(accountState)
-
-  return useCallback((viewer: Viewer) => {
-    setAccount(old => ({ ...old, viewer }))
-  }, [])
-}
-
 export function useLogin() {
-  const setAccount = useSetAccount()
+  const client = useApolloClient()
 
-  return useCallback((account: { viewer: Viewer; token: Token }) => {
+  return useCallback((account: { token: Token }) => {
     Storage.token = account.token
-    setAccount(account.viewer)
+    client.resetStore()
   }, [])
 }
 
-export function useLogout() {
-  const setAccount = useSetRecoilState(accountState)
+export function useSignOut() {
+  const client = useApolloClient()
 
   return useCallback(() => {
     Storage.token = null
-    setAccount(null)
+    client.resetStore()
   }, [])
-}
-
-export const ERR_UNAUTHORIZED = 'ERR_UNAUTHORIZED'
-export interface UnauthorizedError extends Error {
-  code: typeof ERR_UNAUTHORIZED
-}
-
-function unauthorizedError(message?: string): UnauthorizedError {
-  const e: UnauthorizedError = new Error(message) as any
-  e.code = ERR_UNAUTHORIZED
-  return e
-}
-
-export function isUnauthorizedError(e: any): e is UnauthorizedError {
-  return e.code === ERR_UNAUTHORIZED
 }

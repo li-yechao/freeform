@@ -25,8 +25,8 @@ export class AuthResolver {
 
   @Query(() => Viewer)
   @UseGuards(GqlAuthGuard)
-  async viewer(@CurrentUser() viewer: Viewer): Promise<Viewer> {
-    return viewer
+  async viewer(@CurrentUser() user: CurrentUser): Promise<Viewer> {
+    return user
   }
 
   @Mutation(() => AuthResult)

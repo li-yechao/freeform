@@ -23,10 +23,10 @@ export class WorkflowLog {
   id!: string
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
-  workflowId!: mongoose.Types.ObjectId
+  workflowId!: string
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId })
-  userId?: mongoose.Types.ObjectId
+  @Prop()
+  userId?: string
 
   @Prop({ required: true })
   @Field()

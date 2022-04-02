@@ -1,4 +1,9 @@
-name: web-release
+name: Publish web
+
+env:
+  # 7 GiB by default on GitHub, setting to 6 GiB
+  # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+  NODE_OPTIONS: --max-old-space-size=6144
 
 on:
   push:
@@ -14,18 +19,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install node
-        uses: actions/setup-node@v2
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: 16
+          cache: 'yarn'
 
-      - name: Install dependencies
+      - name: Install deps
         run: |
           yarn install
 
       - name: Build web
         run: |
-          NODE_OPTIONS="--max_old_space_size=4096" yarn workspace @freeform/web build
+          yarn workspace @freeform/web build
           tar -cvzf packages/web/web.tar.gz -C packages/web/dist .
 
       - name: Release

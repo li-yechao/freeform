@@ -17,6 +17,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { FilterQuery, Model } from 'mongoose'
 import { CreateRecordInput, UpdateRecordInput } from '../inputs/record.input'
 import { Record } from '../schemas/record.schema'
+import { CamundaService } from './camunda.service'
 import { FormService } from './form.service'
 import { WorkflowService } from './workflow.service'
 
@@ -25,176 +26,90 @@ export class RecordService {
   constructor(
     @InjectModel(Record.name) private readonly recordModel: Model<Record>,
     private readonly formService: FormService,
-    private readonly workflowService: WorkflowService
+    private readonly workflowService: WorkflowService,
+    private readonly camundaService: CamundaService
   ) {}
 
-  async findOne({
-    formId,
-    viewId,
-    recordId,
-  }: {
-    formId: string
-    viewId?: string
-    recordId: string
-  }): Promise<Record> {
-    const form = await this.formService.findOne({ formId })
-
-    const view = viewId ? form.views?.find(i => i.id === viewId) : undefined
-    if (viewId && !view) {
-      throw new Error(`View ${viewId} not found`)
-    }
-
-    const record = await this.recordModel.findOne({ _id: recordId, formId, deletedAt: null })
-
+  async findOne({ formId, recordId }: { formId?: string; recordId: string }): Promise<Record> {
+    const record = await this.recordModel.findOne({
+      _id: recordId,
+      formId,
+      deletedAt: null,
+    })
     if (!record) {
       throw new Error(`Record ${recordId} not found`)
     }
-
-    // TODO: remove fields that not exists in the view
-
     return record
   }
 
   async find({
     formId,
-    viewId,
-    page,
+    filter,
+    offset,
     limit,
+    sort,
   }: {
     formId: string
-    viewId: string
-    page: number
-    limit: number
+    filter?: FilterQuery<Record>
+    offset?: number
+    limit?: number
+    sort?: { [key in keyof Record]?: 1 | -1 }
   }): Promise<Record[]> {
-    const form = await this.formService.findOne({ formId })
-
-    const view = form.views?.find(i => i.id === viewId)
-    if (!view) {
-      throw new Error(`View ${viewId} not found`)
-    }
-
-    const records = await this.recordModel
-      .find({ formId, deletedAt: null })
-      .sort({ _id: -1 })
-      .skip(page * limit)
-      .limit(limit)
-
-    // TODO: remove fields that not exists in the view
-
-    return records
+    return this.recordModel.find({ formId, deletedAt: null, ...filter }, undefined, {
+      sort,
+      skip: offset,
+      limit,
+    })
   }
 
-  async count({ formId }: { formId: string }): Promise<number> {
-    return this.recordModel.countDocuments({ formId, deletedAt: null })
-  }
-
-  async findByAssociationFormField({
+  async count({
     formId,
-    sourceFormId,
-    sourceFieldId,
-    page,
-    limit,
-    recordIds,
+    filter,
   }: {
     formId: string
-    sourceFormId: string
-    sourceFieldId: string
-    page: number
-    limit: number
-    recordIds?: string[] | undefined
-  }): Promise<Record[]> {
-    const form = await this.formService.findOne({ formId })
-    const sourceForm = await this.formService.findOne({ formId: sourceFormId })
-    const sourceField = sourceForm?.fields?.find(i => i.id === sourceFieldId)
-    if (!sourceField) {
-      throw new Error(`Source field ${sourceFieldId} not found`)
-    }
-    if (sourceField.type !== 'associationForm') {
-      throw new Error(
-        `Source field ${sourceFieldId} type ${sourceField.type} is not an associationForm`
-      )
-    }
-    if (sourceField.meta?.['associationFormId'] !== formId) {
-      throw new Error(`Source field ${sourceFieldId} associationFormId is not match`)
-    }
-    const mainFieldId = sourceField.meta?.['mainFieldId']
-    const mainField = form.fields?.find(i => i.id === mainFieldId)
-    if (!mainField) {
-      throw new Error(`Source field ${sourceFieldId} mainField is not found`)
-    }
-
-    const filter: FilterQuery<Record> = { formId, deletedAt: null }
-    if (recordIds?.length) {
-      filter['_id'] = { $in: [recordIds] }
-    }
-
-    const records = await this.recordModel
-      .find(filter, {
-        id: 1,
-        userId: 1,
-        formId: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        [`data.${mainField.id}`]: 1,
-      })
-      .sort({ _id: -1 })
-      .skip(page * limit)
-      .limit(limit)
-
-    return records
+    filter?: FilterQuery<Record>
+  }): Promise<number> {
+    return this.recordModel.countDocuments({ formId, deletedAt: null, ...filter })
   }
 
-  async create(
-    {
-      viewerId,
-      formId,
-      emitToWorkflow = false,
-    }: {
-      viewerId: string
-      formId: string
-      emitToWorkflow?: boolean
-    },
+  async create({
+    userId,
+    formId,
+    input,
+    startWorkflowInstance = false,
+  }: {
+    userId: string
+    formId: string
     input: CreateRecordInput
-  ): Promise<Record> {
-    const form = await this.formService.findOne({ formId })
-
+    startWorkflowInstance?: boolean
+  }): Promise<Record> {
     const record = await this.recordModel.create({
-      userId: viewerId,
+      userId,
       formId,
       createdAt: Date.now(),
       data: input.data,
     })
 
-    // post create record event
-    if (emitToWorkflow) {
-      this.workflowService.onCreateRecordSuccess(
-        viewerId,
-        form.applicationId.toHexString(),
-        formId,
-        record
-      )
+    if (startWorkflowInstance) {
+      this.createProcessInstance({ userId, formId, action: 'create', record })
     }
 
     return record
   }
 
-  async update(
-    {
-      viewerId,
-      formId,
-      recordId,
-      emitToWorkflow = false,
-    }: {
-      viewerId: string
-      formId: string
-      recordId: string
-      emitToWorkflow?: boolean
-    },
+  async update({
+    userId,
+    formId,
+    recordId,
+    input,
+    startWorkflowInstance = false,
+  }: {
+    userId: string
+    formId: string
+    recordId: string
     input: UpdateRecordInput
-  ): Promise<Record> {
-    const form = await this.formService.findOne({ formId })
-
-    // TODO: verify input data schema
+    startWorkflowInstance?: boolean
+  }): Promise<Record> {
     const update = Object.entries(input.data ?? {}).reduce(
       (res, [key, value]) => Object.assign(res, { [`data.${key}`]: value }),
       {}
@@ -210,32 +125,24 @@ export class RecordService {
       throw new Error(`Record ${recordId} not found`)
     }
 
-    // post update record event
-    if (emitToWorkflow) {
-      this.workflowService.onUpdateRecordSuccess(
-        viewerId,
-        form.applicationId.toHexString(),
-        formId,
-        record
-      )
+    if (startWorkflowInstance) {
+      this.createProcessInstance({ userId, formId, action: 'update', record })
     }
 
     return record
   }
 
   async delete({
-    viewerId,
+    userId,
     formId,
     recordId,
-    emitToWorkflow = false,
+    startWorkflowInstance = false,
   }: {
-    viewerId: string
+    userId: string
     formId: string
     recordId: string
-    emitToWorkflow?: boolean
+    startWorkflowInstance?: boolean
   }): Promise<Record> {
-    const form = await this.formService.findOne({ formId })
-
     const record = await this.recordModel.findOneAndUpdate(
       { _id: recordId, formId, deletedAt: null },
       { $set: { deletedAt: Date.now() } },
@@ -246,16 +153,44 @@ export class RecordService {
       throw new Error(`Record ${recordId} not found`)
     }
 
-    // post delete record event
-    if (emitToWorkflow) {
-      this.workflowService.onDeleteRecordSuccess(
-        viewerId,
-        form.applicationId.toHexString(),
-        formId,
-        record
-      )
+    if (startWorkflowInstance) {
+      this.createProcessInstance({ userId, formId, action: 'delete', record })
     }
 
     return record
+  }
+
+  private async createProcessInstance({
+    userId,
+    formId,
+    action,
+    record,
+  }: {
+    userId: string
+    formId: string
+    action: 'create' | 'update' | 'delete'
+    record: Record
+  }) {
+    const { applicationId } = await this.formService.findOne({ formId })
+
+    const workflows = await this.workflowService.find({
+      applicationId,
+      filter: {
+        'trigger.type': 'form_trigger',
+        'trigger.formId': formId,
+        'trigger.actions.type': action,
+      },
+    })
+    for (const workflow of workflows) {
+      this.camundaService?.createProcessInstance({
+        workflowId: workflow.id,
+        variables: {
+          form_trigger_user_id: userId,
+          form_trigger_application_id: applicationId,
+          form_trigger_form_id: formId,
+          form_trigger_record: record,
+        },
+      })
+    }
   }
 }

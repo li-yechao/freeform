@@ -79,7 +79,7 @@ export default function RecordTable() {
   const [{ page, limit }, setPage] = useState({ page: 0, limit: 20 })
 
   const { data } = useRecords({
-    variables: { applicationId, formId, viewId, page, limit },
+    variables: { applicationId, formId, viewId, offset: page * limit, first: limit },
     fetchPolicy: 'cache-and-network',
   })
   const records = data?.application.form.records
@@ -129,7 +129,7 @@ export default function RecordTable() {
         pagination={{
           current: page + 1,
           pageSize: limit,
-          total: records?.pageInfo.count,
+          total: records?.totalCount,
           showSizeChanger: false,
           showTotal: total => <span>共{total}条</span>,
           onChange: (page, limit) => setPage({ page: page - 1, limit }),

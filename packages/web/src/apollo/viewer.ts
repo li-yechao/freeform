@@ -12,15 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-  ApolloClient,
-  gql,
-  InMemoryCache,
-  LazyQueryHookOptions,
-  QueryHookOptions,
-  useLazyQuery,
-  useQuery,
-} from '@apollo/client'
+import { gql, QueryHookOptions, useQuery } from '@apollo/client'
 
 export interface Viewer {
   id: string
@@ -34,19 +26,6 @@ export const VIEWER_QUERY = gql`
   }
 `
 
-export const useViewerQuery = (options?: QueryHookOptions<{ viewer: Viewer }>) =>
-  useQuery(VIEWER_QUERY, options)
-
-export const useViewerLazyQuery = (options?: LazyQueryHookOptions<{ viewer: Viewer }>) =>
-  useLazyQuery(VIEWER_QUERY, options)
-
-export async function queryViewerWithToken(token: string): Promise<Viewer> {
-  const client = new ApolloClient({
-    uri: import.meta.env.VITE_GRAPHQL_URI,
-    cache: new InMemoryCache(),
-    headers: {
-      authorization: `Bearer ${token}`,
-    },
-  })
-  return (await client.query<Viewer>({ query: VIEWER_QUERY })).data
+export const useViewer = (options?: QueryHookOptions<{ viewer: Viewer }>) => {
+  return useQuery(VIEWER_QUERY, options)
 }

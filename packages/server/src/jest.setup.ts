@@ -12,8 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export interface MyTheme {}
-
-declare module '@emotion/react' {
-  export interface Theme extends MyTheme {}
-}
+jest.setTimeout(30e3)

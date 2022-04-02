@@ -14,6 +14,7 @@
 
 import { ComponentType, PureComponent, ReactNode, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useViewer } from '../../apollo/viewer'
 
 export default function ErrorBoundary({
   children,
@@ -24,10 +25,11 @@ export default function ErrorBoundary({
 }) {
   const boundary = useRef<_ErrorBoundary>(null)
   const location = useLocation()
+  const viewer = useViewer()
 
   useEffect(() => {
     boundary.current?.reset()
-  }, [location])
+  }, [location, viewer.data])
 
   return (
     <_ErrorBoundary ref={boundary} fallback={fallback}>

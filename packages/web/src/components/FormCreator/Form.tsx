@@ -247,7 +247,7 @@ const _DropTargets = styled.div`
 `
 
 const DropTarget = ({ id, placement }: { id: string; placement: Placement }) => {
-  const [isOver, ref] = useDrop<{ type: string; id?: string }, {}, boolean>(
+  const [isOver, ref] = useDrop<{ type: string; id?: string }, unknown, boolean>(
     () => ({
       accept: 'field',
       collect: monitor => monitor.isOver({ shallow: true }),

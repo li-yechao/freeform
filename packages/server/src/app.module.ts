@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApolloDriver } from '@nestjs/apollo'
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { GraphQLModule } from '@nestjs/graphql'
 import { MongooseModule } from '@nestjs/mongoose'
 import { AuthModule } from './auth/auth.module'
+import { Config } from './config'
 import { FormModule } from './form/form.module'
 import { UserModule } from './user/user.module'
-import { Config } from './config'
 
 @Module({
   imports: [
@@ -29,19 +29,19 @@ import { Config } from './config'
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         uri: new Config(configService).mongo.uri,
+        ignoreUndefined: true,
       }),
       inject: [ConfigService],
     }),
-    GraphQLModule.forRoot({
+    GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: true,
-      context: ({ req }: any) => ({ headers: req.headers }),
     }),
     AuthModule,
     UserModule,
     FormModule,
   ],
   controllers: [],
-  providers: [Config],
+  providers: [],
 })
 export class AppModule {}

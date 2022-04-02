@@ -18,4 +18,4 @@ WORKDIR /app/
 
 COPY --from=build /target .
 
-CMD ["yarn", "start:prod", "serve"]
+CMD ["yarn", "start", "serve"]

@@ -13,9 +13,24 @@
 // limitations under the License.
 
 import { UseGuards } from '@nestjs/common'
-import { Args, Mutation, Parent, ResolveField, Resolver } from '@nestjs/graphql'
+import {
+  Args,
+  Field,
+  Int,
+  Mutation,
+  ObjectType,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql'
 import { GqlAuthGuard } from '../../auth/gql-auth.guard'
-import { CreateWorkflowInput, UpdateWorkflowInput } from '../inputs/workflow.input'
+import { Connection, ConnectionOptions, PageInfo } from '../../utils/Connection'
+import {
+  CreateWorkflowInput,
+  UpdateWorkflowInput,
+  WorkflowOrder,
+  WorkflowOrderField,
+} from '../inputs/workflow.input'
 import { Application } from '../schemas/application.schema'
 import { Workflow } from '../schemas/workflow.schema'
 import { WorkflowService } from '../services/workflow.service'
@@ -25,14 +40,34 @@ import { WorkflowService } from '../services/workflow.service'
 export class WorkflowResolver {
   constructor(private readonly workflowService: WorkflowService) {}
 
-  @ResolveField(() => [Workflow])
-  async workflows(@Parent() application: Application): Promise<Workflow[]> {
-    return this.workflowService.findAllByApplicationId({ applicationId: application.id })
+  @ResolveField(() => WorkflowConnection)
+  async workflows(
+    @Parent() application: Application,
+    @Args('before', { nullable: true }) before?: string,
+    @Args('after', { nullable: true }) after?: string,
+    @Args('first', { type: () => Int, nullable: true }) first?: number,
+    @Args('last', { type: () => Int, nullable: true }) last?: number,
+    @Args('offset', { type: () => Int, nullable: true }) offset?: number,
+    @Args('orderBy', { type: () => WorkflowOrder, nullable: true }) orderBy?: WorkflowOrder
+  ): Promise<WorkflowConnection> {
+    return new WorkflowConnection({
+      before,
+      after,
+      first,
+      last,
+      offset,
+      orderBy,
+      find: options => this.workflowService.find({ applicationId: application.id, ...options }),
+      count: options => this.workflowService.count({ applicationId: application.id, ...options }),
+    })
   }
 
   @ResolveField(() => Workflow)
-  async workflow(@Args('workflowId') workflowId: string): Promise<Workflow> {
-    return this.workflowService.findOne({ workflowId })
+  async workflow(
+    @Parent() application: Application,
+    @Args('workflowId') workflowId: string
+  ): Promise<Workflow> {
+    return this.workflowService.findOne({ applicationId: application.id, workflowId })
   }
 
   @Mutation(() => Workflow)
@@ -40,24 +75,73 @@ export class WorkflowResolver {
     @Args('applicationId') applicationId: string,
     @Args('input') input: CreateWorkflowInput
   ): Promise<Workflow> {
-    return this.workflowService.create({ applicationId }, input)
+    return this.workflowService.create({ applicationId, input })
   }
 
   @Mutation(() => Workflow)
   async updateWorkflow(
-    @Args('applicationId') _applicationId: string,
+    @Args('applicationId') applicationId: string,
     @Args('workflowId') workflowId: string,
     @Args('input') input: UpdateWorkflowInput
   ): Promise<Workflow> {
-    return this.workflowService.update({ workflowId }, input)
+    return this.workflowService.update({ applicationId, workflowId, input })
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => Workflow)
   async deleteWorkflow(
-    @Args('applicationId') _applicationId: string,
+    @Args('applicationId') applicationId: string,
     @Args('workflowId') workflowId: string
-  ): Promise<boolean> {
-    await this.workflowService.delete({ workflowId })
-    return true
+  ): Promise<Workflow> {
+    return this.workflowService.delete({ applicationId, workflowId })
   }
+}
+
+@ObjectType()
+export class WorkflowConnection extends Connection<Workflow> {
+  constructor({
+    orderBy,
+    ...options
+  }: Omit<ConnectionOptions<Workflow>, 'orderBy'> & { orderBy?: WorkflowOrder }) {
+    super({
+      ...options,
+      orderBy: orderBy && {
+        field: (
+          {
+            [WorkflowOrderField.CREATED_AT]: 'createdAt',
+            [WorkflowOrderField.UPDATED_AT]: 'updatedAt',
+          } as const
+        )[orderBy.field],
+        direction: orderBy.direction,
+      },
+    })
+  }
+
+  @Field(() => [Workflow])
+  override get nodes(): Promise<Workflow[]> {
+    return super.nodes
+  }
+
+  @Field(() => [WorkflowEdge])
+  override get edges(): Promise<WorkflowEdge[]> {
+    return super.edges
+  }
+
+  @Field(() => PageInfo)
+  override get pageInfo(): PageInfo {
+    return super.pageInfo
+  }
+
+  @Field(() => Int)
+  override get totalCount(): Promise<number> {
+    return super.totalCount
+  }
+}
+
+@ObjectType()
+export class WorkflowEdge {
+  @Field(() => String)
+  cursor!: string
+
+  @Field(() => Workflow)
+  node!: Workflow
 }

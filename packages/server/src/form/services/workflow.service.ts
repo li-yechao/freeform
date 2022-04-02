@@ -14,10 +14,8 @@
 
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
-import workflowToBpmn from '../camunda/workflowToBpmn'
+import { FilterQuery, Model } from 'mongoose'
 import { CreateWorkflowInput, UpdateWorkflowInput } from '../inputs/workflow.input'
-import { Record } from '../schemas/record.schema'
 import { Workflow } from '../schemas/workflow.schema'
 import { CamundaService } from './camunda.service'
 
@@ -25,12 +23,19 @@ import { CamundaService } from './camunda.service'
 export class WorkflowService {
   constructor(
     @InjectModel(Workflow.name) private readonly workflowModel: Model<Workflow>,
-    private readonly camundaService: CamundaService
+    private readonly camundaService?: CamundaService
   ) {}
 
-  async findOne({ workflowId }: { workflowId: string }): Promise<Workflow> {
+  async findOne({
+    applicationId,
+    workflowId,
+  }: {
+    applicationId?: string
+    workflowId: string
+  }): Promise<Workflow> {
     const workflow = await this.workflowModel.findOne({
       _id: workflowId,
+      applicationId,
       deletedAt: null,
     })
     if (!workflow) {
@@ -39,31 +44,65 @@ export class WorkflowService {
     return workflow
   }
 
-  async findAllByApplicationId({ applicationId }: { applicationId: string }): Promise<Workflow[]> {
-    return this.workflowModel.find({ applicationId, deletedAt: null })
+  async find({
+    applicationId,
+    filter,
+    sort,
+    offset,
+    limit,
+  }: {
+    applicationId: string
+    filter?: FilterQuery<Workflow>
+    sort?: { [key in keyof Workflow]?: 1 | -1 }
+    offset?: number
+    limit?: number
+  }): Promise<Workflow[]> {
+    return this.workflowModel.find({ applicationId, deletedAt: null, ...filter }, null, {
+      sort,
+      skip: offset,
+      limit,
+    })
   }
 
-  async create(
-    { applicationId }: { applicationId: string },
+  async count({
+    applicationId,
+    filter,
+  }: {
+    applicationId: string
+    filter?: FilterQuery<Workflow>
+  }): Promise<number> {
+    return this.workflowModel.countDocuments({ applicationId, deletedAt: null, ...filter })
+  }
+
+  async create({
+    applicationId,
+    input,
+  }: {
+    applicationId: string
     input: CreateWorkflowInput
-  ): Promise<Workflow> {
+  }): Promise<Workflow> {
     const workflow = await this.workflowModel.create({
       applicationId,
       createdAt: Date.now(),
       ...input,
     })
 
-    await this.deployBpmnToCamunda(workflow)
+    await this.camundaService?.deployProcess({ workflow })
 
     return workflow
   }
 
-  async update(
-    { workflowId }: { workflowId: string },
+  async update({
+    applicationId,
+    workflowId,
+    input,
+  }: {
+    applicationId?: string
+    workflowId: string
     input: UpdateWorkflowInput
-  ): Promise<Workflow> {
+  }): Promise<Workflow> {
     const workflow = await this.workflowModel.findOneAndUpdate(
-      { _id: workflowId, deletedAt: null },
+      { _id: workflowId, applicationId, deletedAt: null },
       {
         $set: {
           updatedAt: Date.now(),
@@ -77,14 +116,20 @@ export class WorkflowService {
       throw new Error(`Workflow ${workflowId} not found`)
     }
 
-    await this.deployBpmnToCamunda(workflow)
+    await this.camundaService?.deployProcess({ workflow })
 
     return workflow
   }
 
-  async delete({ workflowId }: { workflowId: string }): Promise<Workflow> {
+  async delete({
+    applicationId,
+    workflowId,
+  }: {
+    applicationId?: string
+    workflowId: string
+  }): Promise<Workflow> {
     const workflow = await this.workflowModel.findOneAndUpdate(
-      { _id: workflowId, deletedAt: null },
+      { _id: workflowId, applicationId, deletedAt: null },
       { $set: { deletedAt: Date.now() } },
       { new: true }
     )
@@ -93,92 +138,5 @@ export class WorkflowService {
       throw new Error(`Workflow ${workflowId} not found`)
     }
     return workflow
-  }
-
-  private async deployBpmnToCamunda(workflow: Workflow) {
-    if (workflow.trigger && workflow.children.length) {
-      await this.camundaService.deployProcess({
-        name: workflow.id,
-        definition: await workflowToBpmn(workflow),
-      })
-    }
-  }
-
-  async onCreateRecordSuccess(
-    viewerId: string,
-    applicationId: string,
-    formId: string,
-    record: Record
-  ) {
-    const workflows = await this.workflowModel.find({
-      applicationId,
-      deletedAt: null,
-      'trigger.type': 'form_trigger',
-      'trigger.formId': formId,
-      'trigger.actions.type': 'create',
-    })
-    for (const workflow of workflows) {
-      this.camundaService.createProcessInstance({
-        workflowId: workflow.id,
-        variables: {
-          form_trigger_viewer_id: viewerId,
-          form_trigger_application_id: applicationId,
-          form_trigger_form_id: formId,
-          form_trigger_record: record,
-        },
-      })
-    }
-  }
-
-  async onUpdateRecordSuccess(
-    viewerId: string,
-    applicationId: string,
-    formId: string,
-    record: Record
-  ) {
-    const workflows = await this.workflowModel.find({
-      applicationId,
-      deletedAt: null,
-      'trigger.type': 'form_trigger',
-      'trigger.formId': formId,
-      'trigger.actions.type': 'update',
-    })
-    for (const workflow of workflows) {
-      this.camundaService.createProcessInstance({
-        workflowId: workflow.id,
-        variables: {
-          form_trigger_viewer_id: viewerId,
-          form_trigger_application_id: applicationId,
-          form_trigger_form_id: formId,
-          form_trigger_record: record,
-        },
-      })
-    }
-  }
-
-  async onDeleteRecordSuccess(
-    viewerId: string,
-    applicationId: string,
-    formId: string,
-    record: Record
-  ) {
-    const workflows = await this.workflowModel.find({
-      applicationId,
-      deletedAt: null,
-      'trigger.type': 'form_trigger',
-      'trigger.formId': formId,
-      'trigger.actions.type': 'delete',
-    })
-    for (const workflow of workflows) {
-      this.camundaService.createProcessInstance({
-        workflowId: workflow.id,
-        variables: {
-          form_trigger_viewer_id: viewerId,
-          form_trigger_application_id: applicationId,
-          form_trigger_form_id: formId,
-          form_trigger_record: record,
-        },
-      })
-    }
   }
 }

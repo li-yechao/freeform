@@ -16,6 +16,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
 import { PassportModule } from '@nestjs/passport'
+import fetch from 'cross-fetch'
 import { Config } from '../config'
 import { User, UserSchema } from '../user/user.schema'
 import { UserService } from '../user/user.service'
@@ -30,7 +31,14 @@ import { LocalStrategy } from './jwt.strategy'
     PassportModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
-  providers: [Config, LocalStrategy, UserService, AuthResolver, AuthService],
+  providers: [
+    { provide: 'FETCH', useValue: fetch },
+    Config,
+    LocalStrategy,
+    UserService,
+    AuthResolver,
+    AuthService,
+  ],
   controllers: [AuthController],
 })
 export class AuthModule {}

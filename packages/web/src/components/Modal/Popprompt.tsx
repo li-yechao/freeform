@@ -20,7 +20,6 @@ import { ChangeEvent, KeyboardEvent, MouseEvent, useCallback, useEffect, useStat
 export type PoppromptProps = {
   value?: string
   error?: Error
-  title?: string
   placeholder?: string
   onSubmit?: (value: string) => void
 } & Partial<TooltipProps>
@@ -29,7 +28,6 @@ export default function Popprompt({
   visible,
   value,
   error,
-  title,
   placeholder,
   onSubmit,
   ...props

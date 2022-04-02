@@ -52,11 +52,11 @@ const ApplicationScriptModal = ({
   const [script, setScript] = useState('')
 
   useEffect(() => {
-    setScript(application?.thirdScript || '')
-  }, [application?.thirdScript])
+    setScript(application?.script || '')
+  }, [application?.script])
 
   const handleSave = () => {
-    updaetApplication({ variables: { applicationId, input: { thirdScript: formatJs(script) } } })
+    updaetApplication({ variables: { applicationId, input: { script: formatJs(script) } } })
     onClose?.()
   }
 
@@ -112,7 +112,7 @@ const _Modal = styled(Modal)`
 `
 
 const defaultScript = `\
-export default class implements ThirdUserModule {
+export default class implements ApplicationScript {
 }
 `
 
@@ -169,7 +169,7 @@ declare function fetch(input: string, init?: RequestInit): Promise<Response>;
 
     defines.push({
       content: `
-declare interface ThirdUserModule {
+declare interface ApplicationScript {
   getDepartments(
     query?: { departmentId?: string; departmentIds?: string[] }
   ): Promise<{ id: string; name: string; parentId?: string }[]>

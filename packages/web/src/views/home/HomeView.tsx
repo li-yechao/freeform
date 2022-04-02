@@ -35,12 +35,12 @@ import {
 } from './graphql'
 
 export default function HomeView() {
-  const { data: { applications } = {} } = useApplications()
+  const { data: { applications } = {} } = useApplications({ variables: { first: 100 } })
 
   return (
     <Box pb={10} sx={{ maxWidth: 800, margin: 'auto' }}>
       <Row gutter={16}>
-        {applications?.map(app => (
+        {applications?.nodes.map(app => (
           <Col key={app.id} xs={8}>
             <AppItem application={app} />
           </Col>

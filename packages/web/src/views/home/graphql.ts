@@ -27,15 +27,22 @@ export interface CreateApplicationInput {
 
 export type UpdateApplicationInput = Partial<CreateApplicationInput>
 
-export const useApplications = (options?: QueryHookOptions<{ applications: Application[] }>) => {
+export const useApplications = (
+  options?: QueryHookOptions<
+    { applications: { nodes: Application[] } },
+    { before?: string; after?: string; first?: number; last?: number }
+  >
+) => {
   return useQuery(
     gql`
-      query Applications {
-        applications {
-          id
-          createdAt
-          updatedAt
-          name
+      query Applications($before: String, $after: String, $first: Int, $last: Int) {
+        applications(before: $before, after: $after, first: $first, last: $last) {
+          nodes {
+            id
+            createdAt
+            updatedAt
+            name
+          }
         }
       }
     `,

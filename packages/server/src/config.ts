@@ -23,171 +23,93 @@ export class Config {
   constructor(private readonly configService: ConfigService) {}
 
   get port() {
-    return this.getNumber('port')
+    return this.getInt('port', 8080)
   }
 
   get cors() {
-    return this.getBoolean('cors')
+    return this.getBoolean('cors', false)
   }
 
   get mongo() {
-    const config = this
-
     return {
-      get uri() {
-        return config.getString('mongo.uri')
+      uri: this.getString('mongo.uri'),
+    }
+  }
+
+  private createTokenConfig(name: string) {
+    return {
+      get keyId() {
+        return createHash('md5').update(this.privateKey).digest('base64')
+      },
+      issuer: this.get(`${name}.issuer`),
+      audience: this.get(`${name}.audience`),
+      algorithm: this.getEnum<Algorithm>(`${name}.algorithm`, ALGORITHMS, 'RS256'),
+      privateKey: this.getString(`${name}.privateKey`),
+      get publicKey() {
+        return createPublicKey(this.privateKey).export({ format: 'pem', type: 'spki' }).toString()
+      },
+      expiresIn: this.getInt(`${name}.expiresIn`),
+      sign(
+        payload: string | Buffer | any,
+        options?: Omit<SignOptions, 'algorithm' | 'expiresIn' | 'issuer' | 'audience' | 'keyid'>
+      ) {
+        return sign(payload, this.privateKey, {
+          ...options,
+          algorithm: this.algorithm,
+          expiresIn: this.expiresIn,
+          issuer: this.issuer,
+          audience: this.audience,
+          keyid: this.keyId,
+        })
+      },
+      verify(token: string) {
+        return verify(token, this.publicKey, {
+          algorithms: [this.algorithm],
+          issuer: this.issuer,
+          audience: this.audience,
+        })
       },
     }
   }
 
   get accessToken() {
-    const config = this
-
-    return {
-      get id() {
-        return createHash('md5').update(this.privateKey).digest('base64')
-      },
-      get issuer() {
-        return config.get('accessToken.issuer')
-      },
-      get audience() {
-        return config.get('accessToken.audience')
-      },
-      get algorithm(): Algorithm {
-        const alg = config.get('accessToken.algorithm')
-        if (!isAlgorithm(alg)) {
-          throw new Error('Invalid accessToken algorithm')
-        }
-        return alg
-      },
-      get privateKey() {
-        return config.getString('accessToken.privateKey')
-      },
-      get publicKey() {
-        return createPublicKey(this.privateKey).export({ format: 'pem', type: 'spki' }).toString()
-      },
-      get expiresIn() {
-        return config.getNumber('accessToken.expiresIn')
-      },
-      sign(
-        payload: string | Buffer | object,
-        options?: Omit<SignOptions, 'algorithm' | 'expiresIn' | 'issuer' | 'audience' | 'keyid'>
-      ) {
-        return sign(payload, this.privateKey, {
-          ...options,
-          algorithm: this.algorithm,
-          expiresIn: this.expiresIn,
-          issuer: this.issuer,
-          audience: this.audience,
-          keyid: this.id,
-        })
-      },
-      verify(token: string) {
-        return verify(token, this.publicKey, {
-          algorithms: [this.algorithm],
-          issuer: this.issuer,
-          audience: this.audience,
-        })
-      },
-    }
+    return this.createTokenConfig('accessToken')
   }
 
   get refreshToken() {
-    const config = this
-
-    return {
-      get id() {
-        return createHash('md5').update(this.privateKey).digest('base64')
-      },
-      get issuer() {
-        return config.get('refreshToken.issuer')
-      },
-      get audience() {
-        return config.get('refreshToken.audience')
-      },
-      get algorithm(): Algorithm {
-        const alg = config.get('refreshToken.algorithm')
-        if (!isAlgorithm(alg)) {
-          throw new Error('Invalid refreshToken algorithm')
-        }
-        return alg
-      },
-
-      get privateKey() {
-        return config.getString('refreshToken.privateKey')
-      },
-      get publicKey() {
-        return createPublicKey(this.privateKey).export({ format: 'pem', type: 'spki' }).toString()
-      },
-      get expiresIn() {
-        return config.getNumber('refreshToken.expiresIn')
-      },
-      sign(
-        payload: string | Buffer | object,
-        options?: Omit<SignOptions, 'algorithm' | 'expiresIn' | 'issuer' | 'audience' | 'keyid'>
-      ) {
-        return sign(payload, this.privateKey, {
-          ...options,
-          algorithm: this.algorithm,
-          expiresIn: this.expiresIn,
-          issuer: this.issuer,
-          audience: this.audience,
-          keyid: this.id,
-        })
-      },
-      verify(token: string) {
-        return verify(token, this.publicKey, {
-          algorithms: [this.algorithm],
-          issuer: this.issuer,
-          audience: this.audience,
-        })
-      },
-    }
+    return this.createTokenConfig('refreshToken')
   }
 
   get zeebe() {
-    const config = this
-
     return {
       gateway: {
-        get address() {
-          return config.getString('zeebe.gateway.address')
-        },
+        address: this.getString('zeebe.gateway.address'),
       },
       tasklist: {
         accessToken: {
-          get id() {
+          get keyId() {
             return createHash('md5').update(this.privateKey).digest('base64')
           },
-          get issuer() {
-            return config.get('zeebe.tasklist.accessToken.issuer')
-          },
-          get audience() {
-            return config.get('zeebe.tasklist.accessToken.audience')
-          },
-          get algorithm(): Algorithm {
-            const alg = config.get('zeebe.tasklist.accessToken.algorithm')
-            if (!isAlgorithm(alg)) {
-              throw new Error('Invalid accessToken algorithm')
-            }
-            return alg
-          },
-          get privateKey() {
-            return config.getString('zeebe.tasklist.accessToken.privateKey')
-          },
+          issuer: this.get('zeebe.tasklist.accessToken.issuer'),
+          audience: this.get('zeebe.tasklist.accessToken.audience'),
+          algorithm: this.getEnum<Algorithm>(
+            'zeebe.tasklist.accessToken.algorithm',
+            ALGORITHMS,
+            'RS256'
+          ),
+          privateKey: this.getString('zeebe.tasklist.accessToken.privateKey'),
+          scope: this.getString('zeebe.tasklist.accessToken.scope'),
           get publicKey() {
             return createPublicKey(this.privateKey)
               .export({ format: 'pem', type: 'spki' })
               .toString()
           },
-          get expiresIn() {
-            return config.getNumber('zeebe.tasklist.accessToken.expiresIn')
-          },
+          expiresIn: this.getInt('zeebe.tasklist.accessToken.expiresIn'),
           get jwk() {
             return importSPKI(this.publicKey, this.algorithm)
               .then(exportJWK)
               .then(jwk => ({
-                kid: this.id,
+                kid: this.keyId,
                 use: 'sig',
                 alg: this.algorithm,
                 kty: jwk.kty!,
@@ -201,40 +123,81 @@ export class Config {
   }
 
   get dingtalk() {
-    const config = this
-
     return {
-      get clientId() {
-        return config.getString('dingtalk.clientId')
-      },
-      get clientSecret() {
-        return config.getString('dingtalk.clientSecret')
-      },
+      clientId: this.getString('dingtalk.clientId'),
+      clientSecret: this.getString('dingtalk.clientSecret'),
     }
   }
 
   private get(key: string): string | undefined {
-    return this.configService.get<string>(key) || undefined
+    return this.configService.get<string>(key)?.trim() || undefined
   }
 
-  private getString(key: string): string {
-    const v = this.get(key)
-    if (!v) {
-      throw new Error(`Required config ${key} is missing`)
+  private getString(key: string, d?: string): string {
+    const s = this.get(key)
+    if (!s) {
+      if (d !== undefined) {
+        return d
+      }
+      throw new Error(`Missing required config \`${key}\``)
     }
-    return v
+    return s
   }
 
-  private getNumber(key: string): number {
-    const v = this.getString(key)
-    return Number(v)
+  private getEnum<T extends string>(key: string, enums: readonly T[], d?: T): T {
+    const s = this.get(key)
+    if (!s) {
+      if (d !== undefined) {
+        return d
+      }
+      throw new Error(`Missing required config \`${key}\``)
+    }
+    if (enums.includes(s as T)) {
+      return s as T
+    }
+    throw new Error(
+      `Invalid config \`${key}=${s}\`, expected: ${enums.map(e => `\`${e}\``).join(' ')}`
+    )
   }
 
-  private getBoolean(key: string): boolean {
-    return this.getString(key) === 'true'
+  private getInt(key: string, d?: number): number {
+    const s = this.get(key)
+    if (!s) {
+      if (d !== undefined) {
+        return d
+      }
+      throw new Error(`Missing required config \`${key}\``)
+    }
+    try {
+      if (!/^\d+$/.test(s)) {
+        throw new Error('Invalid number')
+      }
+      const n = parseInt(s)
+      if (!Number.isSafeInteger(n)) {
+        throw new Error('Invalid int')
+      }
+      return n
+    } catch (error) {
+      throw new Error(`Invalid config ${key}, require \`number\``)
+    }
+  }
+
+  private getBoolean(key: string, d?: boolean): boolean {
+    const s = this.get(key)
+    if (!s) {
+      if (d !== undefined) {
+        return d
+      }
+      throw new Error(`Missing required config \`${key}\``)
+    }
+    if (s === 'true') {
+      return true
+    }
+    if (s === 'false') {
+      return false
+    }
+    throw new Error(`Invalid config ${key}, require \`true\` or \`false\``)
   }
 }
 
-function isAlgorithm(v: any): v is Algorithm {
-  return ['RS256', 'RS384', 'RS512'].includes(v)
-}
+const ALGORITHMS = ['RS256', 'RS384', 'RS512'] as const

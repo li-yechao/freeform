@@ -21,7 +21,7 @@ export interface Application {
   updatedAt?: number
   name?: string
 
-  workflows: Workflow[]
+  workflows: { nodes: Workflow[] }
 }
 
 export interface Workflow {
@@ -44,12 +44,14 @@ export const useApplication = (
           updatedAt
           name
 
-          workflows {
-            id
-            createdAt
-            updatedAt
-            name
-            trigger
+          workflows(first: 100) {
+            nodes {
+              id
+              createdAt
+              updatedAt
+              name
+              trigger
+            }
           }
         }
       }

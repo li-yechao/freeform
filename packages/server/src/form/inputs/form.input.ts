@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { InputType, Field, PickType, PartialType } from '@nestjs/graphql'
+import { InputType, Field, PickType, PartialType, registerEnumType } from '@nestjs/graphql'
 import { GraphQLJSONObject } from 'graphql-type-json'
+import { OrderDirection } from '../../utils/OrderDirection'
 import { FieldState } from '../schemas/form.schema'
 
 @InputType()
@@ -34,7 +35,7 @@ export class FieldInput {
   state?: FieldState
 
   @Field(() => GraphQLJSONObject, { nullable: true })
-  meta?: {}
+  meta?: unknown
 }
 
 @InputType()
@@ -92,3 +93,19 @@ export class CreateFormInput {
 export class UpdateFormInput extends PartialType(
   PickType(CreateFormInput, ['name', 'description', 'fields', 'layout', 'views'] as const)
 ) {}
+
+@InputType()
+export class FormOrder {
+  @Field(() => FormOrderField)
+  field!: FormOrderField
+
+  @Field(() => OrderDirection)
+  direction!: OrderDirection
+}
+
+export enum FormOrderField {
+  CREATED_AT,
+  UPDATED_AT,
+}
+
+registerEnumType(FormOrderField, { name: 'FormOrderField' })

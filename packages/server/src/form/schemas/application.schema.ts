@@ -23,7 +23,7 @@ export class Application {
   id!: string
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
-  userId!: mongoose.Types.ObjectId
+  userId!: string
 
   @Field()
   @Prop({ required: true })
@@ -42,7 +42,35 @@ export class Application {
 
   @Field({ nullable: true })
   @Prop()
-  thirdScript?: string
+  script?: string
 }
 
 export const ApplicationSchema = SchemaFactory.createForClass(Application)
+
+@ObjectType()
+export class ApplicationDepartment {
+  applicationId!: string
+
+  @Field(() => ID)
+  id!: string
+
+  @Field({ nullable: true })
+  parentId?: string
+
+  @Field()
+  name!: string
+}
+
+@ObjectType()
+export class ApplicationUser {
+  applicationId!: string
+
+  @Field(() => ID)
+  id!: string
+
+  @Field()
+  departmentId!: string
+
+  @Field()
+  name!: string
+}

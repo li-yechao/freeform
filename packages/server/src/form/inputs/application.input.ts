@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { InputType, Field, PartialType, PickType } from '@nestjs/graphql'
+import { InputType, Field, PartialType, PickType, registerEnumType } from '@nestjs/graphql'
+import { OrderDirection } from '../../utils/OrderDirection'
 
 @InputType()
 export class CreateApplicationInput {
@@ -20,10 +21,26 @@ export class CreateApplicationInput {
   name?: string
 
   @Field({ nullable: true })
-  thirdScript?: string
+  script?: string
 }
 
 @InputType()
 export class UpdateApplicationInput extends PartialType(
-  PickType(CreateApplicationInput, ['name', 'thirdScript'] as const)
+  PickType(CreateApplicationInput, ['name', 'script'] as const)
 ) {}
+
+@InputType()
+export class ApplicationOrder {
+  @Field(() => ApplicationOrderField)
+  field!: ApplicationOrderField
+
+  @Field(() => OrderDirection)
+  direction!: OrderDirection
+}
+
+export enum ApplicationOrderField {
+  CREATED_AT,
+  UPDATED_AT,
+}
+
+registerEnumType(ApplicationOrderField, { name: 'ApplicationOrderField' })

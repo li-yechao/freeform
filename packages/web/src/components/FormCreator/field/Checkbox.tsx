@@ -179,7 +179,7 @@ const OptionConfigure = (
 ) => {
   const ref = useRef<HTMLDivElement>(null)
 
-  const [_dropCollected, drop] = useDrop<{ id: string }, unknown, unknown>({
+  const [, drop] = useDrop<{ id: string }, unknown, unknown>({
     accept: 'checkbox-option',
     hover(item) {
       if (item.id === props.id) {

@@ -14,34 +14,92 @@
 
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import fetch from 'cross-fetch'
+import { FilterQuery, Model } from 'mongoose'
+import { ModuleKind, ScriptTarget, transpileModule } from 'typescript'
+import { NodeVM } from 'vm2'
 import { CreateApplicationInput, UpdateApplicationInput } from '../inputs/application.input'
-import { Application } from '../schemas/application.schema'
-import { ThirdUserService } from './third-user.service'
+import { Application, ApplicationDepartment, ApplicationUser } from '../schemas/application.schema'
+
+export interface ApplicationScript {
+  getDepartments(query?: {
+    departmentId?: string
+    departmentIds?: string[]
+  }): Promise<Omit<ApplicationDepartment, 'applicationId'>[]>
+
+  getDepartment(query: {
+    departmentId: string
+  }): Promise<Omit<ApplicationDepartment, 'applicationId'>>
+
+  getUsers(query: {
+    departmentId?: string
+    userIds?: string[]
+  }): Promise<Omit<ApplicationUser, 'applicationId'>[]>
+
+  getUser(query: { userId: string }): Promise<Omit<ApplicationUser, 'applicationId'>>
+}
 
 @Injectable()
 export class ApplicationService {
   constructor(
-    @InjectModel(Application.name) private readonly applicationModel: Model<Application>,
-    private readonly thirdUserService: ThirdUserService
+    @InjectModel(Application.name) private readonly applicationModel: Model<Application>
   ) {}
 
-  async findOne({ applicationId }: { applicationId: string }): Promise<Application> {
-    const application = await this.applicationModel.findOne({ _id: applicationId, deletedAt: null })
+  async findOne({
+    userId,
+    applicationId,
+  }: {
+    userId?: string
+    applicationId: string
+  }): Promise<Application> {
+    const application = await this.applicationModel.findOne({
+      _id: applicationId,
+      userId,
+      deletedAt: null,
+    })
     if (!application) {
       throw new Error(`Application ${applicationId} not found`)
     }
     return application
   }
 
-  async findAllByUserId({ userId }: { userId: string }): Promise<Application[]> {
-    return this.applicationModel.find({ userId, deletedAt: null })
+  async find({
+    userId,
+    filter,
+    sort,
+    offset,
+    limit,
+  }: {
+    userId: string
+    filter?: FilterQuery<Application>
+    sort?: { [key in keyof Application]?: 1 | -1 }
+    offset?: number
+    limit?: number
+  }): Promise<Application[]> {
+    return this.applicationModel.find({ userId, deletedAt: null, ...filter }, null, {
+      sort,
+      skip: offset,
+      limit,
+    })
   }
 
-  async create(
-    { userId }: { userId: string },
+  async count({
+    userId,
+    filter,
+  }: {
+    userId: string
+    filter?: FilterQuery<Application>
+  }): Promise<number> {
+    return this.applicationModel.countDocuments({ userId, deletedAt: null, ...filter })
+  }
+
+  async create({
+    userId,
+    input,
+  }: {
+    userId: string
     input: CreateApplicationInput
-  ): Promise<Application> {
+  }): Promise<Application> {
     return this.applicationModel.create({
       userId,
       createdAt: Date.now(),
@@ -49,12 +107,17 @@ export class ApplicationService {
     })
   }
 
-  async update(
-    { applicationId }: { applicationId: string },
+  async update({
+    userId,
+    applicationId,
+    input,
+  }: {
+    userId?: string
+    applicationId: string
     input: UpdateApplicationInput
-  ): Promise<Application> {
+  }): Promise<Application> {
     const application = await this.applicationModel.findOneAndUpdate(
-      { _id: applicationId, deletedAt: null },
+      { _id: applicationId, userId, deletedAt: null },
       {
         $set: {
           updatedAt: Date.now(),
@@ -68,15 +131,18 @@ export class ApplicationService {
       throw new Error(`Application ${applicationId} not foundd`)
     }
 
-    if (typeof input.thirdScript === 'string') {
-      this.thirdUserService.markModuleChanged(applicationId)
-    }
     return application
   }
 
-  async delete({ applicationId }: { applicationId: string }): Promise<Application> {
+  async delete({
+    userId,
+    applicationId,
+  }: {
+    userId?: string
+    applicationId: string
+  }): Promise<Application> {
     const application = await this.applicationModel.findOneAndUpdate(
-      { _id: applicationId, deletedAt: null },
+      { _id: applicationId, userId, deletedAt: null },
       { $set: { deletedAt: Date.now() } },
       { new: true }
     )
@@ -84,6 +150,100 @@ export class ApplicationService {
     if (!application) {
       throw new Error(`Application ${applicationId} not foundd`)
     }
+
     return application
+  }
+
+  async getDepartments({
+    applicationId,
+    departmentId,
+    departmentIds,
+  }: {
+    applicationId: string
+    departmentId?: string
+    departmentIds?: string[]
+  }): Promise<ApplicationDepartment[]> {
+    const script = await this.script({ applicationId })
+    return (await script.getDepartments({ departmentId, departmentIds })).map(dep => ({
+      applicationId,
+      ...dep,
+    }))
+  }
+
+  async getDepartment({
+    applicationId,
+    departmentId,
+  }: {
+    applicationId: string
+    departmentId: string
+  }): Promise<ApplicationDepartment> {
+    const script = await this.script({ applicationId })
+    return {
+      applicationId,
+      ...(await script.getDepartment({ departmentId })),
+    }
+  }
+
+  async getUsers({
+    applicationId,
+    departmentId,
+    userIds,
+  }: {
+    applicationId: string
+    departmentId?: string
+    userIds?: string[]
+  }): Promise<ApplicationUser[]> {
+    const script = await this.script({ applicationId })
+    return (await script.getUsers({ departmentId, userIds })).map(user => ({
+      applicationId,
+      ...user,
+    }))
+  }
+
+  async getUser({
+    applicationId,
+    userId,
+  }: {
+    applicationId: string
+    userId: string
+  }): Promise<ApplicationUser> {
+    const script = await this.script({ applicationId })
+    return {
+      applicationId,
+      ...(await script.getUser({ userId })),
+    }
+  }
+
+  private static scriptCache = new Map<string, Promise<ApplicationScript>>()
+
+  private async script({ applicationId }: { applicationId: string }) {
+    let m = ApplicationService.scriptCache.get(applicationId)
+    if (!m) {
+      m = (async () => {
+        const script = (await this.findOne({ applicationId })).script
+
+        if (!script) {
+          throw new Error(`Application script is null`)
+        }
+
+        const vm = new NodeVM({
+          sandbox: { fetch },
+        })
+
+        const M = vm.run(
+          transpileModule(script, {
+            compilerOptions: {
+              module: ModuleKind.CommonJS,
+              target: ScriptTarget.ES2021,
+            },
+          }).outputText
+        ).default
+
+        return new M()
+      })()
+
+      ApplicationService.scriptCache.set(applicationId, m)
+    }
+    return m
   }
 }

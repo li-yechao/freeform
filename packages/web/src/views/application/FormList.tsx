@@ -94,7 +94,7 @@ export default function FormList() {
 
   return (
     <_Menu activeKey={formId} selectedKeys={formId ? [formId] : undefined}>
-      {application?.forms.map(form => (
+      {application?.forms.nodes.map(form => (
         <Menu.Item
           key={form.id}
           icon={<UnorderedListOutlined />}

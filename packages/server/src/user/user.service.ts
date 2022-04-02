@@ -21,49 +21,54 @@ import { User } from './user.schema'
 export class UserService {
   constructor(@InjectModel(User.name) private readonly userModel: Model<User>) {}
 
-  async findOne({ userId }: { userId: string }): Promise<User> {
-    const user = await this.userModel.findById(userId)
-    if (!user) {
-      throw new Error(`User ${userId} not found`)
+  async findOne(query: { userId: string } | { thirdType: string; thirdId: string }): Promise<User> {
+    function isThirdQuery(q: any): q is { thirdType: string; thirdId: string } {
+      return typeof q?.thirdType === 'string'
     }
+
+    const filter = isThirdQuery(query)
+      ? { [`third.${query.thirdType}.__id`]: query.thirdId }
+      : { _id: query.userId }
+
+    const user = await this.userModel.findOne({ deletedAt: null, ...filter })
+
+    if (!user) {
+      throw new Error(`User not found`)
+    }
+
     return user
   }
 
-  async findOptionalByThirdId({
-    type,
-    thirdId,
-  }: {
-    type: string
-    thirdId: string
-  }): Promise<User | null> {
-    return this.userModel.findOne({ [`third.${type}.__id`]: thirdId })
-  }
-
-  async findOneByThirdId({ type, thirdId }: { type: string; thirdId: string }): Promise<User> {
-    const user = await this.findOptionalByThirdId({ type, thirdId })
-    if (!user) {
-      throw new Error(`Third user ${thirdId} not found`)
-    }
-    return user
-  }
-
-  async createWithThirdUser({
-    type,
+  async createOrUpdate({
+    thirdType,
     thirdId,
     thirdUser,
   }: {
-    type: string
+    thirdType: string
     thirdId: string
     thirdUser: { [key: string]: any }
   }): Promise<User> {
-    return this.userModel.create({
-      createdAt: Date.now(),
-      third: {
-        [type]: {
-          __id: thirdId,
-          ...thirdUser,
+    const user = await this.userModel.findOneAndUpdate(
+      { [`third.${thirdType}.__id`]: thirdId, deletedAt: null },
+      {
+        $set: {
+          updatedAt: Date.now(),
+          [`third.${thirdType}`]: {
+            __id: thirdId,
+            ...thirdUser,
+          },
+        },
+        $setOnInsert: {
+          createdAt: Date.now(),
         },
       },
-    })
+      { upsert: true, new: true }
+    )
+
+    if (!user) {
+      throw new Error(`User not found`)
+    }
+
+    return user
   }
 }

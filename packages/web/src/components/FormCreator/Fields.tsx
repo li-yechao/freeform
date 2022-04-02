@@ -57,7 +57,7 @@ export default function Fields() {
 const Field = ({ type, icon, title }: { type: string; icon: ReactNode; title: string }) => {
   const addField = useAddOrMoveField()
 
-  const [_, drag] = useDrag(() => ({
+  const [, drag] = useDrag(() => ({
     type: 'field',
     item: { type },
     options: { dropEffect: 'copy' },

@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { InputType, Field, PickType, PartialType } from '@nestjs/graphql'
+import { InputType, Field, PickType, PartialType, registerEnumType } from '@nestjs/graphql'
 import { GraphQLJSONObject } from 'graphql-type-json'
+import { OrderDirection } from '../../utils/OrderDirection'
 import { Node, Trigger } from '../schemas/workflow.schema'
 
 @InputType()
@@ -22,13 +23,29 @@ export class CreateWorkflowInput {
   name?: string
 
   @Field(() => GraphQLJSONObject)
-  trigger!: Trigger
+  trigger?: Trigger
 
   @Field(() => [GraphQLJSONObject])
-  children!: Node[]
+  children?: Node[]
 }
 
 @InputType()
 export class UpdateWorkflowInput extends PartialType(
   PickType(CreateWorkflowInput, ['name', 'trigger', 'children'] as const)
 ) {}
+
+@InputType()
+export class WorkflowOrder {
+  @Field(() => WorkflowOrderField)
+  field!: WorkflowOrderField
+
+  @Field(() => OrderDirection)
+  direction!: OrderDirection
+}
+
+export enum WorkflowOrderField {
+  CREATED_AT,
+  UPDATED_AT,
+}
+
+registerEnumType(WorkflowOrderField, { name: 'WorkflowOrderField' })

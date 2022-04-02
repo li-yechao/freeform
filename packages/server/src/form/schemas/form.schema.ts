@@ -101,7 +101,7 @@ export class Form {
   id!: string
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
-  applicationId!: mongoose.Types.ObjectId
+  applicationId!: string
 
   @Prop({ required: true })
   @GraphqlField()

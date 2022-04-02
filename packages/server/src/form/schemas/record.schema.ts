@@ -24,10 +24,10 @@ export class Record {
   id!: string
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
-  userId!: mongoose.Types.ObjectId
+  userId!: string
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
-  formId!: mongoose.Types.ObjectId
+  formId!: string
 
   @Prop({ required: true })
   @Field()

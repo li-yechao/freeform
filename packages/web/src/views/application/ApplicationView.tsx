@@ -79,7 +79,7 @@ const IndexView = () => {
   const { data: { application } = {} } = useApplication({ variables: { applicationId } })
 
   useEffect(() => {
-    const firstFormId = application?.forms.at(0)?.id
+    const firstFormId = application?.forms.nodes.at(0)?.id
     if (firstFormId) {
       navigate(firstFormId, { replace: true })
     }
