@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.1](https://github.com/li-yechao/freeform/compare/@freeform/web@0.1.0-alpha.5...@freeform/web@1.0.0-alpha.1) (2022-04-06)
+
+**Note:** Version bump only for package @freeform/web
+
 # [0.1.0-alpha.5](https://github.com/li-yechao/freeform/compare/@freeform/web@0.1.0-alpha.4...@freeform/web@0.1.0-alpha.5) (2022-03-02)
 
 ### Features
