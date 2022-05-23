@@ -23,6 +23,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql'
+import { FilterQuery } from 'mongoose'
 import { CurrentUser, GqlAuthGuard } from '../../auth/gql-auth.guard'
 import { Connection, ConnectionOptions, PageInfo } from '../../utils/Connection'
 import {
@@ -43,14 +44,21 @@ export class RecordResolver {
   @ResolveField(() => RecordConnection)
   async records(
     @Parent() form: Form,
-    @Args('viewId') _viewId: string,
+    @Args('viewId', { nullable: true }) _viewId: string,
     @Args('before', { nullable: true }) before?: string,
     @Args('after', { nullable: true }) after?: string,
     @Args('first', { type: () => Int, nullable: true }) first?: number,
     @Args('last', { type: () => Int, nullable: true }) last?: number,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
-    @Args('orderBy', { type: () => RecordOrder, nullable: true }) orderBy?: RecordOrder
+    @Args('orderBy', { type: () => RecordOrder, nullable: true }) orderBy?: RecordOrder,
+    @Args('recordIds', { type: () => [String], nullable: true }) recordIds?: string[]
   ): Promise<RecordConnection> {
+    const idsFilter: FilterQuery<{ _id: string }> = {}
+
+    if (recordIds?.length) {
+      idsFilter._id = { $in: recordIds }
+    }
+
     return new RecordConnection({
       before,
       after,
@@ -58,8 +66,8 @@ export class RecordResolver {
       last,
       offset,
       orderBy,
-      find: options => this.recordService.find({ formId: form.id, ...options }),
-      count: options => this.recordService.count({ formId: form.id, ...options }),
+      find: options => this.recordService.find({ ...idsFilter, formId: form.id, ...options }),
+      count: options => this.recordService.count({ ...idsFilter, formId: form.id, ...options }),
     })
   }
 

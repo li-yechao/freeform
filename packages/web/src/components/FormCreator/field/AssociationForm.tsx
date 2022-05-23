@@ -51,20 +51,14 @@ export default function AssociationForm(props: AssociationFormProps & { tabIndex
     {
       applicationId: string
       formId: string
-      sourceFormId: string
-      sourceFieldId: string
-      page: number
-      limit: number
+      first: number
     }
   >(
     gql`
       query RecordsByAssociationFormFieldSearch(
         $applicationId: String!
         $formId: String!
-        $sourceFormId: String!
-        $sourceFieldId: String!
-        $page: Int!
-        $limit: Int!
+        $first: Int!
       ) {
         application(applicationId: $applicationId) {
           id
@@ -72,12 +66,7 @@ export default function AssociationForm(props: AssociationFormProps & { tabIndex
           form(formId: $formId) {
             id
 
-            records: recordsByAssociationFormFieldSearch(
-              sourceFormId: $sourceFormId
-              sourceFieldId: $sourceFieldId
-              page: $page
-              limit: $limit
-            ) {
+            records(first: $first) {
               nodes {
                 id
                 data
@@ -100,18 +89,16 @@ export default function AssociationForm(props: AssociationFormProps & { tabIndex
       variables: {
         applicationId: props.applicationId,
         formId: associationFormId,
-        sourceFormId: props.formId,
-        sourceFieldId: props.id,
-        page: 0,
-        limit: 10,
+        first: 10,
       },
-    }).then(
-      res =>
+    }).then(res => {
+      return (
         res.data?.application.form.records.nodes.map(i => ({
           value: i.id,
           label: i.data?.[mainFieldId]?.value?.toString(),
         })) ?? []
-    )
+      )
+    })
   }
 
   return (
@@ -150,10 +137,6 @@ export function AssociationFormCell(props: AssociationFormProps) {
     {
       applicationId: string
       formId: string
-      sourceFormId: string
-      sourceFieldId: string
-      page: number
-      limit: number
       recordIds?: string[]
     }
   >(
@@ -161,10 +144,6 @@ export function AssociationFormCell(props: AssociationFormProps) {
       query RecordsByAssociationFormFieldSearch(
         $applicationId: String!
         $formId: String!
-        $sourceFormId: String!
-        $sourceFieldId: String!
-        $page: Int!
-        $limit: Int!
         $recordIds: [String!]
       ) {
         application(applicationId: $applicationId) {
@@ -173,13 +152,7 @@ export function AssociationFormCell(props: AssociationFormProps) {
           form(formId: $formId) {
             id
 
-            records: recordsByAssociationFormFieldSearch(
-              sourceFormId: $sourceFormId
-              sourceFieldId: $sourceFieldId
-              page: $page
-              limit: $limit
-              recordIds: $recordIds
-            ) {
+            records(first: 100, recordIds: $recordIds) {
               nodes {
                 id
                 data
@@ -206,10 +179,6 @@ export function AssociationFormCell(props: AssociationFormProps) {
       variables: {
         applicationId: props.applicationId,
         formId: associationFormId,
-        sourceFormId: props.formId,
-        sourceFieldId: props.id,
-        page: 0,
-        limit: 10,
         recordIds: props.value,
       },
     }).then(
@@ -316,15 +285,22 @@ const AssociationFormSelect = ({
   onChange?: (value: string) => void
 }) => {
   const { data: { application } = {} } = useQuery<{
-    application: { id: string; forms: { id: string; name?: string }[] }
+    application: {
+      id: string
+      forms: {
+        nodes: { id: string; name?: string }[]
+      }
+    }
   }>(
     gql`
       query ApplicationForms($applicationId: String!) {
         application(applicationId: $applicationId) {
           id
-          forms {
-            id
-            name
+          forms(first: 100) {
+            nodes {
+              id
+              name
+            }
           }
         }
       }
@@ -334,7 +310,7 @@ const AssociationFormSelect = ({
 
   return (
     <Select value={value} onChange={onChange} style={{ width: '100%' }}>
-      {application?.forms.map(form => (
+      {application?.forms.nodes.map(form => (
         <Select.Option key={form.id} value={form.id}>
           {form.name || '未命名'}
         </Select.Option>
