@@ -29,15 +29,17 @@ export default function useApplicationDefines({
       name?: string
 
       forms: {
-        id: string
-        name?: string
-
-        fields: {
+        nodes: {
           id: string
-          label?: string
-          type: string
+          name?: string
+
+          fields: {
+            id: string
+            label?: string
+            type: string
+          }[]
         }[]
-      }[]
+      }
     }
   }>(
     gql`
@@ -46,14 +48,16 @@ export default function useApplicationDefines({
           id
           name
 
-          forms {
-            id
-            name
-
-            fields {
+          forms(first: 100) {
+            nodes {
               id
-              label
-              type
+              name
+
+              fields {
+                id
+                label
+                type
+              }
             }
           }
         }
@@ -110,7 +114,7 @@ declare const formTrigger: {
     // globalThis.application
     libs.push({
       content: `
-${application.forms
+${application.forms.nodes
   .map(
     form => `
 /**
@@ -191,7 +195,7 @@ declare interface Record_${form.id} {
  * ${application.name || '未命名应用'}
  */
 declare const application: {
-  ${application.forms
+  ${application.forms.nodes
     .map(
       form => `
   /**
