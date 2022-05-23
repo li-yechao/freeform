@@ -152,12 +152,17 @@ export const useUpdateForm = (
 }
 
 export const useDeleteForm = (
-  options?: MutationHookOptions<{ deleteForm: boolean }, { applicationId: string; formId: string }>
+  options?: MutationHookOptions<
+    { deleteForm: { id: string } },
+    { applicationId: string; formId: string }
+  >
 ) => {
   return useMutation(
     gql`
       mutation DeleteForm($applicationId: String!, $formId: String!) {
-        deleteForm(applicationId: $applicationId, formId: $formId)
+        deleteForm(applicationId: $applicationId, formId: $formId) {
+          id
+        }
       }
     `,
     { refetchQueries: ['ApplicationForms'], ...options }
