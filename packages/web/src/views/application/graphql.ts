@@ -50,7 +50,7 @@ export const useApplication = (
           updatedAt
           name
 
-          forms(first: 100) {
+          forms(first: 100, orderBy: { field: CREATED_AT, direction: ASC }) {
             nodes {
               id
               createdAt
