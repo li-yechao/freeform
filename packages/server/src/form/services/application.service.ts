@@ -19,7 +19,12 @@ import { FilterQuery, Model } from 'mongoose'
 import { ModuleKind, ScriptTarget, transpileModule } from 'typescript'
 import { NodeVM } from 'vm2'
 import { CreateApplicationInput, UpdateApplicationInput } from '../inputs/application.input'
-import { Application, ApplicationDepartment, ApplicationUser } from '../schemas/application.schema'
+import {
+  Application,
+  ApplicationDepartment,
+  ApplicationDistrict,
+  ApplicationUser,
+} from '../schemas/application.schema'
 
 export interface ApplicationScript {
   getDepartments(query?: {
@@ -30,6 +35,13 @@ export interface ApplicationScript {
   getDepartment(query: {
     departmentId: string
   }): Promise<Omit<ApplicationDepartment, 'applicationId'>>
+
+  getDistricts(query?: {
+    districtId?: string
+    districtIds?: string[]
+  }): Promise<Omit<ApplicationDistrict, 'applicationId'>[]>
+
+  getDistrict(query: { districtId: string }): Promise<Omit<ApplicationDistrict, 'applicationId'>>
 
   getUsers(query: {
     departmentId?: string
@@ -181,6 +193,36 @@ export class ApplicationService {
     return {
       applicationId,
       ...(await script.getDepartment({ departmentId })),
+    }
+  }
+
+  async getDistricts({
+    applicationId,
+    districtId,
+    districtIds,
+  }: {
+    applicationId: string
+    districtId?: string
+    districtIds?: string[]
+  }): Promise<ApplicationDistrict[]> {
+    const script = await this.script({ applicationId })
+    return (await script.getDistricts({ districtId, districtIds })).map(district => ({
+      applicationId,
+      ...district,
+    }))
+  }
+
+  async getDistrict({
+    applicationId,
+    districtId,
+  }: {
+    applicationId: string
+    districtId: string
+  }): Promise<ApplicationDistrict> {
+    const script = await this.script({ applicationId })
+    return {
+      applicationId,
+      ...(await script.getDistrict({ districtId })),
     }
   }
 

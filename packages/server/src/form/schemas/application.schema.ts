@@ -74,3 +74,17 @@ export class ApplicationUser {
   @Field()
   name!: string
 }
+
+@ObjectType()
+export class ApplicationDistrict {
+  applicationId!: string
+
+  @Field(() => ID)
+  id!: string
+
+  @Field({ nullable: true })
+  parentId?: string
+
+  @Field()
+  name!: string
+}

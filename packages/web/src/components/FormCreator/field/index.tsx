@@ -25,6 +25,7 @@ import Department, {
   DepartmentConfigure,
   initialDepartmentProps,
 } from './Department'
+import District, { DistrictCell, DistrictConfigure, initialDistrictProps } from './District'
 import Number, { initialNumberProps, NumberConfigure } from './Number'
 import Radio, { initialRadioProps, RadioConfigure } from './Radio'
 import Rate, { initialRateProps, RateConfigure } from './Rate'
@@ -64,6 +65,7 @@ const FIELDS = {
   associationForm: AssociationForm,
   department: Department,
   user: User,
+  district: District,
 }
 
 export function defaultProps(type: string) {
@@ -86,6 +88,7 @@ const DEFAULT_PROPS: {
   associationForm: initialAssociationFormProps,
   department: initialDepartmentProps,
   user: initialUserProps,
+  district: initialDistrictProps,
 }
 
 export function ConfigureRenderer({
@@ -121,6 +124,7 @@ const CONFIGURES: {
   associationForm: AssociationFormConfigure,
   department: DepartmentConfigure,
   user: UserConfigure,
+  district: DistrictConfigure,
 }
 
 export function CellRenderer(props: FieldProps) {
@@ -139,4 +143,5 @@ const CELLS: {
   associationForm: AssociationFormCell,
   department: DepartmentCell,
   user: UserCell,
+  district: DistrictCell,
 }

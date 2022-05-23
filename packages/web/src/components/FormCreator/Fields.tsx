@@ -20,6 +20,7 @@ import {
   FontSizeOutlined,
   LinkOutlined,
   NumberOutlined,
+  PartitionOutlined,
   StarOutlined,
   UsergroupAddOutlined,
 } from '@ant-design/icons'
@@ -41,6 +42,7 @@ export default function Fields() {
       { type: 'associationForm', icon: <LinkOutlined />, title: '关联表' },
       { type: 'department', icon: <ApartmentOutlined />, title: '部门' },
       { type: 'user', icon: <UsergroupAddOutlined />, title: '人员' },
+      { type: 'district', icon: <PartitionOutlined />, title: '地区' },
     ],
     []
   )

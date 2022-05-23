@@ -19,6 +19,7 @@ import { ZBClient } from 'zeebe-node'
 import { Config } from '../config'
 import {
   ApplicationDepartmentResolver,
+  ApplicationDistrictResolver,
   ApplicationResolver,
   ApplicationUserResolver,
 } from './resolvers/application.resolver'
@@ -71,6 +72,7 @@ import { WorkflowService } from './services/workflow.service'
     // Resolvers
     ApplicationResolver,
     ApplicationDepartmentResolver,
+    ApplicationDistrictResolver,
     ApplicationUserResolver,
     FormResolver,
     RecordResolver,

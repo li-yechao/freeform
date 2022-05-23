@@ -178,6 +178,13 @@ declare interface ApplicationScript {
     query: { departmentId: string }
   ): Promise<{ id: string; name: string; parentId?: string }>
 
+  getDistricts(query?: {
+    districtId?: string
+    districtIds?: string[]
+  }): Promise<{ id: string; name: string; parentId?: string }[]>
+
+  getDistrict(query: { districtId: string }): Promise<{ id: string; name: string; parentId?: string }>
+
   getUsers(
     query: { departmentId?: string; userIds?: string[] }
   ): Promise<{ id: string; name: string; departmentId: string }[]>

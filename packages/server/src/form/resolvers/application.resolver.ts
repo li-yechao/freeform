@@ -32,7 +32,12 @@ import {
   CreateApplicationInput,
   UpdateApplicationInput,
 } from '../inputs/application.input'
-import { Application, ApplicationDepartment, ApplicationUser } from '../schemas/application.schema'
+import {
+  Application,
+  ApplicationDepartment,
+  ApplicationDistrict,
+  ApplicationUser,
+} from '../schemas/application.schema'
 import { ApplicationService } from '../services/application.service'
 
 @Resolver()
@@ -188,6 +193,56 @@ export class ApplicationDepartmentResolver {
     return this.applicationService.getUsers({
       applicationId: department.applicationId,
       departmentId: department.id,
+    })
+  }
+}
+
+@Resolver(() => ApplicationDistrict)
+@UseGuards(GqlAuthGuard)
+export class ApplicationDistrictResolver {
+  constructor(private readonly applicationService: ApplicationService) {}
+
+  @Query(() => [ApplicationDistrict])
+  async districts(
+    @Args('applicationId') applicationId: string,
+    @Args('districtId', { nullable: true }) districtId?: string,
+    @Args('districtIds', { type: () => [String], nullable: true }) districtIds?: string[]
+  ): Promise<ApplicationDistrict[]> {
+    return this.applicationService.getDistricts({
+      applicationId,
+      districtId,
+      districtIds,
+    })
+  }
+
+  @Query(() => ApplicationDistrict)
+  async district(
+    @Args('applicationId') applicationId: string,
+    @Args('districtId') districtId: string
+  ): Promise<ApplicationDistrict> {
+    return this.applicationService.getDistrict({
+      applicationId,
+      districtId,
+    })
+  }
+
+  @ResolveField(() => ApplicationDistrict, { nullable: true })
+  async parent(@Parent() district: ApplicationDistrict): Promise<ApplicationDistrict | null> {
+    if (!district.parentId) {
+      return null
+    }
+
+    return this.applicationService.getDistrict({
+      applicationId: district.applicationId,
+      districtId: district.parentId,
+    })
+  }
+
+  @ResolveField(() => [ApplicationDistrict])
+  async children(@Parent() district: ApplicationDistrict): Promise<ApplicationDistrict[]> {
+    return this.applicationService.getDistricts({
+      applicationId: district.applicationId,
+      districtId: district.id,
     })
   }
 }
