@@ -115,20 +115,19 @@ export class RecordResolver {
     })
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => Record)
   async deleteRecord(
     @CurrentUser() user: CurrentUser,
     @Args('applicationId') _applicationId: string,
     @Args('formId') formId: string,
     @Args('recordId') recordId: string
-  ): Promise<boolean> {
-    await this.recordService.delete({
+  ): Promise<Record> {
+    return this.recordService.delete({
       userId: user.id,
       formId,
       recordId,
       startWorkflowInstance: true,
     })
-    return true
   }
 }
 

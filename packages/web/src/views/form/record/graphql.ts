@@ -187,12 +187,14 @@ export const useUpdateRecord = () => {
 
 export const useDeleteRecord = () => {
   return useMutation<
-    { deleteRecord: boolean },
+    { deleteRecord: { id: string } },
     { applicationId: string; formId: string; recordId: string }
   >(
     gql`
       mutation DeleteRecord($applicationId: String!, $formId: String!, $recordId: String!) {
-        deleteRecord(applicationId: $applicationId, formId: $formId, recordId: $recordId)
+        deleteRecord(applicationId: $applicationId, formId: $formId, recordId: $recordId) {
+          id
+        }
       }
     `,
     { refetchQueries: ['Records'] }
