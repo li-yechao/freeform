@@ -110,14 +110,16 @@ export const useUpdateWorkflow = (
 
 export const useDeleteWorkflow = (
   options?: MutationHookOptions<
-    { deleteWorkflow: boolean },
+    { deleteWorkflow: { id: string } },
     { applicationId: string; workflowId: string }
   >
 ) => {
   return useMutation(
     gql`
       mutation DeleteWorkflow($applicationId: String!, $workflowId: String!) {
-        deleteWorkflow(applicationId: $applicationId, workflowId: $workflowId)
+        deleteWorkflow(applicationId: $applicationId, workflowId: $workflowId) {
+          id
+        }
       }
     `,
     { refetchQueries: ['ApplicationWorkflows'], ...options }
